@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.fathzer</groupId>
+		<artifactId>parent-pom</artifactId>
+		<version>1.0.6</version>
+	</parent>
+	<artifactId>games-core</artifactId>
+	<version>0.0.1</version>
+
+	<name>games-core</name>
+	<description>A core library to help implement two players games.</description>
+	<url>https://github.com/fathzer-games/games-core</url>
+	
+	<scm>
+		<url>https://github.com/fathzer-games/games-core.git</url>
+		<connection>https://github.com/fathzer-games/games-core.git</connection>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<sonar.organization>fathzer-games</sonar.organization>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
+	</properties>
+</project>

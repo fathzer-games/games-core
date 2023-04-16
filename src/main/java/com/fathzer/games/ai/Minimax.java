@@ -1,0 +1,67 @@
+package com.fathzer.games.ai;
+
+import java.util.Iterator;
+import java.util.List;
+
+import com.fathzer.games.GameState;
+import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.Status;
+import com.fathzer.games.util.Evaluation;
+
+/**
+ * Minimax based implementation.
+ * @param <M> Implementation of the Move interface to use
+ * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
+ */
+@Deprecated
+public abstract class Minimax<M> extends AbstractAI<M> {
+
+    @Override
+    public List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> moves, int size, int accuracy) {
+		return getBestMoves(depth, moves, size, accuracy, (c,l)->minimax(c,depth,1,depth));
+    }
+
+    private int minimax(Iterator<M> moves, final int depth, final int who, int maxDepth) {
+    	final MoveGenerator<M> moveGenerator = getMoveGenerator();
+    	if (depth == 0 || isInterrupted()) {
+            return who * evaluate();
+        } else if (moves==null) {
+        	final GameState<M> state = moveGenerator.getState();
+			if (Status.DRAW.equals(state.getStatus())) {
+				return 0;
+			} else if (!Status.PLAYING.equals(state.getStatus())){
+				int nbMoves = (maxDepth-depth+1)/2;
+				return -getWinScore(nbMoves)*who;
+			} else {
+				moves = state.iterator();
+			}
+        }
+    	int bestScore;
+        if (who > 0) {
+            // max
+            bestScore = Integer.MIN_VALUE;
+            while (moves.hasNext()) {
+                M move = moves.next();
+                moveGenerator.makeMove(move);
+                int score = minimax(null, depth-1, -who, maxDepth);
+                moveGenerator.unmakeMove();
+                if (score > bestScore) {
+                    bestScore = score;
+                }
+            }
+        } else {
+            // min
+            bestScore = Integer.MAX_VALUE;
+            while (moves.hasNext()) {
+                M move = moves.next();
+                moveGenerator.makeMove(move);
+                int score = minimax(null, depth-1, -who, maxDepth);
+                moveGenerator.unmakeMove();
+                if (score < bestScore) {
+                    bestScore = score;
+                }
+            }
+        }
+        return bestScore;
+    }
+}
