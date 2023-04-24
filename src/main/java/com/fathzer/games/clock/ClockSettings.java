@@ -79,14 +79,14 @@ public class ClockSettings {
 		return this;
 	}
 
-	/** Gets the initial.
+	/** Gets the initial in seconds.
 	 * @return a positive or null int
 	 */
 	public int getInitialTime() {
 		return initialTime;
 	}
 
-	/** Gets the increment.
+	/** Gets the increment in seconds.
 	 * @return an int
 	 */
 	public int getIncrement() {
