@@ -127,4 +127,8 @@ public class ClockSettings {
 	public ClockSettings getNext() {
 		return next;
 	}
+	
+	public ClockState buildClockState() {
+		return new DefaultClockState(this);
+	}
 }
