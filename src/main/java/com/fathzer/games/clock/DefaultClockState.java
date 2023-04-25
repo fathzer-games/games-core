@@ -8,14 +8,14 @@ import java.util.concurrent.atomic.AtomicLong;
 class DefaultClockState implements ClockState {
 	private static final long SECONDS_TO_MS = 1000L;
 
-	private AtomicLong countingSince;
-	private AtomicLong remainingAtLastMove;
-	private AtomicLong remainingMs;
-	private AtomicInteger movesSinceIncrement;
-	private AtomicInteger movesSinceSettingsChange;
-	private ClockSettings settings;
+	protected AtomicLong countingSince;
+	protected AtomicLong remainingAtLastMove;
+	protected AtomicLong remainingMs;
+	protected AtomicInteger movesSinceIncrement;
+	protected AtomicInteger movesSinceSettingsChange;
+	protected ClockSettings settings;
 	
-	DefaultClockState(ClockSettings settings) {
+	protected DefaultClockState(ClockSettings settings) {
 		this.settings = settings;
 		this.countingSince = new AtomicLong(-1);
 		this.remainingMs = new AtomicLong(SECONDS_TO_MS * settings.getInitialTime());
@@ -36,11 +36,18 @@ class DefaultClockState implements ClockState {
 		if (settings.getIncrement()!=0 && movesSinceIncrement.incrementAndGet()==settings.getMovesNumberBeforeIncrement()) {
 			// Should perform increment
 			remaining += settings.getIncrement();
+			movesSinceIncrement.set(0);
 			if (!settings.isCanAccumulate() && remaining > remainingAtLastMove.get()) {
 				remaining = remainingAtLastMove.get();
 			}
 		}
-		// TODO next phase
+		if (settings.getNext()!=null && movesSinceSettingsChange.incrementAndGet()==settings.getMovesNumberBeforeNext()) {
+			// Next phase
+			remaining = Math.min(remaining, settings.getMaxRemainingKept());
+			settings = settings.getNext();
+			movesSinceSettingsChange.set(0);
+			remaining += settings.getInitialTime();
+		}
 		remainingMs.set(remaining);
 		return remaining;
 	}
