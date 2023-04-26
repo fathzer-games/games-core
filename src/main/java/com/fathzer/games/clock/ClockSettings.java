@@ -5,7 +5,7 @@ package com.fathzer.games.clock;
  * <br>It also supports change of ClockSetting after an amount of plies (for instance 30 minutes with no increment for the first 20 plies, then 5 minutes with 5 second increment until the end of the game).
  */
 public class ClockSettings {
-	private int initialTime = 300;
+	private int initialTime;
 	private int increment = 0;
 	private int movesNumberBeforeIncrement = 0;
 	private boolean canAccumulate = false;
@@ -21,6 +21,7 @@ public class ClockSettings {
 		if (initialTime<0) {
 			throw new IllegalArgumentException("Initial time must be strictly positive");
 		}
+		this.initialTime = initialTime;
 	}
 
 	/** Sets the initial time allowed to players.
@@ -57,7 +58,7 @@ public class ClockSettings {
 	/** Set next settings.
 	 * <br>Settings can be chained. For instance a settings of 30 minutes with no increment for the first 20 plies, can be chained with an additional time of 5 minutes with 5 second increment until the end of the game.
 	 * @param movesNumberBeforeNext The number of plies to play in this settings before switching to next settings
-	 * @param maxRemainingKept The maximum of remaining time that should be added to next settings initial time
+	 * @param maxRemainingKept The maximum of remaining time (in seconds) that should be added to next settings initial time
 	 * @param next The additional settings
 	 * @return this
 	 * @throws IllegalArgumentException if movesNumberBeforeNext is &lt;= 0 or next is null but movesNumberBeforeNext is not Integer.MAX_VALUE, or next!=null but movesNumberBeforeNext is Integer.MAX_VALUE.
@@ -114,7 +115,7 @@ public class ClockSettings {
 		return movesNumberBeforeNext;
 	}
 	
-	/** Gets the maximum of remaining time that be added to next setting's initial time when it become active.
+	/** Gets the maximum of remaining time (in seconds) that be added to next setting's initial time when it become active.
 	 * @return a positive or null int
 	 */
 	public int getMaxRemainingKept() {
@@ -128,6 +129,9 @@ public class ClockSettings {
 		return next;
 	}
 	
+	/** Builds a clock state that supports this setting.
+	 * @return a new ClockState
+	 */
 	public ClockState buildClockState() {
 		return new DefaultClockState(this);
 	}

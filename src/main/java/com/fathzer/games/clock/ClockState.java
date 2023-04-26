@@ -3,7 +3,7 @@ package com.fathzer.games.clock;
 /** The clock state for a player.
  */
 public interface ClockState {
-	long moveDone();
+	ClockState moveDone();
 	
 	long pause();
 	
