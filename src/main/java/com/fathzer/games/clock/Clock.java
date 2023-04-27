@@ -18,7 +18,7 @@ public class Clock {
 	    t.setDaemon(true);
 	    return t;
     };
-	private static final ScheduledThreadPoolExecutor TIMER = new ScheduledThreadPoolExecutor(1, FACTORY);
+	protected static final ScheduledThreadPoolExecutor TIMER = new ScheduledThreadPoolExecutor(1, FACTORY);
 	
 	static {
 		TIMER.setRemoveOnCancelPolicy(true);
