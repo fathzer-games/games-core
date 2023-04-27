@@ -24,7 +24,7 @@ public class Clock {
 		TIMER.setRemoveOnCancelPolicy(true);
 	}
 	
-	private ClockState[] counters;
+	private CountDown[] counters;
 	private Color playing;
 	private ScheduledFuture<?> flagFall;
 	private Consumer<Clock> timeUp;
@@ -34,7 +34,7 @@ public class Clock {
 	}
 	
 	public Clock(ClockSettings whiteSettings, ClockSettings blackSettings, Consumer<Clock> timeUp) {
-		this.counters = new ClockState[2];
+		this.counters = new CountDown[2];
 		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildClockState();
 		this.counters[Color.BLACK.ordinal()] = blackSettings.buildClockState();
 		this.playing = Color.BLACK;
@@ -65,8 +65,8 @@ public class Clock {
 			return false;
 		}
 		if (!isPaused()) {
-			// Stop the player's clock
-			final ClockState playerState = getPlayerState();
+			// Stop the player's count down
+			final CountDown playerState = getPlayerState();
 			if (playerState.getRemainingTime() <= 0) {
 				// Too late, time is up
 				debug("Tap is ignored because it was received after clock fires timeup event");
@@ -107,11 +107,11 @@ public class Clock {
 		return playing!=null;
 	}
 	
-	private ClockState getPlayerState() {
+	private CountDown getPlayerState() {
 		return getPlayerState(playing);
 	}
 
-	private ClockState getPlayerState(Color color) {
+	private CountDown getPlayerState(Color color) {
 		return this.counters[color.ordinal()];
 	}
 	

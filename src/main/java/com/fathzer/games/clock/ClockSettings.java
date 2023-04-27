@@ -1,7 +1,7 @@
 package com.fathzer.games.clock;
 
 /** The settings for a clock.
- * <br>This class supports <a href="">the Fisher increment and Bronstein delay</a>.
+ * <br>This class supports <a href="https://en.wikipedia.org/wiki/Chess_clock">the Fisher increment and Bronstein delay</a>.
  * <br>It also supports change of ClockSetting after an amount of plies (for instance 30 minutes with no increment for the first 20 plies, then 5 minutes with 5 second increment until the end of the game).
  */
 public class ClockSettings {
@@ -132,7 +132,7 @@ public class ClockSettings {
 	/** Builds a clock state that supports this setting.
 	 * @return a new ClockState
 	 */
-	public ClockState buildClockState() {
-		return new DefaultClockState(this);
+	public CountDown buildClockState() {
+		return new DefaultCountDown(this);
 	}
 }

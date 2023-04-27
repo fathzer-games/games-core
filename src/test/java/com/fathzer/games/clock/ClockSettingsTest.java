@@ -10,7 +10,7 @@ class ClockSettingsTest {
 	void test() {
 		ClockSettings settings = new ClockSettings(2).withIncrement(1, 1, true);
 		assertEquals(2, settings.getInitialTime());
-		ClockState state = settings.buildClockState();
+		CountDown state = settings.buildClockState();
 		assertEquals(2000, state.getRemainingTime());
 	}
 

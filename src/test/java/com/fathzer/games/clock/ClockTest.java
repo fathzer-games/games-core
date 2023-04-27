@@ -10,6 +10,19 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.games.Color;
 
 class ClockTest {
+	
+	/*
+	static class MySettings extends ClockSettings {
+		public MySettings(int initialTime) {
+			super(initialTime);
+		}
+
+		@Override
+		public ClockState buildClockState() {
+			return new FakeTimedClockState(this);
+		}
+	}*/
+
 
 	@Test
 	void test() throws InterruptedException {
