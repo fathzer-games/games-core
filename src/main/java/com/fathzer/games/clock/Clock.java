@@ -35,11 +35,19 @@ public class Clock {
 	private Color playing;
 	private ScheduledFuture<?> flagFall;
 	private ConcurrentLinkedQueue<Consumer<Status>> listeners;
+	private boolean started;
 	
+	/** Constructor.
+	 * @param settings The settings to apply to both players
+	 */
 	public Clock(ClockSettings settings) {
 		this(settings, settings);
 	}
 	
+	/** Constructor.
+	 * @param whiteSettings The settings for white player
+	 * @param blackSettings The settings for black player
+	 */
 	public Clock(ClockSettings whiteSettings, ClockSettings blackSettings) {
 		this.counters = new CountDown[2];
 		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildCountDown();
@@ -48,28 +56,34 @@ public class Clock {
 		this.listeners = new ConcurrentLinkedQueue<>();
 	}
 	
+	/** Adds a listener.
+	 * <br>Please note the listener can be called by another thread. 
+	 * @param listener a listener that will be informed is a player runs out of time.
+	 */
 	public void addListener(Consumer<Status> listener) {
 		listeners.add(listener);
 	}
 	
+	/** Changes the player that should play when clock starts.
+	 * <br>By default, the clock starts with the black player because its the way it works on some chess sites (<a href="https://chess.com">chess.com</a> for example):
+	 * The clock starts when white player makes its first move. 
+	 * @param startPlayer The color of the player whose countdown will start when the first tap will occur.
+	 * @return this clock
+	 * @throws IllegalStateException if clock is already started.
+	 */
 	public Clock withStartingColor(Color startPlayer) {
+		if (started) {
+			throw new IllegalStateException("Can't change the starting player after clock is started");
+		}
 		this.playing = startPlayer;
 		return this;
 	}
 
-	public synchronized boolean isPaused() {
-		return playing==null || getPlayerState().isPaused();
-	}
-	
-	public synchronized Color getPlaying() {
-		return isPaused() ? null : this.playing;
-	}
-	
-	protected void debug(String message) {
-		// This method does nothing
-	}
-
+	/** Starts the countDown if it was paused or change the player whose countdown.
+	 * @return true if the countdown is started. False if it can't be started because a player already ran out of time.
+	 */
 	public synchronized boolean tap() {
+		started = true;
 		if (playing==null) {
 			return false;
 		}
@@ -102,10 +116,6 @@ public class Clock {
 		return true;
 	}
 	
-	public ScheduledExecutorService getScheduler() {
-		return TIMER;
-	}
-	
 	public synchronized boolean pause() {
 		if (!isPaused()) {
 			if (getPlayerState().pause()<=0) {
@@ -118,15 +128,31 @@ public class Clock {
 		return playing!=null;
 	}
 	
+	public synchronized boolean isPaused() {
+		return playing==null || getPlayerState().isPaused();
+	}
+	
+	public synchronized Color getPlaying() {
+		return isPaused() ? null : this.playing;
+	}
+	
+	public synchronized long getRemaining(Color color) {
+		return getPlayerState(color).getRemainingTime();
+	}
+	
+	protected void debug(String message) {
+		// This method does nothing
+	}
+
+	public ScheduledExecutorService getScheduler() {
+		return TIMER;
+	}
+	
 	private CountDown getPlayerState() {
 		return getPlayerState(playing);
 	}
 
 	private CountDown getPlayerState(Color color) {
 		return this.counters[color.ordinal()];
-	}
-	
-	public synchronized long getRemaining(Color color) {
-		return getPlayerState(color).getRemainingTime();
 	}
 }

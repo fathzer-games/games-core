@@ -50,6 +50,7 @@ class ClockTest {
 		
 		// White tap the clock => Black is playing
 		clock.tap();
+		assertThrows(IllegalStateException.class, ()->clock.withStartingColor(Color.WHITE));
 		assertFalse(clock.isPaused());
 		assertEquals(Color.BLACK, clock.getPlaying());
 		CLOCK.add(1000);
@@ -71,7 +72,7 @@ class ClockTest {
 		// Restart clock
 		clock.tap();
 		assertEquals(Color.WHITE, clock.getPlaying());
-		clock.pause();
+		assertTrue(clock.pause());
 	}	
 		
 	@Test
@@ -91,34 +92,7 @@ class ClockTest {
 		assertEquals(Color.BLACK, winner.get(0));
 		
 		assertTrue(clock.isPaused());
+		assertFalse(clock.pause());
 		assertFalse(clock.tap());
-//		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
-//		assertTrue(clock.getRemaining(Color.WHITE) <= 0);
-//		assertTrue(clock.isPaused());
-//		// Tap should not work anymore
-//		assertFalse(clock.tap());
-//		assertTrue(clock.isPaused());
-//		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
-//		assertTrue(clock.getRemaining(Color.WHITE) <= 0);
-//		// Pause should not work anymore
-//		assertFalse(clock.pause());
 	}
-
-//	void testFlagFall() {
-//		Thread.sleep(2200);
-//		// WHITE flag should be down
-//		assertEquals(1,flagFallColor.size());
-//		assertEquals(Color.WHITE,flagFallColor.get(0));
-//		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
-//		assertTrue(clock.getRemaining(Color.WHITE)<=0);
-//		assertTrue(clock.isPaused());
-//		// Tap should not work anymore
-//		assertFalse(clock.tap());
-//		assertTrue(clock.isPaused());
-//		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
-//		assertTrue(clock.getRemaining(Color.WHITE)<=0);
-//		// Pause should not work anymore
-//		assertFalse(clock.pause());
-//	}
-
 }
