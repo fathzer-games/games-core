@@ -48,30 +48,30 @@ class ClockTest {
 		assertEquals(2000, clock.getRemaining(Color.WHITE));
 		assertEquals(2000, clock.getRemaining(Color.BLACK));
 		
-		// White tap the clock => Black is playing
+		// Clock starts => White is playing
 		clock.tap();
 		assertThrows(IllegalStateException.class, ()->clock.withStartingColor(Color.WHITE));
 		assertFalse(clock.isPaused());
-		assertEquals(Color.BLACK, clock.getPlaying());
-		CLOCK.add(1000);
-		assertEquals(2000, clock.getRemaining(Color.WHITE));
-		// Black tap the clock => White is playing
-		clock.tap();
 		assertEquals(Color.WHITE, clock.getPlaying());
-		long blackRemaining = clock.getRemaining(Color.BLACK);
-		assertEquals(2000, blackRemaining, "Time remaining for black should be near 10000 but is "+blackRemaining);
+		CLOCK.add(1000);
+		assertEquals(2000, clock.getRemaining(Color.BLACK));
+		// White tap the clock => Black is playing
+		clock.tap();
+		assertEquals(Color.BLACK, clock.getPlaying());
+		long whiteRemaining = clock.getRemaining(Color.WHITE);
+		assertEquals(2000, whiteRemaining, "Time remaining for white should be near 10000 but is "+whiteRemaining);
 		assertFalse(clock.isPaused());
 		// Pause the clock
 		clock.pause();
 		assertTrue(clock.isPaused());
 		assertNull(clock.getPlaying());
-		long whiteRemaining = clock.getRemaining(Color.WHITE);
+		long blackRemaining = clock.getRemaining(Color.BLACK);
 		CLOCK.add(1000);
 		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
 		assertEquals(whiteRemaining, clock.getRemaining(Color.WHITE));
 		// Restart clock
 		clock.tap();
-		assertEquals(Color.WHITE, clock.getPlaying());
+		assertEquals(Color.BLACK, clock.getPlaying());
 		assertTrue(clock.pause());
 	}	
 		
@@ -81,15 +81,15 @@ class ClockTest {
 		final FakeScheduler scheduler = new FakeScheduler();
 		
 		final Clock clock = new FakeClock(settings, scheduler);
-		clock.withStartingColor(Color.WHITE);
+		clock.withStartingColor(Color.BLACK);
 		final List<Color> winner = new ArrayList<>();
 		clock.addListener(s -> winner.add(s.winner()));
 
 		assertTrue(clock.tap());
 		scheduler.sleep(2100);
-		// BLACK should have won
+		// WHITE should have won
 		assertEquals(1,winner.size());
-		assertEquals(Color.BLACK, winner.get(0));
+		assertEquals(Color.WHITE, winner.get(0));
 		
 		assertTrue(clock.isPaused());
 		assertFalse(clock.pause());

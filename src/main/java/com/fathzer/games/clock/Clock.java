@@ -52,7 +52,7 @@ public class Clock {
 		this.counters = new CountDown[2];
 		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildCountDown();
 		this.counters[Color.BLACK.ordinal()] = blackSettings.buildCountDown();
-		this.playing = Color.BLACK;
+		this.playing = Color.WHITE;
 		this.listeners = new ConcurrentLinkedQueue<>();
 	}
 	
@@ -65,8 +65,7 @@ public class Clock {
 	}
 	
 	/** Changes the player that should play when clock starts.
-	 * <br>By default, the clock starts with the black player because its the way it works on some chess sites (<a href="https://chess.com">chess.com</a> for example):
-	 * The clock starts when white player makes its first move. 
+	 * <br>By default, the clock starts with the white player because its the way it usually works. But you could want white first move to starts the black count down. 
 	 * @param startPlayer The color of the player whose countdown will start when the first tap will occur.
 	 * @return this clock
 	 * @throws IllegalStateException if clock is already started.
