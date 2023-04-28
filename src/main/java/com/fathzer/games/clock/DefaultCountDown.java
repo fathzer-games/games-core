@@ -25,7 +25,7 @@ class DefaultCountDown implements CountDown {
 		this.movesSinceSettingsChange = new AtomicInteger();
 	}
 	
-	protected long getCurrentTime() {
+	protected long now() {
 		return System.currentTimeMillis();
 	}
 	
@@ -58,7 +58,7 @@ class DefaultCountDown implements CountDown {
 	public long pause() {
 		if (!isPaused()) {
 			// If clock is already paused, do nothing
-			final long elapsed = getCurrentTime()-countingSince.get();
+			final long elapsed = now()-countingSince.get();
 			remainingMs.set(remainingMs.get()-elapsed);
 			countingSince.set(-1);
 		}
@@ -71,7 +71,7 @@ class DefaultCountDown implements CountDown {
 			throw new IllegalStateException("Can't start an already started count down");
 		}
 		// If clock is already started, do nothing
-		countingSince.set(getCurrentTime());
+		countingSince.set(now());
 		return remainingMs.get();
 	}
 	
@@ -79,7 +79,7 @@ class DefaultCountDown implements CountDown {
 	public long getRemainingTime() {
 		final long start = countingSince.get();
 		final long remaining = remainingMs.get();
-		return start < 0 ? remaining : remaining + start - getCurrentTime();
+		return start < 0 ? remaining : remaining + start - now();
 	}
 	
 	@Override

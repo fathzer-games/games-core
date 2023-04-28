@@ -7,22 +7,26 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.games.clock.timeutils.FakeClock;
 
 class DefaultCountDownTest {
-	private static final FakeClock CLOCK = new FakeClock();
+	static final FakeClock CLOCK = new FakeClock();
 
-	static class FakeTimedClockState extends DefaultCountDown {
-		private FakeTimedClockState(ClockSettings settings) {
+	static class FakeTimedCountDown extends DefaultCountDown {
+		FakeTimedCountDown(ClockSettings settings) {
 			super(settings);
 		}
 
 		@Override
-		protected long getCurrentTime() {
-			return CLOCK.getTime();
+		protected long now() {
+			return CLOCK.now();
+		}
+		
+		protected long superNow() {
+			return super.now();
 		}
 	}
 
 	@Test
 	void test() {
-		CountDown state = new FakeTimedClockState(new ClockSettings(2).withIncrement(1, 2, true));
+		CountDown state = new FakeTimedCountDown(new ClockSettings(2).withIncrement(1, 2, true));
 		assertTrue(state.isPaused());
 		assertEquals(2000, state.getRemainingTime());
 		
@@ -62,7 +66,7 @@ class DefaultCountDownTest {
 	@Test
 	void testBronstein() {
 		// Let's try with Bronstein delay
-		CountDown cd = new FakeTimedClockState(new ClockSettings(3).withIncrement(1, 2, false));
+		CountDown cd = new FakeTimedCountDown(new ClockSettings(3).withIncrement(1, 2, false));
 		cd.start();
 		CLOCK.add(100);
 		cd = cd.moveDone();
@@ -78,7 +82,7 @@ class DefaultCountDownTest {
 		assertEquals(3000, cd.getRemainingTime());
 		
 		// Test when the increment is less than time spent to play moves
-		cd = new FakeTimedClockState(new ClockSettings(3).withIncrement(1, 1, false));
+		cd = new FakeTimedCountDown(new ClockSettings(3).withIncrement(1, 1, false));
 		cd.start();
 		CLOCK.add(1500);
 		cd = cd.moveDone();
@@ -91,7 +95,7 @@ class DefaultCountDownTest {
 
 	@Test
 	void testNextPhase() {
-		CountDown cd = new FakeTimedClockState(new ClockSettings(3).withNext(2, Integer.MAX_VALUE, new ClockSettings(4).withIncrement(1, 1, true)));
+		CountDown cd = new FakeTimedCountDown(new ClockSettings(3).withNext(2, Integer.MAX_VALUE, new ClockSettings(4).withIncrement(1, 1, true)));
 		cd.start();
 		CLOCK.add(500);
 		cd = cd.moveDone();
@@ -104,5 +108,11 @@ class DefaultCountDownTest {
 		CLOCK.add(500);
 		cd = cd.moveDone();
 		assertEquals(5500, cd.getRemainingTime());
+	}
+	
+	@Test
+	void testDefaultClock() {
+		FakeTimedCountDown cd = new FakeTimedCountDown(new ClockSettings(2));
+		assertTrue(Math.abs(cd.superNow()-System.currentTimeMillis())<5);
 	}
 }

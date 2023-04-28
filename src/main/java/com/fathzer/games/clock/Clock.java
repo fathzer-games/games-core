@@ -1,6 +1,8 @@
 package com.fathzer.games.clock;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -8,8 +10,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.Status;
 
 /** A clock.
+ * <br>A clock is basically two countdowns, one for each player. When a player has to play, his time decreases.
+ * When the player makes his move, he taps on the clock. This action stops his countdown and starts his opponent's.
+ * <br>Additionally, the game can be paused then both countdowns are stopped.
+ * <br>One can register with the clock to be informed when time is up for a player.
  * <br>This class is thread safe.
  */
 public class Clock {
@@ -18,27 +25,31 @@ public class Clock {
 	    t.setDaemon(true);
 	    return t;
     };
-	protected static final ScheduledThreadPoolExecutor TIMER = new ScheduledThreadPoolExecutor(1, FACTORY);
+	private static final ScheduledExecutorService TIMER = new ScheduledThreadPoolExecutor(1, FACTORY);
 	
 	static {
-		TIMER.setRemoveOnCancelPolicy(true);
+		((ScheduledThreadPoolExecutor)TIMER).setRemoveOnCancelPolicy(true);
 	}
 	
 	private CountDown[] counters;
 	private Color playing;
 	private ScheduledFuture<?> flagFall;
-	private Consumer<Clock> timeUp;
+	private ConcurrentLinkedQueue<Consumer<Status>> listeners;
 	
-	public Clock(ClockSettings settings, Consumer<Clock> timeUp) {
-		this(settings, settings, timeUp);
+	public Clock(ClockSettings settings) {
+		this(settings, settings);
 	}
 	
-	public Clock(ClockSettings whiteSettings, ClockSettings blackSettings, Consumer<Clock> timeUp) {
+	public Clock(ClockSettings whiteSettings, ClockSettings blackSettings) {
 		this.counters = new CountDown[2];
-		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildClockState();
-		this.counters[Color.BLACK.ordinal()] = blackSettings.buildClockState();
+		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildCountDown();
+		this.counters[Color.BLACK.ordinal()] = blackSettings.buildCountDown();
 		this.playing = Color.BLACK;
-		this.timeUp = timeUp;
+		this.listeners = new ConcurrentLinkedQueue<>();
+	}
+	
+	public void addListener(Consumer<Status> listener) {
+		listeners.add(listener);
 	}
 	
 	public Clock withStartingColor(Color startPlayer) {
@@ -56,8 +67,6 @@ public class Clock {
 	
 	protected void debug(String message) {
 		// This method does nothing
-		//TODO Remove when things are ok
-		System.out.println(System.currentTimeMillis()+": "+message);
 	}
 
 	public synchronized boolean tap() {
@@ -80,19 +89,21 @@ public class Clock {
 			playing = playing.opposite(); 
 		}
 		final long remaining = getPlayerState().start();
-		flagFall = TIMER.schedule(()-> {
+		flagFall = getScheduler().schedule(()-> {
 			synchronized(this) {
-				try {
-					timeUp.accept(this);
-				} finally {
-					getPlayerState().pause();
-					// Mark the game ended
-					playing = null;
-				}
+				getPlayerState().pause();
+				final Status status = Color.WHITE.equals(playing) ? Status.BLACK_WON : Status.WHITE_WON;
+				// Mark the game ended
+				playing = null;
+				listeners.iterator().forEachRemaining(l -> l.accept(status));
 			}
 		}, remaining, TimeUnit.MILLISECONDS);
 		debug("Clock is now counting time for "+ playing);
 		return true;
+	}
+	
+	public ScheduledExecutorService getScheduler() {
+		return TIMER;
 	}
 	
 	public synchronized boolean pause() {

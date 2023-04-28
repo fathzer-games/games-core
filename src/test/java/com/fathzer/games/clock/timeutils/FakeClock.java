@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class FakeClock {
 	private AtomicLong currentTime = new AtomicLong();
 	
-	public long getTime() {
+	public long now() {
 		return currentTime.get();
 	}
 	

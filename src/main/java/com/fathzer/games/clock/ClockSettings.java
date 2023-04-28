@@ -129,10 +129,10 @@ public class ClockSettings {
 		return next;
 	}
 	
-	/** Builds a clock state that supports this setting.
+	/** Builds a countdown that supports this setting.
 	 * @return a new ClockState
 	 */
-	public CountDown buildClockState() {
+	public CountDown buildCountDown() {
 		return new DefaultCountDown(this);
 	}
 }
