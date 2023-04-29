@@ -2,10 +2,12 @@ package com.fathzer.games.clock;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static com.fathzer.games.clock.DefaultCountDownTest.*;
+import static com.fathzer.games.clock.ClockState.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 
@@ -38,39 +40,63 @@ class ClockTest {
 			return scheduler.get();
 		}
 	}
+	
+	private static final class ClockListener implements Consumer<ClockEvent> {
+		ClockEvent e;
+		@Override
+		public void accept(ClockEvent e) {
+			this.e = e;
+		}
+	}
+	
+	private void assertClockEvent(ClockListener listener, ClockState expectedPrevious, ClockState expectedNew) {
+		assertEquals(expectedPrevious, listener.e.getPreviousState());
+		assertEquals(expectedNew, listener.e.getNewState());
+		listener.e = null;
+	}
 
 	@Test
 	void test() throws InterruptedException {
 		final ClockSettings settings = new FakeSettings(2).withIncrement(1, 1, true);
 		Clock clock = new Clock(settings);
-		assertTrue(clock.isPaused());
-		assertNull(clock.getPlaying());
+		final ClockListener listener = new ClockListener();
+		clock.addClockListener(listener);
+		assertEquals(CREATED, clock.getState());
+		assertEquals(Color.WHITE, clock.getPlaying());
 		assertEquals(2000, clock.getRemaining(Color.WHITE));
 		assertEquals(2000, clock.getRemaining(Color.BLACK));
 		
+		// Pause does nothing
+		assertTrue(clock.pause());
+		assertNull(listener.e);
+		assertEquals(CREATED, clock.getState());
+		
 		// Clock starts => White is playing
 		clock.tap();
+		assertClockEvent(listener, CREATED, STARTED);
 		assertThrows(IllegalStateException.class, ()->clock.withStartingColor(Color.WHITE));
-		assertFalse(clock.isPaused());
+		assertEquals(STARTED, clock.getState());
 		assertEquals(Color.WHITE, clock.getPlaying());
 		CLOCK.add(1000);
 		assertEquals(2000, clock.getRemaining(Color.BLACK));
 		// White tap the clock => Black is playing
 		clock.tap();
+		assertClockEvent(listener, STARTED, STARTED);
 		assertEquals(Color.BLACK, clock.getPlaying());
 		long whiteRemaining = clock.getRemaining(Color.WHITE);
 		assertEquals(2000, whiteRemaining, "Time remaining for white should be near 10000 but is "+whiteRemaining);
-		assertFalse(clock.isPaused());
 		// Pause the clock
 		clock.pause();
-		assertTrue(clock.isPaused());
-		assertNull(clock.getPlaying());
+		assertEquals(PAUSED, clock.getState());
+		assertClockEvent(listener, STARTED, PAUSED);
+		assertEquals(Color.BLACK, clock.getPlaying());
 		long blackRemaining = clock.getRemaining(Color.BLACK);
 		CLOCK.add(1000);
 		assertEquals(blackRemaining, clock.getRemaining(Color.BLACK));
 		assertEquals(whiteRemaining, clock.getRemaining(Color.WHITE));
 		// Restart clock
 		clock.tap();
+		assertClockEvent(listener, PAUSED, STARTED);
 		assertEquals(Color.BLACK, clock.getPlaying());
 		assertTrue(clock.pause());
 	}	
@@ -83,15 +109,19 @@ class ClockTest {
 		final Clock clock = new FakeClock(settings, scheduler);
 		clock.withStartingColor(Color.BLACK);
 		final List<Color> winner = new ArrayList<>();
-		clock.addListener(s -> winner.add(s.winner()));
+		clock.addStatusListener(s -> winner.add(s.winner()));
+		final ClockListener listener = new ClockListener();
+		clock.addClockListener(listener);
 
 		assertTrue(clock.tap());
+		assertClockEvent(listener, CREATED, STARTED);
 		scheduler.sleep(2100);
 		// WHITE should have won
 		assertEquals(1,winner.size());
 		assertEquals(Color.WHITE, winner.get(0));
+		assertClockEvent(listener, STARTED, ENDED);
 		
-		assertTrue(clock.isPaused());
+		assertEquals(ENDED, clock.getState());
 		assertFalse(clock.pause());
 		assertFalse(clock.tap());
 	}

@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
+import static com.fathzer.games.clock.ClockState.*;
 
 /** A clock.
  * <br>A clock is basically two countdowns, one for each player. When a player has to play, his time decreases.
@@ -32,10 +33,11 @@ public class Clock {
 	}
 	
 	private CountDown[] counters;
-	private Color playing;
 	private ScheduledFuture<?> flagFall;
-	private ConcurrentLinkedQueue<Consumer<Status>> listeners;
-	private boolean started;
+	private volatile Color playing;
+	private ConcurrentLinkedQueue<Consumer<Status>> statusListeners;
+	private ConcurrentLinkedQueue<Consumer<ClockEvent>> clockListeners;
+	private volatile ClockState state;
 	
 	/** Constructor.
 	 * @param settings The settings to apply to both players
@@ -53,15 +55,26 @@ public class Clock {
 		this.counters[Color.WHITE.ordinal()] = whiteSettings.buildCountDown();
 		this.counters[Color.BLACK.ordinal()] = blackSettings.buildCountDown();
 		this.playing = Color.WHITE;
-		this.listeners = new ConcurrentLinkedQueue<>();
+		this.statusListeners = new ConcurrentLinkedQueue<>();
+		this.clockListeners = new ConcurrentLinkedQueue<>();
+		this.state = CREATED;
 	}
 	
-	/** Adds a listener.
+	/** Adds a game status change listener.
 	 * <br>Please note the listener can be called by another thread. 
-	 * @param listener a listener that will be informed is a player runs out of time.
+	 * @param listener a listener that will be informed when a player runs out of time.
 	 */
-	public void addListener(Consumer<Status> listener) {
-		listeners.add(listener);
+	public void addStatusListener(Consumer<Status> listener) {
+		statusListeners.add(listener);
+	}
+	
+	/** Adds a clock state change listener.
+	 * <br>Please note the listener can be called by another thread. 
+	 * @param listener a listener that will be informed when clock state changes.
+	 * @see ClockEvent
+	 */
+	public void addClockListener(Consumer<ClockEvent> listener) {
+		clockListeners.add(listener);
 	}
 	
 	/** Changes the player that should play when clock starts.
@@ -71,27 +84,25 @@ public class Clock {
 	 * @throws IllegalStateException if clock is already started.
 	 */
 	public Clock withStartingColor(Color startPlayer) {
-		if (started) {
+		if (state!=CREATED) {
 			throw new IllegalStateException("Can't change the starting player after clock is started");
 		}
 		this.playing = startPlayer;
 		return this;
 	}
-
+	
 	/** Starts the countDown if it was paused or change the player whose countdown.
 	 * @return true if the countdown is started. False if it can't be started because a player already ran out of time.
 	 */
 	public synchronized boolean tap() {
-		started = true;
-		if (playing==null) {
+		if (ENDED==state) {
 			return false;
 		}
-		if (!isPaused()) {
+		if (STARTED==state) {
 			// Stop the player's count down
-			final CountDown playerState = getPlayerState();
+			final CountDown playerState = getPlayerCountdown();
 			if (playerState.getRemainingTime() <= 0) {
 				// Too late, time is up
-				debug("Tap is ignored because it was received after clock fires timeup event");
 				return false;
 			}
 			// The time was running, cancel the flagFallTask
@@ -101,57 +112,80 @@ public class Clock {
 			// Set the flag for other player
 			playing = playing.opposite(); 
 		}
-		final long remaining = getPlayerState().start();
+		final long remaining = getPlayerCountdown().start();
 		flagFall = getScheduler().schedule(()-> {
 			synchronized(this) {
-				getPlayerState().pause();
+				getPlayerCountdown().pause();
 				final Status status = Color.WHITE.equals(playing) ? Status.BLACK_WON : Status.WHITE_WON;
-				// Mark the game ended
-				playing = null;
-				listeners.iterator().forEachRemaining(l -> l.accept(status));
+				setState(ENDED);
+				statusListeners.forEach(l -> l.accept(status));
 			}
 		}, remaining, TimeUnit.MILLISECONDS);
-		debug("Clock is now counting time for "+ playing);
+		setState(STARTED);
 		return true;
 	}
 	
+	/** Pauses the countdown.
+	 * @return false if time was already up or true if the method succeeded or clock was not counting.
+	 */
 	public synchronized boolean pause() {
-		if (!isPaused()) {
-			if (getPlayerState().pause()<=0) {
+		if (state==STARTED) {
+			if (getPlayerCountdown().pause()<=0) {
 				// Too late, time is up
 				return false;
 			}
 			flagFall.cancel(false);
-			debug("Clock paused");
+			setState(PAUSED);
 		}
-		return playing!=null;
+		return ENDED!=state;
 	}
 	
-	public synchronized boolean isPaused() {
-		return playing==null || getPlayerState().isPaused();
+	/** Gets the state of this clock (paused, counting, ...).
+	 * @return a ClockState. 
+	 */
+	public synchronized ClockState getState() {
+		return state;
 	}
 	
+	/** Gets the currently playing color.
+	 * <br>If the clock is not started, paused or ended, the player that would play is the clock restarts is returned.
+	 * @return a Color.
+	 */
 	public synchronized Color getPlaying() {
-		return isPaused() ? null : this.playing;
+		return this.playing;
 	}
 	
+	/** Gets the remaining time for a player in ms.
+	 * @param color The player's color
+	 * @return a long
+	 */
 	public synchronized long getRemaining(Color color) {
-		return getPlayerState(color).getRemainingTime();
+		return getPlayerCountdown(color).getRemainingTime();
 	}
 	
-	protected void debug(String message) {
-		// This method does nothing
-	}
-
+	/** Gets this clock scheduler.
+	 * <br>It could be used to schedule some clock related tasks (for instance, to update clock GUI in GUI).
+	 * Please note that tasks scheduled must be short to keep clock accuracy safe.
+	 * <br>You can also override this method to implement your own scheduler (for instance for testing).
+	 * @return The clock's scheduler.
+	 */
 	public ScheduledExecutorService getScheduler() {
 		return TIMER;
 	}
 	
-	private CountDown getPlayerState() {
-		return getPlayerState(playing);
+	private CountDown getPlayerCountdown() {
+		return getPlayerCountdown(playing);
 	}
 
-	private CountDown getPlayerState(Color color) {
+	private CountDown getPlayerCountdown(Color color) {
 		return this.counters[color.ordinal()];
+	}
+	
+	private synchronized void setState(ClockState next) {
+		final ClockState old = state;
+		state = next;
+		if (old!=next || old==STARTED) {
+			this.clockListeners.forEach(l -> l.accept(new ClockEvent(this, old, next)));
+		}
 	}
 }
