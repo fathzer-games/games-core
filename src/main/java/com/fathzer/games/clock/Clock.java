@@ -98,7 +98,7 @@ public class Clock {
 		if (ENDED==state) {
 			return false;
 		}
-		if (STARTED==state) {
+		if (COUNTING==state) {
 			// Stop the player's count down
 			final CountDown playerState = getPlayerCountdown();
 			if (playerState.getRemainingTime() <= 0) {
@@ -121,7 +121,7 @@ public class Clock {
 				statusListeners.forEach(l -> l.accept(status));
 			}
 		}, remaining, TimeUnit.MILLISECONDS);
-		setState(STARTED);
+		setState(COUNTING);
 		return true;
 	}
 	
@@ -129,7 +129,7 @@ public class Clock {
 	 * @return false if time was already up or true if the method succeeded or clock was not counting.
 	 */
 	public synchronized boolean pause() {
-		if (state==STARTED) {
+		if (state==COUNTING) {
 			if (getPlayerCountdown().pause()<=0) {
 				// Too late, time is up
 				return false;
@@ -184,7 +184,7 @@ public class Clock {
 	private synchronized void setState(ClockState next) {
 		final ClockState old = state;
 		state = next;
-		if (old!=next || old==STARTED) {
+		if (old!=next || old==COUNTING) {
 			this.clockListeners.forEach(l -> l.accept(new ClockEvent(this, old, next)));
 		}
 	}

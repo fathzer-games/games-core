@@ -1,18 +1,14 @@
 package com.fathzer.games.clock;
 
+/** The state of a clock.
+ */
 public enum ClockState {
-	CREATED(false),
-	PAUSED(false),
-	STARTED(true), //TODO Change to counting
-	ENDED(false);
-
-	private final boolean counting;
-	
-	private ClockState(boolean b) {
-		this.counting = b;
-	}
-
-	public boolean isCounting() {
-		return counting;
-	}
+	/** The clock has not been started yet.*/
+	CREATED,
+	/** The clock was started and one player countdown is running.*/
+	COUNTING,
+	/** The clock was started, but is currently paused. No countdown is running.*/
+	PAUSED,
+	/** One of the player countdown has ran out of time. An ended clock can't be restarted.*/
+	ENDED;
 }

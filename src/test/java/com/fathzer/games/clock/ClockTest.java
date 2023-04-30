@@ -73,22 +73,22 @@ class ClockTest {
 		
 		// Clock starts => White is playing
 		clock.tap();
-		assertClockEvent(listener, CREATED, STARTED);
+		assertClockEvent(listener, CREATED, COUNTING);
 		assertThrows(IllegalStateException.class, ()->clock.withStartingColor(Color.WHITE));
-		assertEquals(STARTED, clock.getState());
+		assertEquals(COUNTING, clock.getState());
 		assertEquals(Color.WHITE, clock.getPlaying());
 		CLOCK.add(1000);
 		assertEquals(2000, clock.getRemaining(Color.BLACK));
 		// White tap the clock => Black is playing
 		clock.tap();
-		assertClockEvent(listener, STARTED, STARTED);
+		assertClockEvent(listener, COUNTING, COUNTING);
 		assertEquals(Color.BLACK, clock.getPlaying());
 		long whiteRemaining = clock.getRemaining(Color.WHITE);
 		assertEquals(2000, whiteRemaining, "Time remaining for white should be near 10000 but is "+whiteRemaining);
 		// Pause the clock
 		clock.pause();
 		assertEquals(PAUSED, clock.getState());
-		assertClockEvent(listener, STARTED, PAUSED);
+		assertClockEvent(listener, COUNTING, PAUSED);
 		assertEquals(Color.BLACK, clock.getPlaying());
 		long blackRemaining = clock.getRemaining(Color.BLACK);
 		CLOCK.add(1000);
@@ -96,7 +96,7 @@ class ClockTest {
 		assertEquals(whiteRemaining, clock.getRemaining(Color.WHITE));
 		// Restart clock
 		clock.tap();
-		assertClockEvent(listener, PAUSED, STARTED);
+		assertClockEvent(listener, PAUSED, COUNTING);
 		assertEquals(Color.BLACK, clock.getPlaying());
 		assertTrue(clock.pause());
 	}	
@@ -114,12 +114,13 @@ class ClockTest {
 		clock.addClockListener(listener);
 
 		assertTrue(clock.tap());
-		assertClockEvent(listener, CREATED, STARTED);
+		assertEquals(clock, listener.e.getClock());
+		assertClockEvent(listener, CREATED, COUNTING);
 		scheduler.sleep(2100);
 		// WHITE should have won
 		assertEquals(1,winner.size());
 		assertEquals(Color.WHITE, winner.get(0));
-		assertClockEvent(listener, STARTED, ENDED);
+		assertClockEvent(listener, COUNTING, ENDED);
 		
 		assertEquals(ENDED, clock.getState());
 		assertFalse(clock.pause());
