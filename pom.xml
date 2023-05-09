@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>com.fathzer</groupId>
 		<artifactId>parent-pom</artifactId>
-		<version>1.0.7</version>
+		<version>1.0.8</version>
 	</parent>
 	<artifactId>games-core</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.1-SNAPSHOT</version>
 
 	<name>games-core</name>
 	<description>A core library to help implement two players games.</description>
@@ -24,6 +24,7 @@
 		<sonar.organization>fathzer-games</sonar.organization>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
+		<animal-sniffer-signature>java18</animal-sniffer-signature>
 	</properties>
 
 	<dependencies>
@@ -40,4 +41,13 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>animal-sniffer-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
 </project>
