@@ -1,5 +1,9 @@
 package com.fathzer.games.util;
 
+import java.util.Collection;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public class Evaluation<M> implements Comparable<Evaluation<M>> {
 	private final M content;
     private final int value;
@@ -23,7 +27,30 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
     }
 
 	@Override
-	public String toString() {
-		return content.toString()+"("+this.getValue()+")";
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final Evaluation<?> other = (Evaluation<?>) obj;
+		return this.value==other.value;
+	}
+
+	@Override
+	public int hashCode() {
+		return value;
+	}
+	
+	public String toString(Function<M,String> toString) {
+		return toString.apply(content)+"("+this.getValue()+")";
+	}
+	
+	public static <M> String toString(Collection<Evaluation<M>> moves, Function<M,String> toString) {
+		return moves.stream().map(m -> m.toString(toString)).collect(Collectors.joining(", ", "[", "]"));
 	}
 }
