@@ -3,29 +3,32 @@ package com.fathzer.games.util;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.fathzer.games.MoveGenerator;
 
 public abstract class GameContextExecutor<M> {
-	private int parallelism;
 	private boolean interrupted;
-	private ExecutorService exec;
-	
-	protected GameContextExecutor() {
-		this.parallelism = PhysicalCores.count();
+	private ThreadPoolExecutor exec;
+
+	static {
+		System.out.println("This is the new version"); //TODO
+	}
+
+	protected GameContextExecutor(ThreadPoolExecutor executor) {
+		this.exec = executor;
+	}
+
+	protected GameContextExecutor() { //TODO remove?
+		this.exec = new ThreadPoolExecutor(0, PhysicalCores.count(), 10L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), (Runnable r) -> new GameThread<>(r));
 	}
 	
 	public <T> List<Future<T>> exec(Collection<Callable<T>> tasks) throws InterruptedException {
-    	exec = Executors.newFixedThreadPool(getParallelism(), (Runnable r) -> new GameThread<>(r, buildMoveGenerator()));
-		try {
-			this.interrupted = false;
-			return exec.invokeAll(tasks);
-		} finally {
-    		exec.shutdown();
-		} 
+		this.interrupted = false;
+		return exec.invokeAll(tasks);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -34,11 +37,11 @@ public abstract class GameContextExecutor<M> {
 	}
 	
 	public int getParallelism() {
-		return parallelism;
+		return exec.getMaximumPoolSize();
 	}
 
 	public void setParallelism(int parallelism) {
-		this.parallelism = parallelism;
+		this.exec.setMaximumPoolSize(parallelism);
 	}
 	
     public abstract MoveGenerator<M> buildMoveGenerator();
@@ -49,8 +52,9 @@ public abstract class GameContextExecutor<M> {
 
 	public void interrupt() {
 		this.interrupted = true;
-		if (exec!=null) {
-			exec.shutdown();
-		}
+	}
+	
+	public ThreadPoolExecutor getExecutor() {
+		return this.exec;
 	}
 }
