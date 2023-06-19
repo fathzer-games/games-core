@@ -39,7 +39,7 @@ public class PerfT<M> extends GameContextExecutor<M> {
 		}
 		final PerfTResult<M> result = new PerfTResult<>();
 		final GameState<M> moves = supplier.get().getState();
-		result.nbMovesFound.addAndGet(moves.size());
+		result.addMovesFound(moves.size());
         final IntStream stream = IntStream.range(0, moves.size());
 		List<Callable<Divide<M>>> tasks = stream.mapToObj(m -> 
 			new Callable<Divide<M>>() {
@@ -52,11 +52,11 @@ public class PerfT<M> extends GameContextExecutor<M> {
 		try {
 			final List<Future<Divide<M>>> results = exec(tasks);
 			for (Future<Divide<M>> f : results) {
-				result.divides.add(f.get());
+				result.add(f.get());
 			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			result.interrupted = true;
+			result.setInterrupted(true);
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		}
@@ -69,7 +69,7 @@ public class PerfT<M> extends GameContextExecutor<M> {
 			leaves = 1;
 		} else {
 			getMoveGenerator().makeMove(move);
-			result.nbMovesMade.incrementAndGet();
+			result.addMoveMade();
 			leaves = get(depth, result);
 			getMoveGenerator().unmakeMove();
 		}
@@ -78,7 +78,7 @@ public class PerfT<M> extends GameContextExecutor<M> {
 	
     private long get (final int depth, PerfTResult<M> result) {
 		if (isInterrupted()) {
-			result.interrupted = true;
+			result.setInterrupted(true);
 			return 1;
 		}
     	if (depth==0) {
@@ -86,14 +86,14 @@ public class PerfT<M> extends GameContextExecutor<M> {
     	}
     	final MoveGenerator<M> generator = getMoveGenerator();
 		final GameState<M> state = generator.getState();
-		result.nbMovesFound.addAndGet(state.size());
+		result.addMovesFound(state.size());
 		if (depth==1 && !playLeaves) {
 			return state.size();
 		}
 		long count = 0;
 		for (int i = 0; i < state.size(); i++) {
             generator.makeMove(state.get(i));
-            result.nbMovesMade.incrementAndGet();
+            result.addMoveMade();
             count += get(depth-1, result);
             generator.unmakeMove();
 		}
