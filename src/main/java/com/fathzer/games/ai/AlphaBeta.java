@@ -2,10 +2,12 @@ package com.fathzer.games.ai;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 
 /**
@@ -14,6 +16,11 @@ import com.fathzer.games.util.Evaluation;
  * @param <M> Implementation of the Move interface to use
  */
 public abstract class AlphaBeta<M> extends AbstractAI<M> {
+	
+	protected AlphaBeta(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
+		super(moveGeneratorBuilder, exec);
+	}
+
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, moves, size, accuracy, (c,l)->alphabeta(c,depth,1,depth,l,Integer.MAX_VALUE));
@@ -88,7 +95,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> {
         return bestScore;
     }
 
-    protected int alphabetaScore(final int depth, final int who, int maxDepth, final int alpha, final int beta) {
+	protected int alphabetaScore(final int depth, final int who, int maxDepth, final int alpha, final int beta) {
 		return alphabeta(null, depth - 1, -who, maxDepth, alpha, beta);
 	}
 }

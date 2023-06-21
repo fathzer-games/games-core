@@ -7,16 +7,28 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
-import com.fathzer.games.util.GameContextExecutor;
 
-public abstract class AbstractAI<M> extends GameContextExecutor<M> implements AI<M> {
-	protected AbstractAI() {
-		super();
+public abstract class AbstractAI<M> implements AI<M> {
+	private final Supplier<MoveGenerator<M>> moveGeneratorBuilder;
+	protected final ContextualizedExecutor<MoveGenerator<M>> exec;
+	private boolean interrupted;
+	
+	protected AbstractAI(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
+		this.moveGeneratorBuilder = moveGeneratorBuilder;
+		this.exec = exec;
+		this.interrupted = false;
+	}
+	
+    protected MoveGenerator<M> getMoveGenerator() {
+		return exec.getContext();
 	}
 	
     /**
@@ -30,7 +42,7 @@ public abstract class AbstractAI<M> extends GameContextExecutor<M> implements AI
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final Iterator<M> moveIterator = buildMoveGenerator().getState().iterator();
+        final Iterator<M> moveIterator = moveGeneratorBuilder.get().getState().iterator();
 		return this.getBestMoves(depth, moveIterator, size, accuracy);
     }
 
@@ -53,7 +65,7 @@ public abstract class AbstractAI<M> extends GameContextExecutor<M> implements AI
 		).collect(Collectors.toList());
     	// Unfortunately, I found no easy way to set parallelism with streams 
 		try {
-			exec(tasks);
+			exec.invokeAll(tasks, moveGeneratorBuilder);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
@@ -80,5 +92,13 @@ public abstract class AbstractAI<M> extends GameContextExecutor<M> implements AI
 //			System.out.print("  ");
 //		}
 //		System.out.println(score);
+	}
+	
+	public boolean isInterrupted() {
+		return interrupted;
+	}
+	
+	public void interrupt() {
+		interrupted = true;
 	}
 }

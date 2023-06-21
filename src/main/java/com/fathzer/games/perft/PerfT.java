@@ -10,18 +10,15 @@ import java.util.stream.IntStream;
 
 import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.util.GameContextExecutor;
+import com.fathzer.games.util.ContextualizedExecutor;
 
-/**
- * A <a href="https://www.chessprogramming.org/Perft">perfT</a> implementation.
- * @param <M> Implementation of the Move interface to use
- */
-public class PerfT<M> extends GameContextExecutor<M> {
-	private Supplier<MoveGenerator<M>> supplier;
+public class PerfT<M> {
 	private boolean playLeaves;
+	private boolean interrupted;
+	private ContextualizedExecutor<MoveGenerator<M>> exec;
 	
-	public PerfT(Supplier<MoveGenerator<M>> supplier) {
-		this.supplier = supplier;
+	public PerfT(ContextualizedExecutor<MoveGenerator<M>> exec) {
+		this.exec = exec;
 		this.playLeaves = false;
 	}
 	
@@ -32,13 +29,13 @@ public class PerfT<M> extends GameContextExecutor<M> {
 	public void setPlayLeaves(boolean playLeaves) {
 		this.playLeaves = playLeaves;
 	}
-
-	public PerfTResult<M> divide(final int depth) {
+	
+	public PerfTResult<M> divide(final int depth, Supplier<MoveGenerator<M>> generator) {
 		if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
 		}
+		final GameState<M> moves = generator.get().getState();
 		final PerfTResult<M> result = new PerfTResult<>();
-		final GameState<M> moves = supplier.get().getState();
 		result.addMovesFound(moves.size());
         final IntStream stream = IntStream.range(0, moves.size());
 		List<Callable<Divide<M>>> tasks = stream.mapToObj(m -> 
@@ -50,7 +47,7 @@ public class PerfT<M> extends GameContextExecutor<M> {
 			
 		}).collect(Collectors.toList());
 		try {
-			final List<Future<Divide<M>>> results = exec(tasks);
+			final List<Future<Divide<M>>> results = exec.invokeAll(tasks, generator);
 			for (Future<Divide<M>> f : results) {
 				result.add(f.get());
 			}
@@ -68,23 +65,24 @@ public class PerfT<M> extends GameContextExecutor<M> {
 		if (depth==0 && !playLeaves) {
 			leaves = 1;
 		} else {
-			getMoveGenerator().makeMove(move);
+			final MoveGenerator<M> moveGenerator = exec.getContext();
+			moveGenerator.makeMove(move);
 			result.addMoveMade();
 			leaves = get(depth, result);
-			getMoveGenerator().unmakeMove();
+			moveGenerator.unmakeMove();
 		}
 		return new Divide<>(move, leaves);
 	}
 	
     private long get (final int depth, PerfTResult<M> result) {
-		if (isInterrupted()) {
+		if (interrupted) {
 			result.setInterrupted(true);
 			return 1;
 		}
     	if (depth==0) {
     		return 1;
     	}
-    	final MoveGenerator<M> generator = getMoveGenerator();
+    	final MoveGenerator<M> generator = exec.getContext();
 		final GameState<M> state = generator.getState();
 		result.addMovesFound(state.size());
 		if (depth==1 && !playLeaves) {
@@ -99,9 +97,12 @@ public class PerfT<M> extends GameContextExecutor<M> {
 		}
         return count;
     }
+	
+	public boolean isInterrupted() {
+		return interrupted;
+	}
 
-	@Override
-	public MoveGenerator<M> buildMoveGenerator() {
-		return supplier.get();
+	public void interrupt() {
+		interrupted = true;
 	}
 }

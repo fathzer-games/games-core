@@ -2,10 +2,12 @@ package com.fathzer.games.ai;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 
 /**
@@ -16,7 +18,11 @@ import com.fathzer.games.util.Evaluation;
 @Deprecated
 public abstract class Minimax<M> extends AbstractAI<M> {
 
-    @Override
+    protected Minimax(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
+		super(moveGeneratorBuilder, exec);
+	}
+
+	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, moves, size, accuracy, (c,l)->minimax(c,depth,1,depth));
     }
