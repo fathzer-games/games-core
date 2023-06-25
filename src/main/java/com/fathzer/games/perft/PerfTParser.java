@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class PerfTParser {
 	private String startPositionPrefix = "start";
 	private String resultPrefix = "perft";
 	private String namePrefix = "name";
+	private Function<String, String> startPositionCustomizer = Function.identity();
 	
 	public final PerfTParser withStartPositionPrefix(String startPositionPrefix) {
 		this.startPositionPrefix = startPositionPrefix;
@@ -25,6 +27,11 @@ public class PerfTParser {
 
 	public final PerfTParser withNamePrefix(String idPrefix) {
 		this.namePrefix = idPrefix;
+		return this;
+	}
+	
+	public final PerfTParser withStartPositionCustomizer(Function<String, String> startPositionCustomizer) {
+		this.startPositionCustomizer = startPositionCustomizer;
 		return this;
 	}
 
@@ -41,7 +48,7 @@ public class PerfTParser {
 					name = line.substring(namePrefix.length()).trim();
 					current = null;
 				} else if (line.startsWith(startPositionPrefix)) {
-					start = line.substring(startPositionPrefix.length()).trim();
+					start = startPositionCustomizer.apply(line.substring(startPositionPrefix.length()).trim());
 					current = null;
 				} else if (line.startsWith(resultPrefix)) {
 					if (current==null) {
