@@ -1,6 +1,6 @@
 package com.fathzer.games.perft;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -8,12 +8,12 @@ import java.util.function.Supplier;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.util.ContextualizedExecutor;
 
-/** A class that test a {@link MoveGenerator} against a {@link PerfT} test Data set.
+/** A class that tests a {@link MoveGenerator} against a {@link PerfT} test Data set.
  * <br>The test executes a list of {@link PerfT} test and returns the total number of moves found at a specified depth.
  * <br>It can also be used to test speed of move generators. It returns the number of moves found, dividing this result by the time spent in the test
  * you will obtain a number of moves found per second.
  */
-public class MoveGeneratorValidator {
+public class MoveGeneratorChecker {
 	/** Details of PerfT count error.
 	 */
 	public static class PerfTCountError {
@@ -69,7 +69,7 @@ public class MoveGeneratorValidator {
 		}
 	}
 	
-	private final List<PerfTTestData> tests;
+	private final Collection<PerfTTestData> tests;
 	private Consumer<PerfTCountError> countErrorManager = e -> { throw new PerfTCountException(e); };
 	private Consumer<RuntimeException> errorManager = e -> { throw e; };
 	// Sonar says there's a bug there, because ParfT is mutable. Sonar is not totally wrong...
@@ -83,13 +83,13 @@ public class MoveGeneratorValidator {
 	/** Constructor.
 	 * @param tests The data set to use to perform the tests
 	 */
-	public MoveGeneratorValidator(List<PerfTTestData> tests) {
+	public MoveGeneratorChecker(Collection<PerfTTestData> tests) {
 		this.tests = tests;
 	}
 	
 	/** Sets the count error manager.
 	 * @param countErrorManager A consumer that will receive count errors (when the number of moves found by PerfT is not the expected count in data set.
-	 * <br>By default, it throws a {@link PerfTCountException} that is throws by {@link #run(int, int, MoveGeneratorTestableBuilder)}.
+	 * <br>By default, it throws a {@link PerfTCountException} that is throws by {@link #run(int, int, TestableMoveGeneratorSupplier)}.
 	 */
 	public void setCountErrorManager(Consumer<PerfTCountError> countErrorManager) {
 		this.countErrorManager = countErrorManager;
@@ -97,7 +97,7 @@ public class MoveGeneratorValidator {
 
 	/** Sets the error manager.
 	 * @param errorManager A consumer that will receive exceptions that may occurs during the search.
-	 * <br>By default, these exceptions are not caught. So, {@link #run(int, int, MoveGeneratorTestableBuilder)} ends throws the exception.
+	 * <br>By default, these exceptions are not caught. So, {@link #run(int, int, TestableMoveGeneratorSupplier)} ends throws the exception.
 	 * <br>Please note the exceptions that can be sent by count error manager are not concerned by this method.
 	 * @see #setCountErrorManager(Consumer)
 	 */
@@ -112,7 +112,7 @@ public class MoveGeneratorValidator {
 	 * @param engine The tested engine.
 	 * @return The number of moves found.
 	 */
-	public <M> long run(int depth, int parallelism, MoveGeneratorTestableBuilder<M> engine) {
+	public <M> long run(int depth, int parallelism, TestableMoveGeneratorSupplier<M> engine) {
 		if (running.compareAndSet(false, true)) {
 			cancelled = false;
 			long count = 0;
