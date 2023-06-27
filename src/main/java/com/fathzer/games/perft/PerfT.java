@@ -1,12 +1,11 @@
 package com.fathzer.games.perft;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
@@ -37,15 +36,15 @@ public class PerfT<M> {
 		final GameState<M> moves = generator.get().getState();
 		final PerfTResult<M> result = new PerfTResult<>();
 		result.addMovesFound(moves.size());
-        final IntStream stream = IntStream.range(0, moves.size());
-		List<Callable<Divide<M>>> tasks = stream.mapToObj(m -> 
-			new Callable<Divide<M>>() {
+		final List<Callable<Divide<M>>> tasks = new ArrayList<>(moves.size());
+		for (M move : moves) {
+			tasks.add(new Callable<Divide<M>>() {
 				@Override
 				public Divide<M> call() throws Exception {
-					return getPrfT(moves.get(m), depth - 1, result);
+					return getPrfT(move, depth - 1, result);
 				}
-			
-		}).collect(Collectors.toList());
+			});
+		}
 		try {
 			final List<Future<Divide<M>>> results = exec.invokeAll(tasks, generator);
 			for (Future<Divide<M>> f : results) {
@@ -89,8 +88,8 @@ public class PerfT<M> {
 			return state.size();
 		}
 		long count = 0;
-		for (int i = 0; i < state.size(); i++) {
-            generator.makeMove(state.get(i));
+		for (M move : state) {
+            generator.makeMove(move);
             result.addMoveMade();
             count += get(depth-1, result);
             generator.unmakeMove();
