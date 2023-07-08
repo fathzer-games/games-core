@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.util.ContextualizedExecutor;
@@ -32,14 +31,14 @@ public abstract class Minimax<M> extends AbstractAI<M> {
     	if (depth == 0 || isInterrupted()) {
             return who * evaluate();
         } else if (moves==null) {
-        	final GameState<M> state = moveGenerator.getState();
-			if (Status.DRAW.equals(state.getStatus())) {
+        	final Status status = moveGenerator.getStatus();
+			if (Status.DRAW.equals(status)) {
 				return 0;
-			} else if (!Status.PLAYING.equals(state.getStatus())){
+			} else if (!Status.PLAYING.equals(status)){
 				int nbMoves = (maxDepth-depth+1)/2;
 				return -getWinScore(nbMoves)*who;
 			} else {
-				moves = state.iterator();
+				moves = moveGenerator.getMoves().iterator();
 			}
         }
     	int bestScore;

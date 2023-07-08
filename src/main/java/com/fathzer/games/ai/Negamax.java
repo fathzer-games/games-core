@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.util.ContextualizedExecutor;
@@ -49,14 +48,14 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
             return who * evaluate();
         }
-    	final GameState<M> state = context.getState();
-		if (Status.DRAW.equals(state.getStatus())) {
+    	final Status status = context.getStatus();
+		if (Status.DRAW.equals(status)) {
 			return 0;
-		} else if (!Status.PLAYING.equals(state.getStatus())){
+		} else if (!Status.PLAYING.equals(status)){
 			final int nbMoves = (maxDepth-depth+1)/2;
 			return -getWinScore(nbMoves);
 		}
-    	final Iterator<M> moves = state.iterator();
+    	final Iterator<M> moves = context.getMoves().iterator();
         int value = Integer.MIN_VALUE;
         while (moves.hasNext()) {
             M move = moves.next();

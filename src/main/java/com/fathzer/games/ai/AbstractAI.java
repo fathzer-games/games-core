@@ -42,7 +42,7 @@ public abstract class AbstractAI<M> implements AI<M> {
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final Iterator<M> moveIterator = moveGeneratorBuilder.get().getState().iterator();
+        final Iterator<M> moveIterator = moveGeneratorBuilder.get().getMoves().iterator();
 		return this.getBestMoves(depth, moveIterator, size, accuracy);
     }
 

@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.util.ContextualizedExecutor;
 
@@ -33,7 +32,7 @@ public class PerfT<M> {
 		if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
 		}
-		final GameState<M> moves = generator.get().getState();
+		final List<M> moves = generator.get().getMoves();
 		final PerfTResult<M> result = new PerfTResult<>();
 		result.addMovesFound(moves.size());
 		final List<Callable<Divide<M>>> tasks = new ArrayList<>(moves.size());
@@ -82,7 +81,7 @@ public class PerfT<M> {
     		return 1;
     	}
     	final MoveGenerator<M> generator = exec.getContext();
-		final GameState<M> state = generator.getState();
+		final List<M> state = generator.getMoves();
 		result.addMovesFound(state.size());
 		if (depth==1 && !playLeaves) {
 			return state.size();

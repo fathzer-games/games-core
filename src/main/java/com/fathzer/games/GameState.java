@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.function.IntUnaryOperator;
 
 /** This interface represents the current state of a game.
+ * <br>This is basically the list of possible moves and the status of the game.
  * @param <M> The class of the moves
  */
 public interface GameState<M> extends Iterable<M> {
@@ -26,12 +27,15 @@ public interface GameState<M> extends Iterable<M> {
 	M get(int index);
 	
 	/** Sorts the move according an evaluation function.
-	 * <br>Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted.
-	 * This method allows to implement a custom sorting algorithm. The default implementation does nothing.
+	 * <br>Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted
+	 * using an ordering heuristics to search parts of the tree that are likely to force alpha-beta cutoffs early.
+	 * See <a href="http://en.wikipedia.org/wiki/Alpha-beta_pruning#Heuristic_improvements">Alpha-beta pruning on Wikipedia</a>
+	 * <br>This method allows to implement a custom sorting algorithm. The default implementation does nothing.
 	 * @param evaluator A function that takes the move index as argument and returns the move value (greater is better).
 	 */
 	default void sort(IntUnaryOperator evaluator) {
-		
+		//FIXME, This method signature implies the move representation is an integer!!!
+		// Default implementation does nothing
 	}
 	
 	@Override
