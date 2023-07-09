@@ -21,7 +21,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> {
 	}
 
 	@Override
-    public List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> moves, int size, int accuracy) {
+    public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, moves, size, accuracy, (c,l)->alphabeta(c,depth,1,depth,l,Integer.MAX_VALUE));
     }
 	

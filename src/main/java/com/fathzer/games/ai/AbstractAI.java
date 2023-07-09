@@ -3,14 +3,10 @@ package com.fathzer.games.ai;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.util.ContextualizedExecutor;
@@ -42,17 +38,16 @@ public abstract class AbstractAI<M> implements AI<M> {
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final Iterator<M> moveIterator = moveGeneratorBuilder.get().getMoves().iterator();
-		return this.getBestMoves(depth, moveIterator, size, accuracy);
+        final List<M> moves = moveGeneratorBuilder.get().getMoves();
+		return this.getBestMoves(depth, moves, size, accuracy);
     }
 
-	protected List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> moves, int size, int accuracy, BiFunction<Iterator<M>,Integer, Integer> evaluator) {
+	protected List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy, BiFunction<Iterator<M>,Integer, Integer> evaluator) {
         if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
         }
         final FixedNumberSearch<M> search = new FixedNumberSearch<>(size, accuracy);
-        final Stream<M> stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(moves, Spliterator.NONNULL), false);
-		final List<Callable<Void>> tasks = stream.map(m ->
+		final List<Callable<Void>> tasks = moves.stream().map(m ->
 			new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {

@@ -1,6 +1,5 @@
 package com.fathzer.games.ai;
 
-import java.util.Iterator;
 import java.util.List;
 
 import com.fathzer.games.util.Evaluation;
@@ -34,5 +33,5 @@ public interface AI<M> {
      * <br>Please note the list may have more than size elements in case of equivalent moves or almost equivalent moves.
      * It can also have less than size elements if there's less than size elements in possibleMoves argument. 
      */
-    List<Evaluation<M>> getBestMoves(final int depth, Iterator<M> possibleMoves, int size, int accuracy);
+    List<Evaluation<M>> getBestMoves(final int depth, List<M> possibleMoves, int size, int accuracy);
 }
