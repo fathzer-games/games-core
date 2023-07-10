@@ -70,9 +70,14 @@ public class ContextualizedExecutor<T> implements Closeable {
 		}
 	}
 
+	/** Returns the context of current thread.
+	 * @return an instance returned by the context supplier passed to {@link #invokeAll(List, Supplier)} or null if this method is called
+	 * by a thread not managed by this class.
+	 */
 	@SuppressWarnings("unchecked")
 	public T getContext() {
-		return ((ContextThread<T>)Thread.currentThread()).context;
+		final Thread currentThread = Thread.currentThread();
+		return (currentThread instanceof ContextThread) ? ((ContextThread<T>)currentThread).context : null;
 	}
 
 	@Override

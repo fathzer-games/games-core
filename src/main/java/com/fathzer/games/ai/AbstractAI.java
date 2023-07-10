@@ -15,16 +15,22 @@ import com.fathzer.games.util.Evaluation;
 public abstract class AbstractAI<M> implements AI<M> {
 	private final Supplier<MoveGenerator<M>> moveGeneratorBuilder;
 	protected final ContextualizedExecutor<MoveGenerator<M>> exec;
+	private final MoveGenerator<M> globalMoveGenerator;
 	private boolean interrupted;
 	
 	protected AbstractAI(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
 		this.moveGeneratorBuilder = moveGeneratorBuilder;
 		this.exec = exec;
 		this.interrupted = false;
+		this.globalMoveGenerator = moveGeneratorBuilder.get();
 	}
 	
     protected MoveGenerator<M> getMoveGenerator() {
-		return exec.getContext();
+		final MoveGenerator<M> result = exec.getContext();
+		if (result==null) {
+			return globalMoveGenerator;
+		}
+		return result;
 	}
 	
     /**
@@ -38,7 +44,7 @@ public abstract class AbstractAI<M> implements AI<M> {
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final List<M> moves = moveGeneratorBuilder.get().getMoves();
+        final List<M> moves = getMoveGenerator().getMoves();
 		return this.getBestMoves(depth, moves, size, accuracy);
     }
 
