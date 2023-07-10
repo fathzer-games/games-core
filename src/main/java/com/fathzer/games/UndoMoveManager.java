@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  * It is optimized to minimize the number of backup containers instantiated and the number of backup performed.
  * <br>{@link #beforeMove()} method should be called to store the current position before performing a move.
  * <br>Then the {@link #undo()} method revert the last move. This method can be iterated until the start position is reached.
- * <T> The class of backup containers.
+ * @param <T> The class of backup containers.
  */
 public class UndoMoveManager<T> {
 	private final Supplier<T> backupBuilder;
@@ -22,6 +22,8 @@ public class UndoMoveManager<T> {
 	
 	/** Constructor.
 	 * @param backupBuilder A supplier that can create a backup container for the game.
+	 * @param backup A consumer that makes a game backup to its argument.
+	 * @param restore A consumer that restores a game from its argument.
 	 * <br>Please note, the backup/restore operations are not done by this class. It simply manage the containers used to perform these operations.
 	 */
 	public UndoMoveManager(Supplier<T> backupBuilder, Consumer<T> backup, Consumer<T> restore) {
@@ -33,9 +35,8 @@ public class UndoMoveManager<T> {
 		this.saved = false;
 	}
 	
-	/** Gets a backup where to backup the game before moving.
+	/** This method should be called by the game to perform a backup before making a move.
 	 * <br>All undone moves are forgotten after this method (you can't rewrite only one move in the middle of the game, there's no guarantee that remaining positions are possible).
-	 * @return A backup ready to be filled.
 	 */
 	public void beforeMove() {
 		if (!saved) {
@@ -52,8 +53,7 @@ public class UndoMoveManager<T> {
 		index++;
 	}
 
-	/** Gets the backup of the game to be restored to achieve the undo move.
-	 * @return A backup
+	/** Restores the backup of the game to achieve the undo move.
 	 * @throws IllegalStateException if no backup is available for undoing a move.
 	 */
 	public void undo() {

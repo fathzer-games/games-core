@@ -53,9 +53,12 @@ public class ContextualizedExecutor<T> implements Closeable {
 	}
 	
 	/** Executes some tasks with some thread context.
+	 * @param <V> The class of the task's results.
 	 * @param tasks The list of tasks to execute
 	 * @param contextSupplier A context supplier that will be called one time for each worker thread.
 	 * <br>Please note that the supplier will be called only when invokeAll is called
+	 * @return The futures that corresponds to the executed tasks.
+	 * @throws InterruptedException if the executor is shutdown during the execution of tasks.
 	 * @see #getContext()
 	 */
 	public <V> List<Future<V>> invokeAll(List<Callable<V>> tasks, Supplier<T> contextSupplier) throws InterruptedException {

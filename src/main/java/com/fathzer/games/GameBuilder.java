@@ -6,6 +6,8 @@ package com.fathzer.games;
  */
 @FunctionalInterface
 public interface GameBuilder<T> {
-	/** Creates a new game.*/
+	/** Creates a new game.
+	 * @return a new game
+	 */
 	T newGame();
 }
