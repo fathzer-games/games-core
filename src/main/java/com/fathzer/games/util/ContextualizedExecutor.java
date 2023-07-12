@@ -1,9 +1,11 @@
 package com.fathzer.games.util;
 
 import java.io.Closeable;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -72,7 +74,23 @@ public class ContextualizedExecutor<T> implements Closeable {
 			throw new IllegalStateException();
 		}
 	}
-
+	
+	/** Check if any execution exception occurred and convert it to a RuntimeException.
+	 * @param <V>
+	 * @param futures The futures to test
+	 * @throws InterruptedException if thread is interrupted while waiting for futures to complete.
+	 * @throws UncheckedException if an execution exception occurred on a future. 
+	 */
+	public <V> void checkExceptions(Collection<Future<V>> futures) throws InterruptedException {
+		try {
+			for (Future<V> future : futures) {
+				future.get();
+			}
+		} catch (ExecutionException e) {
+			throw new UncheckedException(e.getCause());
+		}
+	}
+	
 	/** Returns the context of current thread.
 	 * @return an instance returned by the context supplier passed to {@link #invokeAll(List, Supplier)} or null if this method is called
 	 * by a thread not managed by this class.

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -57,16 +58,16 @@ public abstract class AbstractAI<M> implements AI<M> {
 			new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
-	//System.out.println(m+" computed on "+Thread.currentThread());
+//System.out.println(m+" computed on "+exec+" by thread "+Thread.currentThread());
 	            	final int value = evaluator.apply(Collections.singleton(m).iterator(), search.getLow());
 	            	search.add(m, value);
 					return null;
 				}
 			}
 		).collect(Collectors.toList());
-    	// Unfortunately, I found no easy way to set parallelism with streams 
 		try {
-			exec.invokeAll(tasks, moveGeneratorBuilder);
+			final List<Future<Void>> futures = exec.invokeAll(tasks, moveGeneratorBuilder);
+			exec.checkExceptions(futures);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}

@@ -39,7 +39,7 @@ public class TranspositionTable {
 		table[index+1]=value;
 	}
 	
-	/** Puts an entry in the table.
+	/** Gets an entry in the table.
 	 * <br>WARNING: This method is not thread safe, it should be synchronized on the object returned by {@link #getLock()}
 	 * @param key The table key
 	 * @return 0 if the key is unknown, value in other cases
