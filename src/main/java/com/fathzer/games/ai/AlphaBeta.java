@@ -14,7 +14,7 @@ import com.fathzer.games.util.Evaluation;
  *
  * @param <M> Implementation of the Move interface to use
  */
-public abstract class AlphaBeta<M> extends AbstractAI<M> {
+public abstract class AlphaBeta<M> extends AbstractMPAI<M> {
 	
 	protected AlphaBeta(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
 		super(moveGeneratorBuilder, exec);

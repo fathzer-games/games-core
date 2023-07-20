@@ -3,22 +3,35 @@ package com.fathzer.games.ai;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 
-public abstract class AbstractAI<M> implements AI<M> {
-	private final MoveGenerator<M> moveGenerator;
+public abstract class AbstractMPAI<M> implements AI<M> {
+	private final Supplier<MoveGenerator<M>> moveGeneratorBuilder;
+	protected final ContextualizedExecutor<MoveGenerator<M>> exec;
+	private final MoveGenerator<M> globalMoveGenerator;
 	private boolean interrupted;
 	
-	protected AbstractAI(MoveGenerator<M> moveGenerator) {
-		this.moveGenerator = moveGenerator;
+	protected AbstractMPAI(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
+		this.moveGeneratorBuilder = moveGeneratorBuilder;
+		this.exec = exec;
 		this.interrupted = false;
+		this.globalMoveGenerator = moveGeneratorBuilder.get();
 	}
 	
     protected MoveGenerator<M> getMoveGenerator() {
-    	return moveGenerator;
+		final MoveGenerator<M> result = exec.getContext();
+		if (result==null) {
+			return globalMoveGenerator;
+		}
+		return result;
 	}
 	
     /**
@@ -32,7 +45,7 @@ public abstract class AbstractAI<M> implements AI<M> {
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final List<M> moves = moveGenerator.getMoves();
+        final List<M> moves = getMoveGenerator().getMoves();
 		return this.getBestMoves(depth, moves, size, accuracy);
     }
 
@@ -41,10 +54,23 @@ public abstract class AbstractAI<M> implements AI<M> {
             throw new IllegalArgumentException("Search depth MUST be > 0");
         }
         final FixedNumberSearch<M> search = new FixedNumberSearch<>(size, accuracy);
-        for (M m:moves) {
-        	final int value = evaluator.apply(Collections.singleton(m).iterator(), search.getLow());
-        	search.add(m, value);
-        }
+		final List<Callable<Void>> tasks = moves.stream().map(m ->
+			new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+//System.out.println(m+" computed on "+exec+" by thread "+Thread.currentThread());
+	            	final int value = evaluator.apply(Collections.singleton(m).iterator(), search.getLow());
+	            	search.add(m, value);
+					return null;
+				}
+			}
+		).collect(Collectors.toList());
+		try {
+			final List<Future<Void>> futures = exec.invokeAll(tasks, moveGeneratorBuilder);
+			exec.checkExceptions(futures);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
         return search.getResult();
     }
 	
@@ -70,12 +96,10 @@ public abstract class AbstractAI<M> implements AI<M> {
 //		System.out.println(score);
 	}
 	
-	@Override
 	public boolean isInterrupted() {
 		return interrupted;
 	}
 	
-	@Override
 	public void interrupt() {
 		interrupted = true;
 	}

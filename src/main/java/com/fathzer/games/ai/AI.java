@@ -17,7 +17,7 @@ public interface AI<M> {
      * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
      * @return The list of possible moves in descending evaluation order (best first)
      * <br>Please note the list may have more than size elements in case of equivalent moves or almost equivalent moves.
-     * It can also have less then size elements if there's less than size legal moves. 
+     * It can also have less than size elements if there's less than size legal moves. 
      */
     List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy);
 
@@ -34,4 +34,8 @@ public interface AI<M> {
      * It can also have less than size elements if there's less than size elements in possibleMoves argument. 
      */
     List<Evaluation<M>> getBestMoves(final int depth, List<M> possibleMoves, int size, int accuracy);
+    
+	public void interrupt();
+
+	public boolean isInterrupted();
 }

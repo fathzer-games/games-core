@@ -15,7 +15,7 @@ import com.fathzer.games.util.Evaluation;
  * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
  */
 @Deprecated
-public abstract class Minimax<M> extends AbstractAI<M> {
+public abstract class Minimax<M> extends AbstractMPAI<M> {
 
     protected Minimax(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
 		super(moveGeneratorBuilder, exec);
