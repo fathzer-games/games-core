@@ -11,10 +11,11 @@ public interface TranspositionTableEntry {
 	 * @return a long
 	 */
 	long getKey();
+	void setKey(long key);
 	EntryType getEntryType();
 	void setEntryType(EntryType type);
 	int getDepth();
 	void setDepth(int depth);
-	int getScore();
-	void setScore(int score);
+	int getValue();
+	void setValue(int score);
 }

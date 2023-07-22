@@ -7,7 +7,7 @@ package com.fathzer.games.ai.transposition;
  * <li>move can be represented as a int (32 bits)</li>
  * </ul> 
  */
-public class OneLongEntry implements TranspositionTableEntry {
+class OneLongEntry implements TranspositionTableEntry {
 	//	private static final long moveMask = 0xffffffffL; // 32 bits
 	private static final int SCORE_SHIFT = 32;
 	private static final long SCORE_MASK =  0xffff00000000L; // 16 bits
@@ -20,14 +20,22 @@ public class OneLongEntry implements TranspositionTableEntry {
 	
 	private long key;
 	private long value;
+	
+	OneLongEntry() {
+		// Nothing to do
+	}
+	OneLongEntry set(long key, long value) {
+		this.key = key;
+		this.value = value;
+		return this;
+	}
 
 	/** Constructor of valid entry.
 	 * @param key The entry key
 	 * @param value The value that represents the entry (0 for invalid entry)
 	 */
 	public OneLongEntry(long key, long value) {
-		this.key = key;
-		this.value = value;
+		set(key, value);
 	}
 
 	/** Converts this entry to a non zero long.
@@ -43,13 +51,18 @@ public class OneLongEntry implements TranspositionTableEntry {
 	}
 
 	@Override
+	public void setKey(long key) {
+		this.key = key;
+	}
+	
+	@Override
 	public boolean isValid() {
 		return value!=0;
 	}
 
 	@Override
 	public EntryType getEntryType() {
-		return EntryType.values()[(int) ((value & TYPE_MASK)>>TYPE_SHIFT)];
+		return EntryType.ALL.get((int) ((value & TYPE_MASK)>>TYPE_SHIFT));
 	}
 
 	@Override
@@ -68,12 +81,12 @@ public class OneLongEntry implements TranspositionTableEntry {
 	}
 
 	@Override
-	public int getScore() {
+	public int getValue() {
 		return (short) ((value & SCORE_MASK) >> SCORE_SHIFT);
 	}
 
 	@Override
-	public void setScore(int score) {
+	public void setValue(int score) {
 		value = (value & ~SCORE_MASK) | (((long)score) << SCORE_SHIFT);
 	}
 }

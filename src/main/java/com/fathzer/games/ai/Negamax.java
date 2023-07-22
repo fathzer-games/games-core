@@ -15,7 +15,7 @@ import com.fathzer.games.util.Evaluation;
  * A Negamax with alpha beta pruning implementation.
  * @param <M> Implementation of the Move interface to use
  */
-public abstract class Negamax<M, E extends TranspositionTableEntry> extends AbstractAI<M> {
+public abstract class Negamax<M> extends AbstractAI<M> {
 	protected Negamax(MoveGenerator<M> moveGenerator) {
 		super(moveGenerator);
 	}
@@ -59,26 +59,30 @@ public abstract class Negamax<M, E extends TranspositionTableEntry> extends Abst
 		
 		final int alphaOrigin = alpha;
 		final MoveGenerator<M> mg = getMoveGenerator();
-		final E entry = mg instanceof ZobristProvider ? getTranspositionTable().get(((ZobristProvider)mg).getZobristKey()) : null; 
+		final TranspositionTableEntry entry = mg instanceof ZobristProvider ? getTranspositionTable().get(((ZobristProvider)mg).getZobristKey()) : null;
+		// Let remember the key (entry may be changed by a side potential side effect of transposition table during subtree exploring).
+		final long key = entry!=null ? entry.getKey() : 0;
+		// entry is null if transposition table is not supported
 		if (entry!=null && entry.isValid() && entry.getDepth()>=depth) {
-			final EntryType type = entry.getEntryType();
-			final int score = entry.getScore();
-			if (type==EntryType.EXACT) {
-System.out.println("Bingo");
-				return score;
-			} else if (type==EntryType.LOWER_BOUND) {
-				if (score>alpha) {
-					alpha = score;
-				}
-			} else if (score<beta) {
-				beta=score;
+			final EntryType entryType = entry.getEntryType();
+			final int entryValue = entry.getValue();
+			if (entryType==EntryType.EXACT) {
+//System.out.println("Bingo");
+				return entryValue;
+//			} else if (entryType==EntryType.LOWER_BOUND) {
+//				if (entryValue>alpha) {
+//					alpha = entryValue;
+//				}
+//			} else if (entryType==EntryType.UPPER_BOUND && entryValue<beta) {
+//				beta=entryValue;
 			}
 		}
+
 		
-    	final Iterator<M> moves = getMoveGenerator().getMoves().iterator();
+    	final List<M> moves = getMoveGenerator().getMoves();
+    	//TODO Remove move ordering responsability from move generator
         int value = Integer.MIN_VALUE;
-        while (moves.hasNext()) {
-            M move = moves.next();
+        for (M move : moves) {
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
             getMoveGenerator().makeMove(move);
             final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
@@ -94,9 +98,12 @@ System.out.println("Bingo");
             	break;
             }
         }
-        
+
         if (entry!=null) {
-        	entry.setScore(value);
+        	// If a transposition table is available
+        	// Warning, entry could have been modified by a tt side effect while exploring the subtree
+			entry.setKey(key);
+        	entry.setValue(value);
         	entry.setDepth(depth);
    		    if (value <= alphaOrigin) {
    		    	entry.setEntryType(EntryType.UPPER_BOUND);
@@ -106,10 +113,10 @@ System.out.println("Bingo");
    		    	entry.setEntryType(EntryType.EXACT);
    		    }
         	// Update the transposition table
-        	getTranspositionTable().update(entry);
+        	getTranspositionTable().store(entry);
         }
         return value;
     }
     
-    protected abstract TranspositionTable<E> getTranspositionTable();
+    protected abstract TranspositionTable getTranspositionTable();
 }

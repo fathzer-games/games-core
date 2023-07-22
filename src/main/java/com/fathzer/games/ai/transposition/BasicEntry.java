@@ -24,6 +24,11 @@ public class BasicEntry implements TranspositionTableEntry {
 	}
 
 	@Override
+	public void setKey(long key) {
+		this.key = key;
+	}
+
+	@Override
 	public EntryType getEntryType() {
 		return type;
 	}
@@ -44,12 +49,12 @@ public class BasicEntry implements TranspositionTableEntry {
 	}
 
 	@Override
-	public int getScore() {
+	public int getValue() {
 		return score;
 	}
 
 	@Override
-	public void setScore(int score) {
+	public void setValue(int score) {
 		this.score = score;
 	}
 

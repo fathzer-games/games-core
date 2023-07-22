@@ -8,7 +8,7 @@ class TranspositionTableTest {
 
 	@Test
 	void test() {
-		BasicTranspositionTable table = new BasicTranspositionTable(512);
+		OneLongEntryTranspositionTable table = new OneLongEntryTranspositionTable(512);
 		
 		
 		fail("Not yet implemented");
