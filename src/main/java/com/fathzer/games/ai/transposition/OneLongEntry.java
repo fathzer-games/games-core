@@ -1,5 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
+import java.util.function.IntFunction;
+
 /** A transposition table entry that can be converted to/from a long.
  * <br>Here are its limitations:<ul>
  * <li>score should be a short (16 bits)</li>
@@ -7,8 +9,8 @@ package com.fathzer.games.ai.transposition;
  * <li>move can be represented as a int (32 bits)</li>
  * </ul> 
  */
-class OneLongEntry implements TranspositionTableEntry {
-	//	private static final long moveMask = 0xffffffffL; // 32 bits
+class OneLongEntry<M> implements TranspositionTableEntry<M> {
+	private static final long MOVE_MASK = 0xffffffffL; // 32 bits
 	private static final int SCORE_SHIFT = 32;
 	private static final long SCORE_MASK =  0xffff00000000L; // 16 bits
 	private static final int DEPTH_SHIFT = 48;
@@ -18,41 +20,25 @@ class OneLongEntry implements TranspositionTableEntry {
 	private static final long VALID_MASK = 0x400000000000000L; // 1 bit
 	// It remain 3 bits not used
 	
+	private final IntFunction<M> toMove;
 	private long key;
 	private long value;
 	
-	OneLongEntry() {
-		// Nothing to do
+	/** Constructor.
+	 * @param toMove A function able to convert an integer to a move
+	 */
+	OneLongEntry(IntFunction<M> toMove) {
+		this.toMove = toMove;
 	}
-	OneLongEntry set(long key, long value) {
+	OneLongEntry<M> set(long key, long value) {
 		this.key = key;
 		this.value = value;
 		return this;
 	}
 
-	/** Constructor of valid entry.
-	 * @param key The entry key
-	 * @param value The value that represents the entry (0 for invalid entry)
-	 */
-	public OneLongEntry(long key, long value) {
-		set(key, value);
-	}
-
-	/** Converts this entry to a non zero long.
-	 * @return a long different from 0
-	 */
-	public long toLong() {
-		return value | VALID_MASK;
-	}
-	
 	@Override
 	public long getKey() {
 		return key;
-	}
-
-	@Override
-	public void setKey(long key) {
-		this.key = key;
 	}
 	
 	@Override
@@ -64,10 +50,13 @@ class OneLongEntry implements TranspositionTableEntry {
 	public EntryType getEntryType() {
 		return EntryType.ALL.get((int) ((value & TYPE_MASK)>>TYPE_SHIFT));
 	}
-
-	@Override
-	public void setEntryType(EntryType type) {
-		value = (value & ~TYPE_MASK) | (((long)type.ordinal()) << TYPE_SHIFT);
+	
+	long toLong(EntryType type, byte depth, short value, int move) {
+		return VALID_MASK |
+			((((long)type.ordinal()) << TYPE_SHIFT) & TYPE_MASK) |
+			((((long)depth) << DEPTH_SHIFT) & DEPTH_MASK) |
+			((((long)value) << SCORE_SHIFT) & SCORE_MASK) |
+			(move & MOVE_MASK);
 	}
 
 	@Override
@@ -76,17 +65,12 @@ class OneLongEntry implements TranspositionTableEntry {
 	}
 
 	@Override
-	public void setDepth(int depth) {
-		value = (value & ~DEPTH_MASK) | (((long)depth) << DEPTH_SHIFT);
-	}
-
-	@Override
 	public int getValue() {
 		return (short) ((value & SCORE_MASK) >> SCORE_SHIFT);
 	}
-
+	
 	@Override
-	public void setValue(int score) {
-		value = (value & ~SCORE_MASK) | (((long)score) << SCORE_SHIFT);
+	public M getMove() {
+		return toMove.apply((int)(value & MOVE_MASK));
 	}
 }

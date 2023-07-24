@@ -1,11 +1,12 @@
 package com.fathzer.games.ai.transposition;
 
-public class BasicEntry implements TranspositionTableEntry {
+public class BasicEntry<M> implements TranspositionTableEntry<M> {
 	private boolean valid;
 	private long key;
 	private EntryType type;
 	private int depth;
 	private int score;
+	private M move;
 	
 	public BasicEntry(boolean valid, long key) {
 		super();
@@ -23,7 +24,6 @@ public class BasicEntry implements TranspositionTableEntry {
 		return key;
 	}
 
-	@Override
 	public void setKey(long key) {
 		this.key = key;
 	}
@@ -33,7 +33,6 @@ public class BasicEntry implements TranspositionTableEntry {
 		return type;
 	}
 
-	@Override
 	public void setEntryType(EntryType type) {
 		this.type = type;
 	}
@@ -43,7 +42,6 @@ public class BasicEntry implements TranspositionTableEntry {
 		return depth;
 	}
 
-	@Override
 	public void setDepth(int depth) {
 		this.depth = depth;
 	}
@@ -52,10 +50,17 @@ public class BasicEntry implements TranspositionTableEntry {
 	public int getValue() {
 		return score;
 	}
-
-	@Override
+	
 	public void setValue(int score) {
 		this.score = score;
 	}
 
+	@Override
+	public M getMove() {
+		return move;
+	}
+	
+	public void setMove(M move) {
+		this.move = move;
+	}
 }

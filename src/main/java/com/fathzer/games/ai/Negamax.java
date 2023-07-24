@@ -80,8 +80,9 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 
 		
     	final List<M> moves = getMoveGenerator().getMoves();
-    	//TODO Remove move ordering responsability from move generator
+    	//TODO Remove move ordering responsibility from move generator
         int value = Integer.MIN_VALUE;
+        M bestMove = null;
         for (M move : moves) {
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
             getMoveGenerator().makeMove(move);
@@ -89,6 +90,7 @@ public abstract class Negamax<M> extends AbstractAI<M> {
             getMoveGenerator().unmakeMove();
             if (score > value) {
                 value = score;
+                bestMove = move;
             }
             if (value > alpha) {
             	alpha = value;
@@ -102,21 +104,21 @@ public abstract class Negamax<M> extends AbstractAI<M> {
         if (entry!=null) {
         	// If a transposition table is available
         	// Warning, entry could have been modified by a tt side effect while exploring the subtree
-			entry.setKey(key);
-        	entry.setValue(value);
-        	entry.setDepth(depth);
-   		    if (value <= alphaOrigin) {
-   		    	entry.setEntryType(EntryType.UPPER_BOUND);
-   		    } else if (value >= beta) {
-   		    	entry.setEntryType(EntryType.LOWER_BOUND);
-   		    } else {
-   		    	entry.setEntryType(EntryType.EXACT);
-   		    }
         	// Update the transposition table
-        	getTranspositionTable().store(entry);
+        	getTranspositionTable().store(key,getEntryType(value, alphaOrigin, beta),depth,value,bestMove);
         }
         return value;
     }
     
-    protected abstract TranspositionTable getTranspositionTable();
+    private EntryType getEntryType(int value, int alpha, int beta) {
+		    if (value <= alpha) {
+   		    	return EntryType.UPPER_BOUND;
+   		    } else if (value >= beta) {
+   		    	return EntryType.LOWER_BOUND;
+   		    } else {
+   		    	return EntryType.EXACT;
+   		    }
+    }
+    
+    protected abstract TranspositionTable<M> getTranspositionTable();
 }
