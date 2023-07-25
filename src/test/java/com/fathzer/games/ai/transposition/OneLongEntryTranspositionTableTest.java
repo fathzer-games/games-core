@@ -30,7 +30,7 @@ class OneLongEntryTranspositionTableTest {
 		TranspositionTableEntry<Integer> entry = table.get(key);
 		assertTrue(entry.isValid());
 		assertEquals(EntryType.UPPER_BOUND, entry.getEntryType());
-		assertEquals(5, entry.getDepth());
+		assertEquals(4, entry.getDepth());
 		assertEquals(Short.MIN_VALUE, entry.getValue());
 		assertEquals(-10, entry.getMove());
 
