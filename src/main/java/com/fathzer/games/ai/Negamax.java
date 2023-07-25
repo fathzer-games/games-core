@@ -16,6 +16,8 @@ import com.fathzer.games.util.Evaluation;
  * @param <M> Implementation of the Move interface to use
  */
 public abstract class Negamax<M> extends AbstractAI<M> {
+    private final AlphaBetaState state = new AlphaBetaState();
+	
 	protected Negamax(MoveGenerator<M> moveGenerator) {
 		super(moveGenerator);
 	}
@@ -39,7 +41,14 @@ public abstract class Negamax<M> extends AbstractAI<M> {
         return score;
 	}
 	
-	protected void cut(M move, int alpha, int beta, int score, int depth) {
+	/** Called when a cut occurs.
+	 * @param move The move that triggers the cut
+	 * @param alpha The alpha value when cut occurred
+	 * @param beta The beta value when cut occurred
+	 * @param value The value when cut occurred
+	 * @param depth The depth at which the cut occurred
+	 */
+	protected void cut(M move, int alpha, int beta, int value, int depth) {
 //		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+score+" (alpha is "+alpha+")");
 	}
 	
@@ -48,7 +57,8 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
             return who * evaluate();
         }
-    	final Status status = getMoveGenerator().getStatus();
+		final MoveGenerator<M> mg = getMoveGenerator();
+    	final Status status = mg.getStatus();
 		if (Status.DRAW.equals(status)) {
 			return 0;
 		} else if (!Status.PLAYING.equals(status)){
@@ -58,36 +68,39 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 		}
 		
 		final int alphaOrigin = alpha;
-		final MoveGenerator<M> mg = getMoveGenerator();
-		final TranspositionTableEntry entry = mg instanceof ZobristProvider ? getTranspositionTable().get(((ZobristProvider)mg).getZobristKey()) : null;
-		// Let remember the key (entry may be changed by a side potential side effect of transposition table during subtree exploring).
-		final long key = entry!=null ? entry.getKey() : 0;
-		// entry is null if transposition table is not supported
-		if (entry!=null && entry.isValid() && entry.getDepth()>=depth) {
-			final EntryType entryType = entry.getEntryType();
-			final int entryValue = entry.getValue();
-			if (entryType==EntryType.EXACT) {
-//System.out.println("Bingo");
-				return entryValue;
-//			} else if (entryType==EntryType.LOWER_BOUND) {
-//				if (entryValue>alpha) {
-//					alpha = entryValue;
-//				}
-//			} else if (entryType==EntryType.UPPER_BOUND && entryValue<beta) {
-//				beta=entryValue;
+		final boolean keyProvider = mg instanceof ZobristProvider;
+		final TranspositionTableEntry<M> entry;
+		final long key;
+		if (keyProvider) {
+			key = ((ZobristProvider)mg).getZobristKey();
+			synchronized(getTranspositionTable().getLock(key)) {
+				entry = mg instanceof ZobristProvider ? getTranspositionTable().get(((ZobristProvider)mg).getZobristKey()) : null;
+				// entry is null if transposition table is not supported
+				if (entry!=null && entry.isValid()) {
+					state.set(depth, alpha, beta);
+					Integer toBeReturned = process(entry, state);
+					if (toBeReturned!=null) {
+						return toBeReturned;
+					} else {
+						alpha = state.getAlpha();
+						beta = state.getBeta();
+					}
+				}
 			}
+		} else {
+			key = 0;
+			entry = null;
 		}
 
-		
-    	final List<M> moves = getMoveGenerator().getMoves();
+
+    	final List<M> moves = mg.getMoves();
     	//TODO Remove move ordering responsibility from move generator
         int value = Integer.MIN_VALUE;
         M bestMove = null;
         for (M move : moves) {
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-            getMoveGenerator().makeMove(move);
+            mg.makeMove(move);
             final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
-            getMoveGenerator().unmakeMove();
+            mg.unmakeMove();
             if (score > value) {
                 value = score;
                 bestMove = move;
@@ -103,22 +116,53 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 
         if (entry!=null) {
         	// If a transposition table is available
-        	// Warning, entry could have been modified by a tt side effect while exploring the subtree
-        	// Update the transposition table
-        	getTranspositionTable().store(key,getEntryType(value, alphaOrigin, beta),depth,value,bestMove);
+    		synchronized(getTranspositionTable().getLock(key)) {
+    			toTranspositionTable(key, value, alphaOrigin, alpha, beta, depth, bestMove);
+    		}
         }
         return value;
     }
     
-    private EntryType getEntryType(int value, int alpha, int beta) {
-		    if (value <= alpha) {
-   		    	return EntryType.UPPER_BOUND;
-   		    } else if (value >= beta) {
-   		    	return EntryType.LOWER_BOUND;
-   		    } else {
-   		    	return EntryType.EXACT;
-   		    }
+    /** Process a transposition table entry.
+     * <br>This method is called before iterating on possible moves to use entry data in order to speed up the Negamax algorithm.
+     * <br>One can override it to customize how transposition table entries are used.
+     * <br>The default behaviour is to return the value of entries with {@link EntryType#EXACT} type and depth &gt;= the current negamax depth and ignore others.
+     * <br>Please note that the call of this method is synchronized on the {@link TranspositionTable#getLock(long)} object.
+     * @param entry The entry
+     * @param state The current negamax state
+     * @return The value that should be returned without exploring the moves or null if moves exploration is required.
+     * In such a case, you can change the alpha and beta values of the state passed as an argument.
+     */
+    protected Integer process(TranspositionTableEntry<M> entry, AlphaBetaState state) {
+    	if (entry.getDepth()>=state.getDepth() && EntryType.EXACT==entry.getEntryType()) {
+    		return entry.getValue();
+    	} else {
+    		return null;
+    	}
     }
     
+    /** Stores the results of possible moves exploration .
+     * <br>This method is called after iterating on possible moves to store useful data in transposition table in order to speed up the Negamax algorithm.
+     * <br>One can override it to customize how transposition table entries are used.
+     * <br>The default behaviour is to store only {@link EntryType#EXACT} values.
+     * <br>Please note that the call of this method is synchronized on the {@link TranspositionTable#getLock(long)} object.
+     * @param key The key
+     * @param value The returned value
+     * @param move The move that corresponds to the value
+     * @param alphaOrigin The alpha value passed to the {@link #negamax(int, int, int, int, int)} method.
+     * @param alpha The alpha value.
+     * @param beta The beta value
+     * @param depth The current depth
+     */
+    protected void toTranspositionTable(long key, int value, int alphaOrigin, int alpha, int beta, int depth, M move) {
+    	// Update the transposition table
+    	if (value>alphaOrigin && value<beta) {
+   			getTranspositionTable().store(key, EntryType.EXACT, depth, value, move);
+    	}
+    }
+    
+    /** Gets the transposition table used by this instance.
+     * @return a transposition table.
+     */
     protected abstract TranspositionTable<M> getTranspositionTable();
 }

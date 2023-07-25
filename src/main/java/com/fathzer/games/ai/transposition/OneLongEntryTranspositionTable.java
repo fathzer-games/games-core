@@ -23,12 +23,6 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		this.size = (1024 * 1024 / 8 / SLOTS)*sizeInMB;
 		table = new long[size * SLOTS];
 	}
-/*	
-	public Object getLock() {
-		//TODO Probably better not to synchronize all threads on the whole transposition table
-		return this;
-	}
-*/
 	
 	/** Puts an entry in the table.
 	 * <br>This method always replace the value already stored
@@ -77,37 +71,4 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		// Clears the table
 		Arrays.fill(table, 0);
 	}
-
-	/**
-	 * Collects the principal variation starting from the position on the board
-	 * 
-	 * @param board
-	 *            The position to collect pv from
-	 * @param current_depth
-	 *            How deep the pv goes (avoids situations where keys point to
-	 *            each other infinitely)
-	 * @return collectString The moves in a string
-	 */
-/*	public int[] collectPV(Board board, int current_depth) {
-		int[] arrayPV = new int[128];
-		int move = getMove(board.zobristKey);
-
-		int i = current_depth;
-		int index = 0;
-		while (i > 0) {
-			if (move == 0 || !board.validateHashMove(move))
-				break;
-			arrayPV[index] = move;
-			board.makeMove(move);
-			move = getMove(board.zobristKey);
-			i--;
-			index++;
-		}
-
-		// Unmake the moves
-		for (i = index - 1; i >= 0; i--) {
-			board.unmakeMove(arrayPV[i]);
-		}
-		return arrayPV;
-	}*/
 }
