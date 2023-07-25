@@ -7,8 +7,11 @@
 A core library to help implement two players games
 
 ## TODO
+- Make Negamax responsible for key sorting
+- The responsability of updating or not transposition table is share between TT and Negamax ... should probably be the responsability of Negamaw only.
+- Negamax and NegamaxMP have a lot of duplicated code ... should be fixed.
 - Probably it should be better to force evaluation functions to return short instead of integer and makes Evaluator responsible for the computation of mat evaluations
-- Implement transposition table to increase search depth, in AI and PerfT
+- Implement incremental search depth, in AI and PerfT
 - Write tests and Documentation ;-)
 - Test with Sonar
 - Publish artifact on Maven central
