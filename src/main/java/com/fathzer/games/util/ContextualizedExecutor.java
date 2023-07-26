@@ -63,7 +63,7 @@ public class ContextualizedExecutor<T> implements Closeable {
 	 * @throws InterruptedException if the executor is shutdown during the execution of tasks.
 	 * @see #getContext()
 	 */
-	public <V> List<Future<V>> invokeAll(List<Callable<V>> tasks, Supplier<T> contextSupplier) throws InterruptedException {
+	public <V> List<Future<V>> invokeAll(Collection<Callable<V>> tasks, Supplier<T> contextSupplier) throws InterruptedException {
 		if (running.compareAndSet(false, true)) {
 			this.contextSupplier = contextSupplier;
 			threads.forEach(t -> t.context = contextSupplier.get());

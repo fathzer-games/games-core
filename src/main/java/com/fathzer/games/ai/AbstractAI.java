@@ -4,21 +4,23 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.util.Evaluation;
 
 public abstract class AbstractAI<M> implements AI<M> {
-	private final MoveGenerator<M> moveGenerator;
+	private final ExecutionContext<M> context;
 	private boolean interrupted;
 	
-	protected AbstractAI(MoveGenerator<M> moveGenerator) {
-		this.moveGenerator = moveGenerator;
+	protected AbstractAI(ExecutionContext<M> context) {
 		this.interrupted = false;
+		this.context = context;
 	}
 	
     protected MoveGenerator<M> getMoveGenerator() {
-    	return moveGenerator;
+    	return context.getMoveGenerator();
 	}
 	
     /**
@@ -32,7 +34,7 @@ public abstract class AbstractAI<M> implements AI<M> {
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-        final List<M> moves = moveGenerator.getMoves();
+        final List<M> moves = getMoveGenerator().getMoves();
 		return this.getBestMoves(depth, moves, size, accuracy);
     }
 
@@ -41,10 +43,15 @@ public abstract class AbstractAI<M> implements AI<M> {
             throw new IllegalArgumentException("Search depth MUST be > 0");
         }
         final FixedNumberSearch<M> search = new FixedNumberSearch<>(size, accuracy);
-        for (M m:moves) {
-        	final int value = evaluator.apply(Collections.singleton(m).iterator(), search.getLow());
-        	search.add(m, value);
-        }
+		final List<Runnable> tasks = moves.stream().map(m -> new Runnable() {
+			@Override
+			public void run() {
+//System.out.println(m+" computed on "+exec+" by thread "+Thread.currentThread());
+	            	final int value = evaluator.apply(Collections.singleton(m).iterator(), search.getLow());
+	            	search.add(m, value);
+			}
+		}).collect(Collectors.toList());
+		context.execute(tasks);
         return search.getResult();
     }
 	
@@ -55,19 +62,6 @@ public abstract class AbstractAI<M> implements AI<M> {
      */
 	public int getWinScore(int nbMoves) {
 		return Short.MAX_VALUE-nbMoves*10;
-	}
-	
-	protected void log(M move, int depth) {
-//		for (int i = 0; i < depth; i++) {
-//			System.out.print("  ");
-//		}
-//		System.out.println(move);
-	}
-	protected void log(int score, int depth) {
-//		for (int i = 0; i < depth; i++) {
-//			System.out.print("  ");
-//		}
-//		System.out.println(score);
 	}
 	
 	@Override

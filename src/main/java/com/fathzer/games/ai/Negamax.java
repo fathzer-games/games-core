@@ -6,6 +6,7 @@ import java.util.List;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.ZobristProvider;
+import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
@@ -17,10 +18,22 @@ import com.fathzer.games.util.Evaluation;
  */
 public abstract class Negamax<M> extends AbstractAI<M> {
     private final AlphaBetaState state = new AlphaBetaState();
-	
-	protected Negamax(MoveGenerator<M> moveGenerator) {
-		super(moveGenerator);
+    private TranspositionTable<M> transpositionTable;
+    
+	protected Negamax(ExecutionContext<M> exec) {
+		super(exec);
 	}
+	
+	@Override
+    public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
+		List<Evaluation<M>> result = super.getBestMoves(depth, size, accuracy);
+		if ((getMoveGenerator() instanceof ZobristProvider) && getTranspositionTable()!=null) {
+			// Store best move info in table
+			final Evaluation<M> best = result.get(0);
+			getTranspositionTable().store(((ZobristProvider)getMoveGenerator()).getZobristKey(), EntryType.EXACT, depth, best.getValue(), best.getContent());
+		}
+		return result;
+    }
 
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
@@ -33,11 +46,12 @@ public abstract class Negamax<M> extends AbstractAI<M> {
     		// So using it as alpha value makes negamax fail 
     		alpha += 1;
     	}
+    	final MoveGenerator<M> moveGenerator = getMoveGenerator();
         M move = moves.next();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        getMoveGenerator().makeMove(move);
+        moveGenerator.makeMove(move);
         final int score = -negamax(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
-        getMoveGenerator().unmakeMove();
+        moveGenerator.unmakeMove();
         return score;
 	}
 	
@@ -49,7 +63,7 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 	 * @param depth The depth at which the cut occurred
 	 */
 	protected void cut(M move, int alpha, int beta, int value, int depth) {
-//		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+score+" (alpha is "+alpha+")");
+//		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+value+" (alpha is "+alpha+")");
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
@@ -68,7 +82,7 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 		}
 		
 		final int alphaOrigin = alpha;
-		final boolean keyProvider = mg instanceof ZobristProvider;
+		final boolean keyProvider = (mg instanceof ZobristProvider) && getTranspositionTable()!=null;
 		final TranspositionTableEntry<M> entry;
 		final long key;
 		if (keyProvider) {
@@ -164,5 +178,11 @@ public abstract class Negamax<M> extends AbstractAI<M> {
     /** Gets the transposition table used by this instance.
      * @return a transposition table.
      */
-    protected abstract TranspositionTable<M> getTranspositionTable();
+    public final TranspositionTable<M> getTranspositionTable() {
+    	return transpositionTable;
+    }
+    
+    public void setTranspositonTable(TranspositionTable<M> table) {
+    	this.transpositionTable = table;
+    }
 }
