@@ -1,6 +1,6 @@
 package com.fathzer.games.ai.transposition;
 
-import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
  * A transposition table that associates a key to an entry represented by a long.
@@ -10,7 +10,7 @@ import java.util.Arrays;
  * <li>move can be represented as a integer (32 bits)</li>
  */
 public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
-	private long[] table; // Used for transposition table
+	private AtomicLongArray table; // Used for transposition table
 	private final int size; // The number of slots either table will have
 	private static final int SLOTS = 2; // The number of long per record
 	
@@ -21,7 +21,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 */
 	protected OneLongEntryTranspositionTable(int sizeInMB) {
 		this.size = (1024 * 1024 / 8 / SLOTS)*sizeInMB;
-		table = new long[size * SLOTS];
+		table = new AtomicLongArray(size * SLOTS);
 	}
 	
 	/** Puts an entry in the table.
@@ -32,8 +32,8 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 */
 	public void put(long key, long value) {
 		final int index = getKeyIndex(key);
-		table[index]=key;
-		table[index+1]=value;
+		table.set(index, key);
+		table.set(index+1, value);
 	}
 	
 	/** {@inheritDoc} 
@@ -42,7 +42,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	@Override
 	public TranspositionTableEntry<M> get(long key) {
 		final int index = getKeyIndex(key);
-		return entry.set(key, table[index]==key ? table[index+1] : 0);
+		return entry.set(key, table.get(index)==key ? table.get(index+1) : 0);
 	}
 
 	private int getKeyIndex(long key) {
@@ -55,12 +55,12 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	@Override
 	public void store(long key, EntryType type, int depth, int value, M move) {
 		final int index = getKeyIndex(key);
-		final long old = table[index+1];
-		if (old!=0 && keep(entry.set(table[index], old), type, depth, value, move)) {
+		final long old = table.get(index+1);
+		if (old!=0 && keep(entry.set(table.get(index), old), type, depth, value, move)) {
 			return;
 		}
-		table[index] = key;
-		table[index+1] = entry.toLong(type, (byte)depth, (short) value, toInt(move));
+		table.set(index, key);
+		table.set(index+1, entry.toLong(type, (byte)depth, (short) value, toInt(move)));
 	}
 	
 	protected abstract int toInt(M move);
@@ -69,6 +69,8 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	@Override
 	public void newPosition() {
 		// Clears the table
-		Arrays.fill(table, 0);
+		for (int i=0; i<table.length();i++) {
+			table.set(i, 0);
+		}
 	}
 }
