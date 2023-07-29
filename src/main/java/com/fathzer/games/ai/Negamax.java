@@ -104,7 +104,6 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			entry = null;
 		}
 
-
     	final List<M> moves = sort(position.getMoves());
         int value = Integer.MIN_VALUE;
         M bestMove = null;

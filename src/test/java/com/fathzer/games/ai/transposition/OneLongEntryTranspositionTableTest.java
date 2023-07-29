@@ -45,11 +45,11 @@ class OneLongEntryTranspositionTableTest {
 		// Verify there's no problem with 0 values
 		table.newPosition();
 		
-		table.store(key, EntryType.values()[0], 0, 0, 0);
+		table.store(key, EntryType.EXACT, 0, 0, 0);
 		entry = table.get(key);
 		assertTrue(entry.isValid());
 		assertEquals(0, entry.getDepth());
-		assertEquals(EntryType.values()[0], entry.getEntryType());
+		assertEquals(EntryType.EXACT, entry.getEntryType());
 		assertEquals(0, entry.getValue());
 		assertEquals(0, entry.getMove());
 	}

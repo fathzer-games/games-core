@@ -17,8 +17,7 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 	private static final long DEPTH_MASK = 0xff000000000000L; // 8 bits
 	private static final int TYPE_SHIFT = 56;
 	private static final long TYPE_MASK = 0x300000000000000L; // 2 bits
-	private static final long VALID_MASK = 0x400000000000000L; // 1 bit
-	// It remain 3 bits not used
+	// It remain 4 bits not used
 	
 	private final IntFunction<M> toMove;
 	private long key;
@@ -52,7 +51,7 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 	}
 	
 	long toLong(EntryType type, byte depth, short value, int move) {
-		return VALID_MASK |
+		return type==EntryType.INVALID ? 0 :
 			((((long)type.ordinal()) << TYPE_SHIFT) & TYPE_MASK) |
 			((((long)depth) << DEPTH_SHIFT) & DEPTH_MASK) |
 			((((long)value) << SCORE_SHIFT) & SCORE_MASK) |
