@@ -1,11 +1,10 @@
 package com.fathzer.games.ai;
 
-import java.util.Iterator;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
-import com.fathzer.games.ZobristProvider;
+import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -16,38 +15,37 @@ import com.fathzer.games.util.Evaluation;
  * A Negamax with alpha beta pruning implementation.
  * @param <M> Implementation of the Move interface to use
  */
-public abstract class Negamax<M> extends AbstractAI<M> {
+public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
     private final AlphaBetaState state = new AlphaBetaState();
     private TranspositionTable<M> transpositionTable;
     
-	protected Negamax(ExecutionContext<M> exec) {
+	public Negamax(ExecutionContext<M> exec) {
 		super(exec);
 	}
 	
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
 		List<Evaluation<M>> result = super.getBestMoves(depth, size, accuracy);
-		if ((getMoveGenerator() instanceof ZobristProvider) && getTranspositionTable()!=null) {
+		if ((getGamePosition() instanceof HashProvider) && getTranspositionTable()!=null) {
 			// Store best move info in table
 			final Evaluation<M> best = result.get(0);
-			getTranspositionTable().store(((ZobristProvider)getMoveGenerator()).getZobristKey(), EntryType.EXACT, depth, best.getValue(), best.getContent());
+			getTranspositionTable().store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, depth, best.getValue(), best.getContent());
 		}
 		return result;
     }
 
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
-		return getBestMoves(depth, moves, size, accuracy, (c,alpha)-> get(c,depth,alpha));
+		return getBestMoves(depth, sort(moves), size, accuracy, (m,alpha)-> rootEvaluation(m,depth,alpha));
     }
 
-	private int get(Iterator<M> moves, final int depth, int alpha) {
+	private int rootEvaluation(M move, final int depth, int alpha) {
     	if (alpha==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
     		// So using it as alpha value makes negamax fail 
     		alpha += 1;
     	}
-    	final MoveGenerator<M> moveGenerator = getMoveGenerator();
-        M move = moves.next();
+    	final MoveGenerator<M> moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         moveGenerator.makeMove(move);
         final int score = -negamax(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
@@ -67,32 +65,32 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
+		final GamePosition<M> position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
-            return who * evaluate();
+            return who * position.evaluate();
         }
-		final MoveGenerator<M> mg = getMoveGenerator();
-    	final Status status = mg.getStatus();
+    	final Status status = position.getStatus();
 		if (Status.DRAW.equals(status)) {
 			return 0;
 		} else if (!Status.PLAYING.equals(status)){
 			final int nbMoves = (maxDepth-depth+1)/2;
 			// Player looses after nbMoves moves
-			return -getWinScore(nbMoves);
+			return -position.getWinScore(nbMoves);
 		}
 		
 		final int alphaOrigin = alpha;
-		final boolean keyProvider = (mg instanceof ZobristProvider) && getTranspositionTable()!=null;
+		final boolean keyProvider = (position instanceof HashProvider) && getTranspositionTable()!=null;
 		final TranspositionTableEntry<M> entry;
 		final long key;
 		if (keyProvider) {
-			key = ((ZobristProvider)mg).getZobristKey();
+			key = ((HashProvider)position).getHashKey();
 			synchronized(getTranspositionTable().getLock(key)) {
-				entry = mg instanceof ZobristProvider ? getTranspositionTable().get(((ZobristProvider)mg).getZobristKey()) : null;
+				entry = position instanceof HashProvider ? getTranspositionTable().get(((HashProvider)position).getHashKey()) : null;
 				// entry is null if transposition table is not supported
 				if (entry!=null && entry.isValid()) {
 					state.set(depth, alpha, beta);
-					Integer toBeReturned = process(entry, state);
+					Integer toBeReturned = processTranspositionTableEntry(entry, state);
 					if (toBeReturned!=null) {
 						return toBeReturned;
 					} else {
@@ -107,14 +105,13 @@ public abstract class Negamax<M> extends AbstractAI<M> {
 		}
 
 
-    	final List<M> moves = mg.getMoves();
-    	//TODO Remove move ordering responsibility from move generator
+    	final List<M> moves = sort(position.getMoves());
         int value = Integer.MIN_VALUE;
         M bestMove = null;
         for (M move : moves) {
-            mg.makeMove(move);
+            position.makeMove(move);
             final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
-            mg.unmakeMove();
+            position.unmakeMove();
             if (score > value) {
                 value = score;
                 bestMove = move;
@@ -147,7 +144,7 @@ public abstract class Negamax<M> extends AbstractAI<M> {
      * @return The value that should be returned without exploring the moves or null if moves exploration is required.
      * In such a case, you can change the alpha and beta values of the state passed as an argument.
      */
-    protected Integer process(TranspositionTableEntry<M> entry, AlphaBetaState state) {
+    protected Integer processTranspositionTableEntry(TranspositionTableEntry<M> entry, AlphaBetaState state) {
     	if (entry.getDepth()>=state.getDepth() && EntryType.EXACT==entry.getEntryType()) {
     		return entry.getValue();
     	} else {

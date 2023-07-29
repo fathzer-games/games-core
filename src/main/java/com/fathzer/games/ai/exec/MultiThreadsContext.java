@@ -7,25 +7,25 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.util.ContextualizedExecutor;
 
 public class MultiThreadsContext<M> implements ExecutionContext<M> {
-	private final Supplier<MoveGenerator<M>> moveGeneratorBuilder;
-	protected final ContextualizedExecutor<MoveGenerator<M>> exec;
-	private final MoveGenerator<M> globalMoveGenerator;
+	private final Supplier<GamePosition<M>> moveGeneratorBuilder;
+	protected final ContextualizedExecutor<GamePosition<M>> exec;
+	private final GamePosition<M> globalGamePosition;
 	
-	public MultiThreadsContext(Supplier<MoveGenerator<M>> moveGeneratorBuilder, ContextualizedExecutor<MoveGenerator<M>> exec) {
+	public MultiThreadsContext(Supplier<GamePosition<M>> moveGeneratorBuilder, ContextualizedExecutor<GamePosition<M>> exec) {
 		this.moveGeneratorBuilder = moveGeneratorBuilder;
 		this.exec = exec;
-		this.globalMoveGenerator = moveGeneratorBuilder.get();
+		this.globalGamePosition = moveGeneratorBuilder.get();
 	}
 
 	@Override
-	public MoveGenerator<M> getMoveGenerator() {
-		final MoveGenerator<M> result = exec.getContext();
+	public GamePosition<M> getGamePosition() {
+		final GamePosition<M> result = exec.getContext();
 		if (result==null) {
-			return globalMoveGenerator;
+			return globalGamePosition;
 		}
 		return result;
 	}

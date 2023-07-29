@@ -2,10 +2,10 @@ package com.fathzer.games.ai.exec;
 
 import java.util.Collection;
 
-import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.GamePosition;
 
 public interface ExecutionContext<M> extends AutoCloseable {
-	MoveGenerator<M> getMoveGenerator();
+	GamePosition<M> getGamePosition();
 	
 	void execute(Collection<Runnable> tasks);
 	 

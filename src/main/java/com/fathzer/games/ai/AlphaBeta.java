@@ -1,19 +1,21 @@
 package com.fathzer.games.ai;
 
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 
-import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.util.Evaluation;
 
 /**
- * AlphaBeta based implementation.
+ * <a href="https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">AlphaBeta</a> based implementation.
  *
  * @param <M> Implementation of the Move interface to use
+ * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
  */
-public abstract class AlphaBeta<M> extends AbstractAI<M> {
+@Deprecated
+public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M> {
+	//TODO Verify it's still working
 	
 	protected AlphaBeta(ExecutionContext<M> exec) {
 		super(exec);
@@ -21,7 +23,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> {
 
 	@Override
     public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
-		return getBestMoves(depth, moves, size, accuracy, (c,l)->alphabeta(c,depth,1,depth,l,Integer.MAX_VALUE));
+		return getBestMoves(depth, sort(moves), size, accuracy, (m,l)->alphabeta(Collections.singletonList(m),depth,1,depth,l,Integer.MAX_VALUE));
     }
 	
 	protected void alphaCut(M move, int alpha, int score, int depth) {
@@ -32,30 +34,29 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> {
 //		System.out.println ("beta cut on "+move+"at depth "+depth+" with score="+score+" (beta is "+beta+")");
 	}
 	
-    private int alphabeta(Iterator<M> moves, final int depth, final int who, int maxDepth, int alpha, int beta) {
-    	final MoveGenerator<M> moveGenerator = getMoveGenerator();
+    private int alphabeta(List<M> moves, final int depth, final int who, int maxDepth, int alpha, int beta) {
+    	final GamePosition<M> position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
-            return who * evaluate();
+            return who * position.evaluate();
         } else if (moves==null) {
-        	final Status status = moveGenerator.getStatus();
+        	final Status status = position.getStatus();
 			if (Status.DRAW.equals(status)) {
 				return 0;
 			} else if (!Status.PLAYING.equals(status)){
 				final int nbMoves = (maxDepth-depth+1)/2;
-				return -getWinScore(nbMoves)*who;
+				return -position.getWinScore(nbMoves)*who;
 			} else {
-				moves = moveGenerator.getMoves().iterator();
+				moves = sort(position.getMoves());
 			}
         }
         int bestScore;
         if (who > 0) {
             bestScore = Integer.MIN_VALUE;
-            while (moves.hasNext()) {
-                M move = moves.next();
+            for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                moveGenerator.makeMove(move);
+                position.makeMove(move);
                 final int score = alphabetaScore(depth, who, maxDepth, alpha, beta);
-                moveGenerator.unmakeMove();
+                position.unmakeMove();
                 if (score > bestScore) {
                     bestScore = score;
                 }
@@ -71,12 +72,11 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> {
             }
         } else {
             bestScore = Integer.MAX_VALUE;
-            while (moves.hasNext()) {
-                M move = moves.next();
+            for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                moveGenerator.makeMove(move);
+                position.makeMove(move);
                 final int score = alphabetaScore(depth, who, maxDepth, alpha, beta);
-                moveGenerator.unmakeMove();
+                position.unmakeMove();
                 if (score < bestScore) {
                     bestScore = score;
                 }

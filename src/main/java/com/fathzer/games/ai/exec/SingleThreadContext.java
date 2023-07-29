@@ -2,18 +2,18 @@ package com.fathzer.games.ai.exec;
 
 import java.util.Collection;
 
-import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.GamePosition;
 
 public class SingleThreadContext<M> implements ExecutionContext<M> {
-	private final MoveGenerator<M> moveGenerator;
+	private final GamePosition<M> gamePosition;
 	
-	public SingleThreadContext(MoveGenerator<M> moveGenerator) {
-		this.moveGenerator = moveGenerator;
+	public SingleThreadContext(GamePosition<M> position) {
+		this.gamePosition = position;
 	}
 
 	@Override
-	public MoveGenerator<M> getMoveGenerator() {
-		return this.moveGenerator;
+	public GamePosition<M> getGamePosition() {
+		return this.gamePosition;
 	}
 	
 	@Override

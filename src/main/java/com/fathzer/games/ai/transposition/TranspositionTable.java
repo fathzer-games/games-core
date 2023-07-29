@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ZobristProvider;
+import com.fathzer.games.HashProvider;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
  */
@@ -58,15 +58,15 @@ public interface TranspositionTable<M> {
 	 * Collects the principal variation starting from the position on the board
 	 * <br>Warning, this method should not be called during table modification.
 	 * @param board The position to collect pv from.
-	 * <br>The move generator should implement the {@link ZobristProvider} interface.
+	 * <br>The move generator should implement the {@link HashProvider} interface.
 	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
 	 *            each other infinitely)
 	 * @return The moves
 	 */
 	default List<M> collectPV(MoveGenerator<M> board, int maxDepth) {
-		final ZobristProvider zp = (ZobristProvider)board; 
+		final HashProvider zp = (HashProvider)board; 
 		final List<M> arrayPV = new ArrayList<>(maxDepth);
-		TranspositionTableEntry<M> entry = get(zp.getZobristKey());
+		TranspositionTableEntry<M> entry = get(zp.getHashKey());
 
 		for (int i=0;i<maxDepth;i++) {
 			//FIXME Be aware of zobrist key collisions that should make move is not possible
@@ -76,7 +76,7 @@ public interface TranspositionTable<M> {
 			}
 			arrayPV.add(move);
 			board.makeMove(move);
-			entry = get(zp.getZobristKey());
+			entry = get(zp.getHashKey());
 		}
 
 		// Unmake the moves
