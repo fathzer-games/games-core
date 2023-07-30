@@ -52,17 +52,17 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	@Override
 	public void store(long key, EntryType type, int depth, int value, M move) {
 		final int index = getKeyIndex(key);
-		final long old = table.get(index+1);
 		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
-		if (old!=0 &&keep(entry.set(table.get(index), old), type, depth, value, move)) {
-			return;
-		}
 		writeLock.lock();
 		try {
+			final long old = table.get(index+1);
+			if (old!=0 && keep(entry.set(table.get(index), old), type, depth, value, move)) {
+				return;
+			}
 			table.set(index, key);
 			table.set(index+1, entry.toLong(type, (byte)depth, (short) value, toInt(move)));
 		} finally {
-			writeLock.lock();
+			writeLock.unlock();
 		}
 	}
 	
