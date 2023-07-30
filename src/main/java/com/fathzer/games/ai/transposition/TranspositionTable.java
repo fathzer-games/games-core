@@ -7,6 +7,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.HashProvider;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
+ * <br>Implementations of this interface should be thread safe.
  */
 public interface TranspositionTable<M> {
 	/** Get a table entry.
@@ -16,14 +17,6 @@ public interface TranspositionTable<M> {
 	 * Typically, a fake table, that never saves anything will return null.
 	 */
 	TranspositionTableEntry<M> get(long key);
-	
-	/** Gets the lock to use in order to synchronize access to data attached to a key.
-	 * @param The key
-	 * @return an object to synchronize on. THe default implementation returns this.
-	 */
-	default Object getLock(long key) {
-		return this;
-	}
 	
 	/** Sets a key entry.
 	 * <br>If a key already exists in the same table slot, it is replaced or not depending on the table implementation.

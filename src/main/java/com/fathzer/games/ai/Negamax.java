@@ -16,7 +16,6 @@ import com.fathzer.games.util.Evaluation;
  * @param <M> Implementation of the Move interface to use
  */
 public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
-    private final AlphaBetaState state = new AlphaBetaState();
     private TranspositionTable<M> transpositionTable;
     
 	public Negamax(ExecutionContext<M> exec) {
@@ -85,18 +84,17 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 		final long key;
 		if (keyProvider) {
 			key = ((HashProvider)position).getHashKey();
-			synchronized(getTranspositionTable().getLock(key)) {
-				entry = position instanceof HashProvider ? getTranspositionTable().get(((HashProvider)position).getHashKey()) : null;
-				// entry is null if transposition table is not supported
-				if (entry!=null && entry.isValid()) {
-					state.set(depth, alpha, beta);
-					Integer toBeReturned = processTranspositionTableEntry(entry, state);
-					if (toBeReturned!=null) {
-						return toBeReturned;
-					} else {
-						alpha = state.getAlpha();
-						beta = state.getBeta();
-					}
+			entry = position instanceof HashProvider ? getTranspositionTable().get(((HashProvider)position).getHashKey()) : null;
+			// entry is null if transposition table is not supported
+			if (entry!=null && entry.isValid()) {
+				final AlphaBetaState state = new AlphaBetaState();
+				state.set(depth, alpha, beta);
+				Integer toBeReturned = processTranspositionTableEntry(entry, state);
+				if (toBeReturned!=null) {
+					return toBeReturned;
+				} else {
+					alpha = state.getAlpha();
+					beta = state.getBeta();
 				}
 			}
 		} else {
@@ -126,9 +124,7 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 
         if (entry!=null) {
         	// If a transposition table is available
-    		synchronized(getTranspositionTable().getLock(key)) {
-    			toTranspositionTable(key, value, alphaOrigin, alpha, beta, depth, bestMove);
-    		}
+   			toTranspositionTable(key, value, alphaOrigin, alpha, beta, depth, bestMove);
         }
         return value;
     }
