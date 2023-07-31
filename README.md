@@ -8,7 +8,6 @@ A core library to help implement two players games
 
 ## TODO
 - AlphaBeta: Verify it's still working and implement move sorting
-- The responsability of updating or not transposition table is share between TT and Negamax ... should probably be the responsability of Negamax only.
 - Implement incremental search depth in AI
 - Write tests and Documentation ;-)
 - Test with Sonar

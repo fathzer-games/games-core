@@ -1,15 +1,13 @@
 package com.fathzer.games.ai;
 
-public final class AlphaBetaState {
-	private int depth;
+public class AlphaBetaState {
+	private final int depth;
 	private int alpha;
 	private int beta;
+	private int value;
+	private boolean valueSet;
 	
-	AlphaBetaState() {
-		// Nothing to do
-	}
-	
-	void set(int depth, int alpha, int beta) {
+	public AlphaBetaState(int depth, int alpha, int beta) {
 		this.depth = depth;
 		this.alpha = alpha;
 		this.beta = beta;
@@ -33,5 +31,18 @@ public final class AlphaBetaState {
 
 	public int getDepth() {
 		return depth;
+	}
+
+	public int getValue() {
+		return value;
+	}
+
+	public void setValue(int value) {
+		this.valueSet = true;
+		this.value = value;
+	}
+
+	public boolean isValueSet() {
+		return valueSet;
 	}
 }

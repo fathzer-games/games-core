@@ -13,11 +13,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <li>move can be represented as a integer (32 bits)</li>
  */
 public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
+	private static final int SLOTS = 2; // The number of long per record
 	private final AtomicLongArray table; // Used for transposition table
 	private final Lock readLock;
 	private final Lock writeLock;
 	private final int size; // The number of slots either table will have
-	private static final int SLOTS = 2; // The number of long per record
+	private TranspositionTablePolicy<M> policy;
 		
 	/** Constructor.
 	 * @param sizeInMB The table size in MB
@@ -28,6 +29,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		final ReadWriteLock lock = new ReentrantReadWriteLock();
 		this.readLock = lock.readLock();
 		this.writeLock = lock.writeLock();
+		policy = new BasicPolicy<>();
 	}
 	
 	/** {@inheritDoc} 
@@ -52,20 +54,24 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	@Override
 	public void store(long key, EntryType type, int depth, int value, M move) {
 		final int index = getKeyIndex(key);
-		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
 		writeLock.lock();
 		try {
-			final long old = table.get(index+1);
-			if (old!=0 && keep(entry.set(table.get(index), old), type, depth, value, move)) {
-				return;
-			}
 			table.set(index, key);
-			table.set(index+1, entry.toLong(type, (byte)depth, (short) value, toInt(move)));
+			table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
 		} finally {
 			writeLock.unlock();
 		}
 	}
 	
+	@Override
+	public TranspositionTablePolicy<M> getPolicy() {
+		return policy;
+	}
+	
+	public void setPolicy(TranspositionTablePolicy<M> policy) {
+		this.policy = policy;
+	}
+
 	protected abstract int toInt(M move);
 	protected abstract M toMove(int value);
 	

@@ -19,7 +19,7 @@ public interface TranspositionTable<M> {
 	TranspositionTableEntry<M> get(long key);
 	
 	/** Sets a key entry.
-	 * <br>If a key already exists in the same table slot, it is replaced or not depending on the table implementation.
+	 * <br>If a key already exists in the same table slot, it is replaced.
 	 * @param key The entry's key
 	 * @param type The entry's type
 	 * @param depth The search depth at which the entry is stored
@@ -28,24 +28,16 @@ public interface TranspositionTable<M> {
 	 */
 	void store(long key, EntryType type, int depth, int value, M move);
 	
-	/** Tests if old entry should be kept when a new one is available.
-	 * <br>This method can be used by {@link store} method to decide if entry should replace an existing one.
-	 * @param old The entry previously in the table
-	 * @param type The entry's type
-	 * @param depth The search depth at which the entry is stored
-	 * @param value The entry's value
-	 * @param move The entry's move 
-	 * @return false if the old entry should be discarded and replaced by the new one.
-	 * <br>The default implementation returns true if depth of old entry is higher than depth of new one (remember depth of tree leaves is 0). 
-	 */
-	default boolean keep(TranspositionTableEntry<M> old, EntryType type, int depth, int value, M move) {
-		return old.getDepth()>depth;
-	}
-	
 	/** Called when position changes.
 	 * <br>On this event, the table can clean itself, or increment a generation counter used in its own implementation of {@link #keep} method.
 	 */
 	void newPosition();
+	
+	/** Gets the transposition table's policy.
+	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
+	 * @return
+	 */
+	TranspositionTablePolicy<M> getPolicy();
 	
 	/**
 	 * Collects the principal variation starting from the position on the board

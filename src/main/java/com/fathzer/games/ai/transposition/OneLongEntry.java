@@ -50,7 +50,7 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 		return EntryType.ALL.get((int) ((value & TYPE_MASK)>>TYPE_SHIFT));
 	}
 	
-	long toLong(EntryType type, byte depth, short value, int move) {
+	static long toLong(EntryType type, byte depth, short value, int move) {
 		return type==EntryType.INVALID ? 0 :
 			((((long)type.ordinal()) << TYPE_SHIFT) & TYPE_MASK) |
 			((((long)depth) << DEPTH_SHIFT) & DEPTH_MASK) |
