@@ -1,9 +1,9 @@
 package com.fathzer.games.ai.transposition;
 
 import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
 
 /**
  * A transposition table that associates a key to an entry represented by a long.
@@ -15,8 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
 	private static final int SLOTS = 2; // The number of long per record
 	private final AtomicLongArray table; // Used for transposition table
-	private final Lock readLock;
-	private final Lock writeLock;
+	private final ReadWriteLock lock;
 	private final int size; // The number of slots either table will have
 	private TranspositionTablePolicy<M> policy;
 		
@@ -26,9 +25,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	protected OneLongEntryTranspositionTable(int sizeInMB) {
 		this.size = (1024 * 1024 / 8 / SLOTS)*sizeInMB;
 		table = new AtomicLongArray(size * SLOTS);
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
+		this.lock = new ReentrantReadWriteLock();
 		policy = new BasicPolicy<>();
 	}
 	
@@ -39,11 +36,11 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	public TranspositionTableEntry<M> get(long key) {
 		final int index = getKeyIndex(key);
 		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
-		readLock.lock();
+		lock.readLock().lock();
 		try {
 			return entry.set(key, table.get(index)==key ? table.get(index+1) : 0);
 		} finally {
-			readLock.unlock();
+			lock.readLock().unlock();
 		}
 	}
 
@@ -52,14 +49,18 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 	
 	@Override
-	public void store(long key, EntryType type, int depth, int value, M move) {
+	public void store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator) {
 		final int index = getKeyIndex(key);
-		writeLock.lock();
+		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
+		lock.writeLock().lock();
 		try {
-			table.set(index, key);
-			table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
+			entry.set(key, table.get(index)==key ? table.get(index+1) : 0);
+			if (validator.test(entry)) {
+				table.set(index, key);
+				table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
+			}
 		} finally {
-			writeLock.unlock();
+			lock.writeLock().unlock();
 		}
 	}
 	

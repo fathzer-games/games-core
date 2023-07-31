@@ -19,11 +19,14 @@ public interface TranspositionTablePolicy<M> {
 	AlphaBetaState accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta);
 	
 	
-	/** Tests if old entry should be kept when a new one is available.
+	/** Updates the transposition table, if required, after iterating on possible moves.
+	 * <br>This method is responsible for deciding if something should be stored and what should be stored.
+	 * <br>It typically uses {@link TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)} method to store/update the entry 
 	 * @param table The transposition table
 	 * @param key The key where to store data
 	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int)} updated with alpha, beta and value
 	 * @param move The entry's move
+	 * @see TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)
 	 */
-	void toTranspositionTable(TranspositionTable<M> table, long key, AlphaBetaState state, M move);
+	void store(TranspositionTable<M> table, long key, AlphaBetaState state, M move);
 }

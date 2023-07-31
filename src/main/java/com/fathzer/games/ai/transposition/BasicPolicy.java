@@ -13,14 +13,10 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	}
 	
 	@Override
-	public void toTranspositionTable(TranspositionTable<M> table, long key, AlphaBetaState state, M move) {
+	public void store(TranspositionTable<M> table, long key, AlphaBetaState state, M move) {
     	// Update the transposition table
-    	if (state.getValue()>state.getAlpha() && state.getValue()<state.getBeta()) {
-    		final TranspositionTableEntry<M> current = table.get(key);
-    		//FIXME Not thread safe entry can be updated between get and store
-    		if (!current.isValid() || state.getDepth()>current.getDepth()) {
-    			table.store(key, EntryType.EXACT, state.getDepth(), state.getValue(), move);
-    		}
+    	if (state.getValue()>state.getAlpha() && state.getValue()<state.getBetaUpdated()) {
+   			table.store(key, EntryType.EXACT, state.getDepth(), state.getValue(), move, p -> !p.isValid() || state.getDepth()>=p.getDepth());
     	}
 	}
 }

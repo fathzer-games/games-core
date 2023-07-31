@@ -25,7 +25,7 @@ class OneLongEntryTranspositionTableTest {
 		long key = 1L;
 		assertFalse(table.get(1L).isValid());
 		
-		table.store(key, EntryType.UPPER_BOUND, 4, Short.MIN_VALUE, -10);
+		table.store(key, EntryType.UPPER_BOUND, 4, Short.MIN_VALUE, -10, p->true);
 		
 		TranspositionTableEntry<Integer> entry = table.get(key);
 		assertTrue(entry.isValid());
@@ -34,7 +34,7 @@ class OneLongEntryTranspositionTableTest {
 		assertEquals(Short.MIN_VALUE, entry.getValue());
 		assertEquals(-10, entry.getMove());
 
-		table.store(key, EntryType.LOWER_BOUND, 5, 32737, -15);
+		table.store(key, EntryType.LOWER_BOUND, 5, 32737, -15, p->true);
 		// Verify entry is replaced
 		entry = table.get(key);
 		assertEquals(5,entry.getDepth());
@@ -45,7 +45,7 @@ class OneLongEntryTranspositionTableTest {
 		// Verify there's no problem with 0 values
 		table.newPosition();
 		
-		table.store(key, EntryType.EXACT, 0, 0, 0);
+		table.store(key, EntryType.EXACT, 0, 0, 0, p->true);
 		entry = table.get(key);
 		assertTrue(entry.isValid());
 		assertEquals(0, entry.getDepth());
@@ -53,5 +53,4 @@ class OneLongEntryTranspositionTableTest {
 		assertEquals(0, entry.getValue());
 		assertEquals(0, entry.getMove());
 	}
-
 }

@@ -2,6 +2,7 @@ package com.fathzer.games.ai.transposition;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.HashProvider;
@@ -24,9 +25,10 @@ public interface TranspositionTable<M> {
 	 * @param type The entry's type
 	 * @param depth The search depth at which the entry is stored
 	 * @param value The entry's value
-	 * @param move The entry's move 
+	 * @param move The entry's move
+	 * @param validator a predicate that returns true if the previous entry which is passed to the predicate should be replaced 
 	 */
-	void store(long key, EntryType type, int depth, int value, M move);
+	void store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
 	 * <br>On this event, the table can clean itself, or increment a generation counter used in its own implementation of {@link #keep} method.
@@ -54,7 +56,7 @@ public interface TranspositionTable<M> {
 		TranspositionTableEntry<M> entry = get(zp.getHashKey());
 
 		for (int i=0;i<maxDepth;i++) {
-			//FIXME Be aware of zobrist key collisions that should make move is not possible
+			//FIXME Be aware of key collisions that should make move is not possible
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
 			if (move==null /*|| !board.isValid(move)*/) {
 				break;

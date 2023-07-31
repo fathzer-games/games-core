@@ -29,7 +29,7 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			// Store best move info in table
 			final Evaluation<M> best = result.get(0);
 			// TODO Make it with tt policy?
-			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, depth, best.getValue(), best.getContent());
+			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, depth, best.getValue(), best.getContent(), p->true);
 		}
 		return result;
     }
@@ -88,9 +88,9 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta);
 			if (state.isValueSet()) {
 				return state.getValue();
-			} else {
-				alpha = state.getAlpha();
-				beta = state.getBeta();
+			} if (state.isAlphaBetaUpdated()) {
+				alpha = state.getAlphaUpdated();
+				beta = state.getBetaUpdated();
 			}
 		} else {
 			key = 0;
@@ -119,10 +119,9 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 
         if (keyProvider) {
         	// If a transposition table is available
-        	state.setAlpha(alpha);
-        	state.setBeta(beta);
         	state.setValue(value);
-        	transpositionTable.getPolicy().toTranspositionTable(transpositionTable, key, state, bestMove);
+        	state.updateAlphaBeta(alpha, beta);
+        	transpositionTable.getPolicy().store(transpositionTable, key, state, bestMove);
         }
         return value;
     }
