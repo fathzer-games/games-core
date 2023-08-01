@@ -50,6 +50,11 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 		return toString.apply(content)+"("+this.getValue()+")";
 	}
 	
+	@Override
+	public String toString() {
+		return toString(Object::toString);
+	}
+
 	public static <M> String toString(Collection<Evaluation<M>> moves, Function<M,String> toString) {
 		return moves.stream().map(m -> m.toString(toString)).collect(Collectors.joining(", ", "[", "]"));
 	}

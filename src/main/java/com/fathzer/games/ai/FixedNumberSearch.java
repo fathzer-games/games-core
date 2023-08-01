@@ -1,5 +1,6 @@
 package com.fathzer.games.ai;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,24 +22,24 @@ final class FixedNumberSearch<M> {
 			return currentLow;
 		}
 		synchronized void add(M move, int value) {
-			if (result.size()<count) {
-				insert(this.result, new Evaluation<M>(move, value));
-				if (result.size()==count) {
-					currentLow = result.peekLast().getValue()-delta-1;
-				}
-			} else if (value>currentLow) {
-				insert(this.result, new Evaluation<M>(move, value));
+			insert(this.result, new Evaluation<M>(move, value));
+			if (result.size()>=count) {
 				currentLow = result.get(count-1).getValue() - delta -1;
 			}
 		}
-		List<Evaluation<M>> getResult() {
-			if (result.size()>count) {
-				// Delete extra results
-				final int limit = result.get(count-1).getValue()-delta;
-				while (result.peekLast().getValue()<limit) {
-					result.pollLast();
+		synchronized List<Evaluation<M>> getCut() {
+			final List<Evaluation<M>> cut = new ArrayList<>(result.size());
+			final int low = getLow();
+			int currentCount = 0;
+			for (Evaluation<M> ev : result) {
+				if (ev.getValue()>low || currentCount<count) {
+					cut.add(ev);
+					currentCount++;
 				}
 			}
+			return cut;
+		}
+		List<Evaluation<M>> getList() {
 			return result;
 		}
 		private static <T extends Comparable<T>> void insert(List<T> list, T element) {
