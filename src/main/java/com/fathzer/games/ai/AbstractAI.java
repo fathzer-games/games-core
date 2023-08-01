@@ -34,13 +34,13 @@ public abstract class AbstractAI<M> implements AI<M> {
 		final List<Runnable> tasks = moves.stream().map(m -> new Runnable() {
 			@Override
 			public void run() {
-//System.out.println(m+" computed on "+exec+" by thread "+Thread.currentThread());
-	            	final int value = rootEvaluator.apply(m, search.getLow());
-	            	search.add(m, value);
+            	final int value = rootEvaluator.apply(m, search.getLow());
+//System.out.println(m+" by thread "+Thread.currentThread()+" at depth "+depth+" value="+value+". Interrupted="+isInterrupted());
+            	search.add(m, value);
 			}
 		}).collect(Collectors.toList());
 		context.execute(tasks);
-        return search.getResult();
+        return search.getCut();
     }
 	
 	@Override
