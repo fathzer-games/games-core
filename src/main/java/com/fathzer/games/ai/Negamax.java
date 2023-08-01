@@ -23,11 +23,15 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 	}
 	
 	@Override
-    public List<Evaluation<M>> getBestMoves(final int depth, int size, int accuracy) {
-		List<Evaluation<M>> result = super.getBestMoves(depth, size, accuracy);
+    public SearchResult<M> getBestMoves(final int depth, int size, int accuracy) {
+		SearchResult<M> result = super.getBestMoves(depth, size, accuracy);
 		if ((getGamePosition() instanceof HashProvider) && transpositionTable!=null) {
+			if (isInterrupted()) {
+				//FIXME
+				System.out.println("Fuck we are interrupted but will store "+result.getList().get(0).toString(Object::toString));
+			}
 			// Store best move info in table
-			final Evaluation<M> best = result.get(0);
+			final Evaluation<M> best = result.getList().get(0);
 			// TODO Make it with tt policy?
 			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, depth, best.getValue(), best.getContent(), p->true);
 		}
@@ -35,7 +39,7 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
     }
 
 	@Override
-    public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
+    public SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, sort(moves), size, accuracy, (m,alpha)-> rootEvaluation(m,depth,alpha));
     }
 

@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-class FixedNumberSearchTest {
+class SearchResultTest {
 
 	@Test
 	void test() {
-		FixedNumberSearch<Integer> fns = new FixedNumberSearch<>(3, 2);
+		SearchResult<Integer> fns = new SearchResult<>(3, 2);
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
 		fns.add(1, 0);
 		assertEquals(Integer.MIN_VALUE, fns.getLow());

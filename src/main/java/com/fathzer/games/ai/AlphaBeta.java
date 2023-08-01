@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.exec.ExecutionContext;
-import com.fathzer.games.util.Evaluation;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">AlphaBeta</a> based implementation.
@@ -22,7 +21,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
 	}
 
 	@Override
-    public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
+    public SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, sort(moves), size, accuracy, (m,l)->alphabeta(Collections.singletonList(m),depth,1,depth,l,Integer.MAX_VALUE));
     }
 	

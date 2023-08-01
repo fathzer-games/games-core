@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.exec.ExecutionContext;
-import com.fathzer.games.util.Evaluation;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/Minimax">Minimax</a> based implementation.
@@ -20,7 +19,7 @@ public abstract class Minimax<M> extends AbstractAI<M> {
 	}
 
 	@Override
-    public List<Evaluation<M>> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
+    public SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
 		return getBestMoves(depth, moves, size, accuracy, (m,l)->minimax(Collections.singletonList(m),depth,1,depth));
     }
 
