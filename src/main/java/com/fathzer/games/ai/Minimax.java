@@ -19,13 +19,14 @@ public abstract class Minimax<M> extends AbstractAI<M> {
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
+    public SearchResult<M> getBestMoves(List<M> moves, int depth, int size, int accuracy) {
 		return getBestMoves(depth, moves, size, accuracy, (m,l)->minimax(Collections.singletonList(m),depth,1,depth));
     }
 
     private int minimax(List<M> moves, final int depth, final int who, int maxDepth) {
     	final GamePosition<M> position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
+    		getStatistics().evaluationDone();
             return who * position.evaluate();
         } else if (moves==null) {
         	final Status status = position.getStatus();
@@ -36,6 +37,7 @@ public abstract class Minimax<M> extends AbstractAI<M> {
 				return -position.getWinScore(nbMoves)*who;
 			} else {
 				moves = position.getMoves();
+				getStatistics().movesGenerated(moves.size());
 			}
         }
     	int bestScore;
@@ -44,6 +46,7 @@ public abstract class Minimax<M> extends AbstractAI<M> {
             bestScore = Integer.MIN_VALUE;
             for (M move : moves) {
                 position.makeMove(move);
+                getStatistics().movePlayed();
                 int score = minimax(null, depth-1, -who, maxDepth);
                 position.unmakeMove();
                 if (score > bestScore) {

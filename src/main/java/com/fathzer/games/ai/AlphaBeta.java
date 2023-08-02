@@ -21,8 +21,8 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy) {
-		return getBestMoves(depth, sort(moves), size, accuracy, (m,l)->alphabeta(Collections.singletonList(m),depth,1,depth,l,Integer.MAX_VALUE));
+    public SearchResult<M> getBestMoves(List<M> moves, int depth, int size, int accuracy) {
+		return getBestMoves(depth, moves, size, accuracy, (m,l)->alphabeta(Collections.singletonList(m),depth,1,depth,l,Integer.MAX_VALUE));
     }
 	
 	protected void alphaCut(M move, int alpha, int score, int depth) {
@@ -36,6 +36,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
     private int alphabeta(List<M> moves, final int depth, final int who, int maxDepth, int alpha, int beta) {
     	final GamePosition<M> position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
+    		getStatistics().evaluationDone();
             return who * position.evaluate();
         } else if (moves==null) {
         	final Status status = position.getStatus();
@@ -46,6 +47,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
 				return -position.getWinScore(nbMoves)*who;
 			} else {
 				moves = sort(position.getMoves());
+				getStatistics().movesGenerated(moves.size());
 			}
         }
         int bestScore;
@@ -54,6 +56,7 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
                 position.makeMove(move);
+                getStatistics().movePlayed();
                 final int score = alphabetaScore(depth, who, maxDepth, alpha, beta);
                 position.unmakeMove();
                 if (score > bestScore) {

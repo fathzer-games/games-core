@@ -19,15 +19,16 @@ public interface AI<M> {
 
     /**
      * Gets best moves evaluations at the given search depth
-     * <br>This methods iterates over provided ordered moves to evaluate each and maximize cutoff.
+     * <br>This methods evaluates provided moves in the list order. In order to maximize cutoff in some algorithm (like {@link Negamax}),
+     * you should order the list in from what is estimated to be the best move to the worst one.
+     * @param possibleMoves A list of moves to evaluate. If one of these moves is impossible, result is not specified (It may crash or return a wrong result, etc...).
      * @param depth The search depth (must be &gt; 0)
-     * @param possibleMoves A list of possible moves
      * @param size How many best moves is requested (Integer.MAX_VALUE to have all moves evaluated).
      * @param accuracy The minimum gap under which a move is considered having the same value than another.
      * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
      * @return The search result. 
      */
-    SearchResult<M> getBestMoves(final int depth, List<M> possibleMoves, int size, int accuracy);
+    SearchResult<M> getBestMoves(List<M> possibleMoves, int depth, int size, int accuracy);
     
 	public void interrupt();
 

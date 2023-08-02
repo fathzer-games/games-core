@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.fathzer.games.util.Evaluation;
 
+/** The result of a best move search.
+ */
 public final class SearchResult<M> {
 		private final LinkedList<Evaluation<M>> result;
 		private final int count;
@@ -31,9 +33,9 @@ public final class SearchResult<M> {
 		}
 		
 		/** Gets the list of moves evaluation, truncated to the number of moves requested in this instance constructor.
-		 * @return The list of evaluated moves
+		 * @return The sorted (best first) list of better moves
 	     * <br>Please note the list may have more than size elements in case of equivalent moves or almost equivalent moves.
-	     * It can also have less than size elements if there's less than size legal moves. 
+	     * It can also have less than size elements if there's less than size legal moves or search was interrupted before it finished. 
 		 */
 		public synchronized List<Evaluation<M>> getCut() {
 			final List<Evaluation<M>> cut = new ArrayList<>(result.size());
@@ -49,8 +51,9 @@ public final class SearchResult<M> {
 		}
 		
 		/** Gets the list of moves evaluation.
-		 * @return The list of evaluation of all valid moves
+		 * @return The list sorted (best first) of all valid moves
 	     * <br>Please note the list may contain upper bounded evaluation (moves we determine they are not good enough to be selected in {@link #getCut()}).
+	     * <br>Please note this list may not contains all valid moves if search wass interrupted before it finished.
 		 */
 		public List<Evaluation<M>> getList() {
 			return result;
