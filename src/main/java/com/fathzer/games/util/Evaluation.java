@@ -22,10 +22,14 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 	}
 
 	@Override
-    public int compareTo(Evaluation<M> move) {
-        return move.value - value;
+    public int compareTo(Evaluation<M> other) {
+        return other.value - value;
     }
 
+	/**
+	 * Two evaluations are equals if their values are equals, even if their moves are different.<br>
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
