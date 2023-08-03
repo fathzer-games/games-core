@@ -16,7 +16,7 @@ public interface TranspositionTablePolicy<M> {
      * @param beta The current beta value
      * @return The state that should be applied. If a value is set, the search is stopped and the value is returned. If alpha or beta value are changed in returned instance, they are copied in calling search function.
      */
-	AlphaBetaState accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta);
+	AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta);
 	
 	
 	/** Updates the transposition table, if required, after iterating on possible moves.
@@ -25,8 +25,7 @@ public interface TranspositionTablePolicy<M> {
 	 * @param table The transposition table
 	 * @param key The key where to store data
 	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int)} updated with alpha, beta and value
-	 * @param move The entry's move
 	 * @see TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)
 	 */
-	void store(TranspositionTable<M> table, long key, AlphaBetaState state, M move);
+	void store(TranspositionTable<M> table, long key, AlphaBetaState<M> state);
 }

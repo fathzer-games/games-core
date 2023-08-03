@@ -1,6 +1,6 @@
 package com.fathzer.games.ai;
 
-public class AlphaBetaState {
+public class AlphaBetaState<M> {
 	private final int depth;
 	private final int alpha;
 	private final int beta;
@@ -9,6 +9,7 @@ public class AlphaBetaState {
 	private int value;
 	private boolean valueSet;
 	private boolean alphaBetaUpdated;
+	private M bestMove;
 	
 	public AlphaBetaState(int depth, int alpha, int beta) {
 		this.depth = depth;
@@ -56,5 +57,13 @@ public class AlphaBetaState {
 
 	public boolean isAlphaBetaUpdated() {
 		return alphaBetaUpdated;
+	}
+
+	public M getBestMove() {
+		return bestMove;
+	}
+
+	public void setBestMove(M bestMove) {
+		this.bestMove = bestMove;
 	}
 }

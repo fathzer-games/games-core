@@ -82,7 +82,7 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 		
 		final boolean keyProvider = (position instanceof HashProvider) && transpositionTable!=null;
 		final long key;
-		final AlphaBetaState state;
+		final AlphaBetaState<M> state;
 		if (keyProvider) {
 			key = ((HashProvider)position).getHashKey();
 			TranspositionTableEntry<M> entry = position instanceof HashProvider ? transpositionTable.get(((HashProvider)position).getHashKey()) : null;
@@ -98,7 +98,8 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			state = null;
 		}
 
-    	final List<M> moves = sort(position.getMoves());
+    	final List<M> moves = sort(state==null?null:state.getBestMove(), position.getMoves());
+//    	final List<M> moves = sort(position.getMoves());
     	getStatistics().movesGenerated(moves.size());
         int value = Integer.MIN_VALUE;
         M bestMove = null;
@@ -124,7 +125,8 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
         	// If a transposition table is available
         	state.setValue(value);
         	state.updateAlphaBeta(alpha, beta);
-        	transpositionTable.getPolicy().store(transpositionTable, key, state, bestMove);
+        	state.setBestMove(bestMove);
+        	transpositionTable.getPolicy().store(transpositionTable, key, state);
         }
         return value;
     }
@@ -140,4 +142,19 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
     public void setTranspositonTable(TranspositionTable<M> table) {
     	this.transpositionTable = table;
     }
+
+	protected List<M> sort(M best, List<M> moves) {
+		final List<M> result = sort(moves);
+		if (best!=null) {
+//System.out.println("Here we are with "+best);
+			int index = moves.indexOf(best);
+			if (index<0) {
+				throw new IllegalArgumentException("Strange, best move "+best+" does not exists");
+			} else if (index!=0) {
+				// Put best move in first place
+				result.add(0, result.remove(index));
+			}
+		}
+		return result;
+	}
 }
