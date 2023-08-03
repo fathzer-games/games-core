@@ -72,4 +72,26 @@ public interface TranspositionTable<M> {
 		}
 		return arrayPV;
 	}
+	
+	/**
+	 * Collects the principal variation starting from the position on the board after a move
+	 * <br>Warning, this method should not be called during table modification.
+	 * @param board The position to collect pv from.
+	 * @param move The move to play (if move is not a valid move, result is not specified).
+	 * <br>The move generator should implement the {@link HashProvider} interface.
+	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
+	 *            each other infinitely)
+	 * @return The moves
+	 */
+	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
+		board.makeMove(move);
+		try {
+			final List<M> result = collectPV(board, maxDepth);
+			result.add(0, move);
+			return result;
+		} finally {
+			board.unmakeMove();
+		}
+	}
+
 }
