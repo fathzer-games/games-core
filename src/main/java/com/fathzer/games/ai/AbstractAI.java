@@ -17,6 +17,7 @@ public abstract class AbstractAI<M> implements AI<M> {
 		this.statistics = new SearchStatistics();
 	}
 	
+	@Override
     public SearchStatistics getStatistics() {
 		return statistics;
 	}
@@ -26,20 +27,19 @@ public abstract class AbstractAI<M> implements AI<M> {
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(final int depth, int size, int accuracy) {
+    public SearchResult<M> getBestMoves(SearchParameters params) {
+		statistics.clear();
 		List<M> moves = getGamePosition().getMoves();
 		getStatistics().movesGenerated(moves.size());
 		if (getClass().isAssignableFrom(MoveSorter.class)) {
 			moves = ((MoveSorter<M>)this).sort(moves);
 		}
-		return this.getBestMoves(moves, depth, size, accuracy);
+		return this.getBestMoves(moves, params);
     }
 
-	protected SearchResult<M> getBestMoves(final int depth, List<M> moves, int size, int accuracy, BiFunction<M,Integer, Integer> rootEvaluator) {
-        if (depth <= 0) {
-            throw new IllegalArgumentException("Search depth MUST be > 0");
-        }
-        final SearchResult<M> search = new SearchResult<>(size, accuracy);
+	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
+		statistics.clear();
+        final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
 		final List<Runnable> tasks = moves.stream().map(m -> new Runnable() {
 			@Override
 			public void run() {

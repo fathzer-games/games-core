@@ -19,8 +19,8 @@ public abstract class Minimax<M> extends AbstractAI<M> {
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, int depth, int size, int accuracy) {
-		return getBestMoves(depth, moves, size, accuracy, (m,l)->minimax(Collections.singletonList(m),depth,1,depth));
+    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
+		return getBestMoves(moves, params, (m,l)->minimax(Collections.singletonList(m),params.getDepth(),1,params.getDepth()));
     }
 
     private int minimax(List<M> moves, final int depth, final int who, int maxDepth) {

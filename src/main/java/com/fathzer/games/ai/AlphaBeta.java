@@ -21,8 +21,8 @@ public abstract class AlphaBeta<M> extends AbstractAI<M> implements MoveSorter<M
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, int depth, int size, int accuracy) {
-		return getBestMoves(depth, moves, size, accuracy, (m,l)->alphabeta(Collections.singletonList(m),depth,1,depth,l,Integer.MAX_VALUE));
+    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
+		return getBestMoves(moves, params, (m,l)->alphabeta(Collections.singletonList(m),params.getDepth(),1,params.getDepth(),l,Integer.MAX_VALUE));
     }
 	
 	protected void alphaCut(M move, int alpha, int score, int depth) {

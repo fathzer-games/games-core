@@ -15,7 +15,7 @@ public interface AI<M> {
      * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
      * @return The search result
      */
-    SearchResult<M> getBestMoves(final int depth, int size, int accuracy);
+    SearchResult<M> getBestMoves(SearchParameters parameters);
 
     /**
      * Gets best moves evaluations at the given search depth
@@ -28,9 +28,14 @@ public interface AI<M> {
      * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
      * @return The search result. 
      */
-    SearchResult<M> getBestMoves(List<M> possibleMoves, int depth, int size, int accuracy);
+    SearchResult<M> getBestMoves(List<M> possibleMoves, SearchParameters parameters);
     
 	public void interrupt();
 
 	public boolean isInterrupted();
+
+	/** Gets the statistic related to last search call.
+	 * @return The statistics
+	 */
+	SearchStatistics getStatistics();
 }

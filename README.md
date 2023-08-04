@@ -7,8 +7,9 @@
 A core library to help implement two players games
 
 ## TODO
+- Use Evaluator directly in AI implementations instead of just in recursive engine, I think it could removes the need for intermediate classes between Board and Negamax.
+- Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation).
 - AlphaBeta: Verify it's still working and implement move sorting
-- Implement incremental search depth in AI
 - Write tests and Documentation ;-)
 - Test with Sonar
 - Publish artifact on Maven central

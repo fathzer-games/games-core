@@ -23,19 +23,19 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 	}
 	
 	@Override
-    public SearchResult<M> getBestMoves(final int depth, int size, int accuracy) {
-		SearchResult<M> result = super.getBestMoves(depth, size, accuracy);
+    public SearchResult<M> getBestMoves(SearchParameters params) {
+		SearchResult<M> result = super.getBestMoves(params);
 		if ((getGamePosition() instanceof HashProvider) && transpositionTable!=null && !isInterrupted()) {
 			// Store best move info in table
 			final Evaluation<M> best = result.getList().get(0);
-			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, depth, best.getValue(), best.getContent(), p->true);
+			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, params.getDepth(), best.getValue(), best.getContent(), p->true);
 		}
 		return result;
     }
 
 	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, int depth, int size, int accuracy) {
-		return getBestMoves(depth, moves, size, accuracy, (m,alpha)-> rootEvaluation(m,depth,alpha));
+    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
+		return getBestMoves(moves, params, (m,alpha)-> rootEvaluation(m,params.getDepth(),alpha));
     }
 
 	private int rootEvaluation(M move, final int depth, int alpha) {
@@ -99,7 +99,6 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 		}
 
     	final List<M> moves = sort(state==null?null:state.getBestMove(), position.getMoves());
-//    	final List<M> moves = sort(position.getMoves());
     	getStatistics().movesGenerated(moves.size());
         int value = Integer.MIN_VALUE;
         M bestMove = null;
@@ -146,7 +145,6 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 	protected List<M> sort(M best, List<M> moves) {
 		final List<M> result = sort(moves);
 		if (best!=null) {
-//System.out.println("Here we are with "+best);
 			int index = moves.indexOf(best);
 			if (index<0) {
 				throw new IllegalArgumentException("Strange, best move "+best+" does not exists");
