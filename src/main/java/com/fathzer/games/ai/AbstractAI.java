@@ -4,16 +4,19 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 
-public abstract class AbstractAI<M> implements AI<M> {
-	private final ExecutionContext<M> context;
+public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> {
+	private final ExecutionContext<M,B> context;
+	private final Evaluator<B> evaluator;
 	private boolean interrupted;
 	private SearchStatistics statistics;
 	
-	protected AbstractAI(ExecutionContext<M> context) {
-		this.interrupted = false;
+	protected AbstractAI(ExecutionContext<M,B> context, Evaluator<B> evaluator) {
 		this.context = context;
+		this.evaluator = evaluator;
+		this.interrupted = false;
 		this.statistics = new SearchStatistics();
 	}
 	
@@ -22,8 +25,12 @@ public abstract class AbstractAI<M> implements AI<M> {
 		return statistics;
 	}
 
-	protected GamePosition<M> getGamePosition() {
+	protected B getGamePosition() {
     	return context.getGamePosition();
+	}
+	
+	protected Evaluator<B> getEvaluator() {
+		return evaluator;
 	}
 
 	@Override

@@ -9,7 +9,6 @@ public interface TranspositionTablePolicy<M> {
      * <br>This method is called before iterating on possible moves to use entry data in order to speed up the Negamax algorithm.
      * <br>One can override it to customize how transposition table entries are used.
      * <br>The default behaviour is to return the value of entries with {@link EntryType#EXACT} type and depth &gt;= the current negamax depth and ignore others.
-     * <br>Please note that the call of this method is synchronized on the {@link TranspositionTable#getLock(long)} object.
      * @param entry The entry
      * @param depth The current depth
      * @param alpha The current alpha value
@@ -25,7 +24,8 @@ public interface TranspositionTablePolicy<M> {
 	 * @param table The transposition table
 	 * @param key The key where to store data
 	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int)} updated with alpha, beta and value
+	 * @return true if state is stored, false if it is ignored
 	 * @see TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)
 	 */
-	void store(TranspositionTable<M> table, long key, AlphaBetaState<M> state);
+	boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state);
 }

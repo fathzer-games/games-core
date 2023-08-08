@@ -9,6 +9,7 @@ public interface AI<M> {
     
     /**
      * Gets best moves evaluations at the given search depth
+     * <br>This method works on all possible moves for the position. If you want to work on reduced move set, you can use {@link #getBestMoves(List, SearchParameters)} methods
      * @param depth The search depth (must be &gt; 0)
      * @param size How many best moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
      * @param accuracy The minimum gap under which a move is considered having the same value than another.

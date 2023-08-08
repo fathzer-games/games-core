@@ -26,9 +26,10 @@ public interface TranspositionTable<M> {
 	 * @param depth The search depth at which the entry is stored
 	 * @param value The entry's value
 	 * @param move The entry's move
-	 * @param validator a predicate that returns true if the previous entry which is passed to the predicate should be replaced 
+	 * @param validator a predicate that returns true if the previous entry which is passed to the predicate should be replaced
+ 	 * @return true if state is stored, false if it is ignored
 	 */
-	void store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
+	boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
 	 * <br>On this event, the table can clean itself, or increment a generation counter used in its own implementation of {@link #keep} method.
@@ -40,6 +41,11 @@ public interface TranspositionTable<M> {
 	 * @return
 	 */
 	TranspositionTablePolicy<M> getPolicy();
+	
+	/** Sets the transposition table's policy.
+	 * @param ppolicy The policy decides what should be stored in the table and how to use it in the search algorithm.
+	 */
+	void setPolicy(TranspositionTablePolicy<M> policy);
 	
 	/**
 	 * Collects the principal variation starting from the position on the board
@@ -59,6 +65,7 @@ public interface TranspositionTable<M> {
 			//FIXME Be aware of key collisions that should make move is not possible
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
 			if (move==null /*|| !board.isValid(move)*/) {
+System.out.println("Found nothing for "+zp.getHashKey()); //TODO
 				break;
 			}
 			arrayPV.add(move);

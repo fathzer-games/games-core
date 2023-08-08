@@ -16,10 +16,11 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	}
 	
 	@Override
-	public void store(TranspositionTable<M> table, long key, AlphaBetaState<M> state) {
+	public boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state) {
     	// Update the transposition table
     	if (state.getValue()>state.getAlpha() && state.getValue()<state.getBetaUpdated()) {
-   			table.store(key, EntryType.EXACT, state.getDepth(), state.getValue(), state.getBestMove(), p -> !p.isValid() || state.getDepth()>=p.getDepth());
+   			return table.store(key, EntryType.EXACT, state.getDepth(), state.getValue(), state.getBestMove(), p -> !p.isValid() || state.getDepth()>=p.getDepth());
     	}
+    	return false;
 	}
 }

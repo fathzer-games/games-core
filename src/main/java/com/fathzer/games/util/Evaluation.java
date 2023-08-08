@@ -1,12 +1,15 @@
 package com.fathzer.games.util;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Evaluation<M> implements Comparable<Evaluation<M>> {
 	private final M content;
     private final int value;
+    private List<M> pv;
+    private Function<M,List<M>> pvBuilder;
     
     public Evaluation(M what, int evaluation) {
     	this.content = what;
@@ -19,6 +22,26 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 
 	public int getValue() {
 		return value;
+	}
+	
+	/** Gets the <a href="https://en.wikipedia.org/wiki/Variation_(game_tree)">principal variation</a> of this move.
+	 * @return a list of moves or null if the principal variation is not available (for instance if the evaluation has been
+	 * computed by an algorithm that can't compute the principal variation).
+	 */
+	public List<M> getPrincipalVariation() {
+		if (pv==null && pvBuilder!=null) {
+			pv = pvBuilder.apply(content);
+		}
+		return pv;
+	}
+
+	/** Sets a function that can lazily compute the <a href="https://en.wikipedia.org/wiki/Variation_(game_tree)">principal variation</a> of this move.
+	 * @param pvBuilder A function that converts a move to its principal variation.
+	 * <br>This function will be invoked once with {@link #getContent()} as parameter first time {@link #getPrincipalVariation()} is called.
+	 * <br>If null, which is the default value, the principal variation will not be computed and null will be returned
+	 */
+	public void setPvBuilder(Function<M,List<M>> pvBuilder) {
+		this.pvBuilder = pvBuilder;
 	}
 
 	@Override

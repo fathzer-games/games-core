@@ -21,15 +21,14 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 	private long maxTime = Long.MAX_VALUE;
 	private final AI<M> ai;
 	private List<Evaluation<M>> orderedMoves;
-	private final int maxDepth;
 	private EventLogger<M> logger;
+	private SearchParameters currentParams;
 	
 	RecursiveSearch(Evaluator<B> evaluator, AI<M> ai, SearchParameters params, long maxTimeMs) {
 		this.evaluator = evaluator;
 		this.params = params;
 		this.maxTime = maxTimeMs;
 		this.ai = ai;
-		this.maxDepth = params.getDepth();
 		this.logger = new Mute<>();
 	}
 	
@@ -43,27 +42,32 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 	
 	private List<Evaluation<M>> buildBestMoves() {
 		final long start = System.currentTimeMillis();
-		params.setDepth(2);
-		SearchResult<M> bestMoves = ai.getBestMoves(params);
-		logger.logSearch(params.getDepth(), ai.getStatistics(), bestMoves);
+		this.currentParams = new SearchParameters(getStartDepth(), params.getSize(), params.getAccuracy());
+		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
+		logger.logSearch(currentParams.getDepth(), ai.getStatistics(), bestMoves);
 		final Timer timer = new Timer(true);
 		if (maxTime!=Long.MAX_VALUE) {
-			timer.schedule(new TimerTask(){
-				@Override
-				public void run() {
-					ai.interrupt();
-					logger.logTimeOut(params.getDepth());
-				}
-			}, maxTime-(System.currentTimeMillis()-start));
+			final long remaining = maxTime-(System.currentTimeMillis()-start);
+			if (remaining>0) {
+				timer.schedule(new TimerTask(){
+					@Override
+					public void run() {
+						ai.interrupt();
+						logger.logTimeOut(currentParams.getDepth());
+					}
+				}, remaining);
+			} else {
+				return bestMoves.getCut();
+			}
 		}
 		final List<Evaluation<M>> ended = new ArrayList<>(bestMoves.getList().size());
 		do {
 			// Re-use best moves order to speedup next search
 			final List<M> moves = getMovesToDeepen(bestMoves.getList(), ended);
-			params.setDepth(params.getDepth()+2);
+			currentParams.setDepth(getNextDepth(currentParams.getDepth()));
 			if (!moves.isEmpty()) {
-				final SearchResult<M> deeper = ai.getBestMoves(moves, params);
-				logger.logSearch(params.getDepth(), ai.getStatistics(), bestMoves);
+				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
+				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
 				} else {
@@ -75,11 +79,19 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 			if (ai.isInterrupted() || moves.isEmpty()) {
 				break;
 			}
-		} while (params.getDepth()<maxDepth);
+		} while (currentParams.getDepth()<params.getDepth());
 		timer.cancel();
 		final List<Evaluation<M>> result = bestMoves.getCut();
 		result.addAll(ended);
 		return result;
+	}
+
+	protected int getStartDepth() {
+		return 2;
+	}
+
+	protected int getNextDepth(int currentDepth) {
+		return currentDepth+2;
 	}
 
 	public List<Evaluation<M>> getBestMoves() {
@@ -92,7 +104,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 	private List<M> getMovesToDeepen(List<Evaluation<M>> evaluations, List<Evaluation<M>> ended) {
 		if (isEndOfGame(evaluations.get(0))) {
 			// if best move is a win/loose, continuing analysis is useless
-			logger.logEndDetected(params.getDepth());
+			logger.logEndDetected(currentParams.getDepth());
 			return Collections.emptyList();
 		}
 		// Separate move that leads to loose (put in finished). These moves do not need to be deepened. Store others in toDeepen
@@ -111,6 +123,10 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 	}
 	
 	private boolean isEndOfGame(Evaluation<M> mv) {
-		return evaluator.getNbMovesToWin(mv.getValue()) <= params.getDepth();
+		return evaluator.isWinLooseScore(mv.getValue(), params.getDepth());
+	}
+
+	public int getMaxDepth() {
+		return params.getDepth();
 	}
 }

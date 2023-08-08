@@ -7,8 +7,7 @@
 A core library to help implement two players games
 
 ## TODO
-- Use Evaluator directly in AI implementations instead of just in recursive engine, I think it could removes the need for intermediate classes between Board and Negamax.
-- Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation).
+- Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-(
 - AlphaBeta: Verify it's still working and implement move sorting
 - Write tests and Documentation ;-)
 - Test with Sonar

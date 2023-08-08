@@ -49,16 +49,18 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 	
 	@Override
-	public void store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator) {
+	public boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator) {
 		final int index = getKeyIndex(key);
 		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
 		lock.writeLock().lock();
 		try {
 			entry.set(key, table.get(index)==key ? table.get(index+1) : 0);
-			if (validator.test(entry)) {
+			final boolean written = validator.test(entry);
+			if (written) {
 				table.set(index, key);
 				table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
 			}
+			return written;
 		} finally {
 			lock.writeLock().unlock();
 		}
@@ -69,6 +71,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		return policy;
 	}
 	
+	@Override
 	public void setPolicy(TranspositionTablePolicy<M> policy) {
 		this.policy = policy;
 	}

@@ -13,13 +13,14 @@ import com.fathzer.games.util.Evaluation;
 
 /**
  * A Negamax with alpha beta pruning implementation.
- * @param <M> Implementation of the Move interface to use
+ * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
  */
-public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
+public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements MoveSorter<M> {
     private TranspositionTable<M> transpositionTable;
     
-	public Negamax(ExecutionContext<M> exec) {
-		super(exec);
+	public Negamax(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
+		super(exec, evaluator);
 	}
 	
 	@Override
@@ -64,20 +65,28 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 //		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+value+" (alpha is "+alpha+")");
 	}
 	
-    protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
-		final GamePosition<M> position = getGamePosition();
+	protected Integer getEndOfSearchScore (B position, final int depth, int maxDepth, final int who) {
     	if (depth == 0 || isInterrupted()) {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
     		getStatistics().evaluationDone();
-            return who * position.evaluate();
+    		return who * getEvaluator().evaluate(position);
         }
     	final Status status = position.getStatus();
 		if (Status.DRAW.equals(status)) {
 			return 0;
 		} else if (!Status.PLAYING.equals(status)){
-			final int nbMoves = (maxDepth-depth+1)/2;
-			// Player looses after nbMoves moves
-			return -position.getWinScore(nbMoves);
+			// Player looses after nbMoves half moves
+            return -getEvaluator().getWinScore(maxDepth-depth);
+		} else {
+			return null;
+		}
+	}
+	
+    protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
+		final B position = getGamePosition();
+		Integer endOfSearchScore = getEndOfSearchScore(position, depth, maxDepth, who);
+		if (endOfSearchScore!=null) {
+			return endOfSearchScore;
 		}
 		
 		final boolean keyProvider = (position instanceof HashProvider) && transpositionTable!=null;
@@ -85,10 +94,10 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 		final AlphaBetaState<M> state;
 		if (keyProvider) {
 			key = ((HashProvider)position).getHashKey();
-			TranspositionTableEntry<M> entry = position instanceof HashProvider ? transpositionTable.get(((HashProvider)position).getHashKey()) : null;
+			TranspositionTableEntry<M> entry = transpositionTable.get(key);
 			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta);
 			if (state.isValueSet()) {
-				return state.getValue();
+				return fromTTScore(state.getValue(), maxDepth);
 			} else if (state.isAlphaBetaUpdated()) {
 				alpha = state.getAlphaUpdated();
 				beta = state.getBetaUpdated();
@@ -98,7 +107,7 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			state = null;
 		}
 
-    	final List<M> moves = sort(state==null?null:state.getBestMove(), position.getMoves());
+		final List<M> moves = sort(state==null?null:state.getBestMove(), position.getMoves());
     	getStatistics().movesGenerated(moves.size());
         int value = Integer.MIN_VALUE;
         M bestMove = null;
@@ -119,10 +128,10 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
             	break;
             }
         }
-
+        
         if (keyProvider && !isInterrupted()) {
         	// If a transposition table is available
-        	state.setValue(value);
+        	state.setValue(toTTScore(value, depth, maxDepth));
         	state.updateAlphaBeta(alpha, beta);
         	state.setBestMove(bestMove);
         	transpositionTable.getPolicy().store(transpositionTable, key, state);
@@ -154,5 +163,24 @@ public class Negamax<M> extends AbstractAI<M> implements MoveSorter<M> {
 			}
 		}
 		return result;
+	}
+	
+	protected int toTTScore(int value, int depth, int maxDepth) {
+		final Evaluator<B> ev = getEvaluator();
+		if (ev.isWinLooseScore(value, maxDepth)) {
+			return ev.getWinScore(depth);
+		} else {
+			return value;
+		}
+	}
+	
+	protected int fromTTScore(int value, int maxDepth) {
+		final Evaluator<B> ev = getEvaluator();
+		if (ev.isWinLooseScore(value, maxDepth)) {
+			final int matDepth = ev.getNbHalfMovesToWin(value);
+			return ev.getWinScore(maxDepth-matDepth);
+		} else {
+			return value;
+		}
 	}
 }
