@@ -2,6 +2,8 @@ package com.fathzer.games.ai.experimental;
 
 import java.util.List;
 
+import static com.fathzer.games.ai.experimental.Spy.Event.*;
+
 import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
@@ -20,17 +22,7 @@ import com.fathzer.games.util.Evaluation;
  * @param <M> Implementation of the Move interface to use
  */
 public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
-//TODO Remove?
-	public enum Event {EVAL, MAT, DRAW, EXIT, TT}
-    public interface Spy<M, B extends MoveGenerator<M>> {
-    	default void enter(TreeSearchStateStack<M,B> state) {}
-    	default void alphaBetaFromTT(TreeSearchStateStack<M,B> state, AlphaBetaState<M> abState) {}
-    	default void storeTT(TreeSearchStateStack<M,B> state, AlphaBetaState<M> abState, boolean store) {}
-    	default void cut(TreeSearchStateStack<M,B> state, M move, int score) {}
-    	default void exit(TreeSearchStateStack<M,B> state, Event evt, int value) {}
-    }
-    public Spy<M,B> spy = new Spy<M,B>() {};
-//TODO
+    private Spy<M,B> spy = new Spy<M,B>() {};
     
 	public Negamax3(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
 		super(exec, evaluator);
@@ -60,32 +52,32 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     	}
     	final B position = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        position.makeMove(move);
-        getStatistics().movePlayed();
         final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(position, depth);
-        stack.init(stack.get(stack.getCurrentDepth()), -Integer.MAX_VALUE, -alpha);
+        stack.init(stack.getCurrent(), alpha, Integer.MAX_VALUE);
+        stack.makeMove(move);
+        getStatistics().movePlayed();
     	final int score = -negamax(stack);
-        position.unmakeMove();
+        stack.unmakeMove();
         return score;
 	}
 	
 	protected Integer getEndOfSearchScore (TreeSearchStateStack<M,B> stack) {
-		final TreeSearchState<M> state = stack.get(stack.getCurrentDepth());
+		final TreeSearchState<M> state = stack.getCurrent();
 		if (state.depth == 0 || isInterrupted()) {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
     		getStatistics().evaluationDone();
     		final int eval = state.who * getEvaluator().evaluate(stack.position);
-   			spy.exit(stack, Event.EVAL, eval);
+   			spy.exit(stack, EVAL, eval);
 			return eval;
         }
     	final Status status = stack.position.getStatus();
 		if (Status.DRAW.equals(status)) {
-			spy.exit(stack, Event.DRAW, 0);
+			spy.exit(stack, DRAW, 0);
 			return 0;
 		} else if (!Status.PLAYING.equals(status)){
 			// Player looses after nbMoves moves
             final int matScore = -getEvaluator().getWinScore(stack.maxDepth-state.depth);
-           	spy.exit(stack, Event.MAT, matScore);
+           	spy.exit(stack, MAT, matScore);
 			return matScore;
 		} else {
 			return null;
@@ -103,7 +95,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		if (endOfSearchScore!=null) {
 			return endOfSearchScore;
 		}
-		final TreeSearchState<M> searchState = searchStack.get(searchStack.getCurrentDepth());
+		final TreeSearchState<M> searchState = searchStack.getCurrent();
 		
 		final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
 		final long key;
@@ -113,7 +105,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
 			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin);
 			if (state.isValueSet()) {
-				spy.exit(searchStack, Event.TT, state.getValue());
+				spy.exit(searchStack, TT, state.getValue());
 				return fromTTScore(state.getValue(), searchStack.maxDepth);
 			} else if (state.isAlphaBetaUpdated()) {
 				spy.alphaBetaFromTT(searchStack, state);
@@ -127,20 +119,18 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 
 		final List<M> moves = sort(state==null?null:state.getBestMove(), searchStack.position.getMoves());
     	getStatistics().movesGenerated(moves.size());
-        int value = -Integer.MAX_VALUE;
-        M bestMove = null;
         for (M move : moves) {
         	searchStack.makeMove(move);
             getStatistics().movePlayed();
             final int score = -negamax(searchStack);
             searchStack.unmakeMove();
-            if (score > value) {
-                value = score;
-                bestMove = move;
-                if (value > searchState.alpha) {
-                	searchState.alpha = value;
-                    if (searchState.alpha >= searchState.beta) {
-                   		spy.cut(searchStack, move, score);
+            if (score > searchState.value) {
+            	searchState.value = score;
+                searchState.bestMove = move;
+                if (score > searchState.alpha) {
+                	searchState.alpha = score;
+                    if (score >= searchState.beta) {
+                   		spy.cut(searchStack, move);
                     	break;
                     }
                 }
@@ -149,14 +139,18 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
         
         if (keyProvider && !isInterrupted()) {
         	// If a transposition table is available
-        	state.setValue(toTTScore(value,searchState.depth, searchStack.maxDepth));
+        	state.setValue(toTTScore(searchState.value,searchState.depth, searchStack.maxDepth));
         	state.updateAlphaBeta(searchState.alpha, searchState.beta);
-        	state.setBestMove(bestMove);
+        	state.setBestMove(searchState.bestMove);
         	boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state);
        		spy.storeTT(searchStack, state, store);
         }
 
-       	spy.exit(searchStack, Event.EXIT, value);
-        return value;
+       	spy.exit(searchStack, EXIT, searchState.value);
+        return searchState.value;
     }
+
+	public void setSpy(Spy<M,B> spy) {
+		this.spy = spy;
+	}
 }

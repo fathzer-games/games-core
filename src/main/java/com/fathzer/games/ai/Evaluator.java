@@ -20,7 +20,7 @@ public interface Evaluator<T> {
     /** Gets the score obtained for a win after a number of half moves.
      * <br>The default value is Short.MAX_VALUE - nbHalfMoves
      * @param nbHalfMoves The number of half moves needed to win.
-     * @return a positive int &gt; to any value returned by {@link #evaluate()}
+     * @return a positive int &gt; to any value returned by {@link #evaluate(Object)}
      */
 	default int getWinScore(int nbHalfMoves) {
 		return Short.MAX_VALUE-nbHalfMoves;

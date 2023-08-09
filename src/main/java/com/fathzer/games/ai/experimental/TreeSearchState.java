@@ -7,6 +7,8 @@ public class TreeSearchState<M> {
 	public int betaOrigin;
 	public int alpha;
 	public int beta;
+	public int value;
+    public M bestMove;
 	public M lastMove;
 	
 	

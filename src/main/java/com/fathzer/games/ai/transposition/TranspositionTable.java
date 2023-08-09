@@ -12,7 +12,7 @@ import com.fathzer.games.HashProvider;
  */
 public interface TranspositionTable<M> {
 	/** Get a table entry.
-	 * @param The key
+	 * @param key The key
 	 * @return a table entry or null if this position should not be stored in transposition table.
 	 * If the key does not exists yet, but should be stored later, it returns a entry with valid flag set to false.
 	 * Typically, a fake table, that never saves anything will return null.
@@ -32,9 +32,9 @@ public interface TranspositionTable<M> {
 	boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
-	 * <br>On this event, the table can clean itself, or increment a generation counter used in its own implementation of {@link #keep} method.
+	 * <br>On this event, the table can clean itself, or in a future release increment a generation counter in Entry generation.
 	 */
-	void newPosition();
+	void newPosition(); //TODO Change comment when generation will be used in TableEntry
 	
 	/** Gets the transposition table's policy.
 	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
@@ -43,7 +43,7 @@ public interface TranspositionTable<M> {
 	TranspositionTablePolicy<M> getPolicy();
 	
 	/** Sets the transposition table's policy.
-	 * @param ppolicy The policy decides what should be stored in the table and how to use it in the search algorithm.
+	 * @param policy The policy decides what should be stored in the table and how to use it in the search algorithm.
 	 */
 	void setPolicy(TranspositionTablePolicy<M> policy);
 	

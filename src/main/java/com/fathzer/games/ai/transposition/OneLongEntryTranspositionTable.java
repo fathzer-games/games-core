@@ -11,6 +11,7 @@ import java.util.function.Predicate;
  * <li>score should be a short (16 bits)</li>
  * <li>depth is limited to 127 (8 bits), of course, it should be &gt;= 0</li>
  * <li>move can be represented as a integer (32 bits)</li>
+ * </ul>
  */
 public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
 	private static final int SLOTS = 2; // The number of long per record
@@ -29,9 +30,6 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		policy = new BasicPolicy<>();
 	}
 	
-	/** {@inheritDoc} 
-	 * <br>WARNING: This method is not thread safe, it should be synchronized on the object returned by {@link #getLock()}
-	 */
 	@Override
 	public TranspositionTableEntry<M> get(long key) {
 		final int index = getKeyIndex(key);

@@ -10,10 +10,7 @@ public interface AI<M> {
     /**
      * Gets best moves evaluations at the given search depth
      * <br>This method works on all possible moves for the position. If you want to work on reduced move set, you can use {@link #getBestMoves(List, SearchParameters)} methods
-     * @param depth The search depth (must be &gt; 0)
-     * @param size How many best moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
-     * @param accuracy The minimum gap under which a move is considered having the same value than another.
-     * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
+     * @param parameters The search parameters
      * @return The search result
      */
     SearchResult<M> getBestMoves(SearchParameters parameters);
@@ -23,10 +20,7 @@ public interface AI<M> {
      * <br>This methods evaluates provided moves in the list order. In order to maximize cutoff in some algorithm (like {@link Negamax}),
      * you should order the list in from what is estimated to be the best move to the worst one.
      * @param possibleMoves A list of moves to evaluate. If one of these moves is impossible, result is not specified (It may crash or return a wrong result, etc...).
-     * @param depth The search depth (must be &gt; 0)
-     * @param size How many best moves is requested (Integer.MAX_VALUE to have all moves evaluated).
-     * @param accuracy The minimum gap under which a move is considered having the same value than another.
-     * 				This allows to obtain moves that are almost equivalent to the last strictly best move.
+     * @param parameters The search parameters
      * @return The search result. 
      */
     SearchResult<M> getBestMoves(List<M> possibleMoves, SearchParameters parameters);

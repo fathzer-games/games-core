@@ -1,7 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a> entry.
- * <br><b>Warning: All getters have non specified results when called on an invalid entry.
+ * <br><b>Warning:</b> All getters have non specified results when called on an invalid entry.
  */
 public interface TranspositionTableEntry<M> {
 	/** Tests if the entry is valid.

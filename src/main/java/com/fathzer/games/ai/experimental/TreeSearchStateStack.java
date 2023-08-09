@@ -14,25 +14,21 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 	public TreeSearchStateStack(B position, int maxDepth) {
 		this.position = position;
 		this.maxDepth = maxDepth;
-		states = new ArrayList<>(maxDepth);
+		states = new ArrayList<>(maxDepth+1);
 		int who = maxDepth%2==0 ? 1 : -1;
-		for (int i = 0 ; i<maxDepth; i++) {
+		for (int i = 0 ; i<=maxDepth; i++) {
 			states.add(new TreeSearchState<>(i, 0, 0, who));
 			who = -who;
 		}
-		currentDepth = maxDepth-1; 
+		currentDepth = maxDepth; 
 	}
 	
+	public TreeSearchState<M> getCurrent() {
+		return states.get(currentDepth);
+	}
+
 	public TreeSearchState<M> get(int depth) {
 		return states.get(depth);
-	}
-	
-	public TreeSearchState<M> next() {
-		final TreeSearchState<M> current = get(currentDepth);
-		currentDepth--;
-		final TreeSearchState<M> result = get(currentDepth);
-		init(result, -current.beta, -current.alpha);
-		return result;
 	}
 
 	void init(final TreeSearchState<M> result, int alpha, int beta) {
@@ -40,6 +36,9 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		result.alpha = alpha;
 		result.betaOrigin = beta;
 		result.beta = beta;
+		result.bestMove = null;
+		result.value = -Integer.MAX_VALUE;
+		result.lastMove = null;
 	}
 	
 	public void makeMove(M move) {
@@ -47,7 +46,15 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		get(currentDepth).lastMove = move;
 		next();
 	}
-	
+
+	private TreeSearchState<M> next() {
+		final TreeSearchState<M> current = get(currentDepth);
+		currentDepth--;
+		final TreeSearchState<M> result = get(currentDepth);
+		init(result, -current.beta, -current.alpha);
+		return result;
+	}
+
 	public void unmakeMove() {
 		position.unmakeMove();
 		currentDepth++;

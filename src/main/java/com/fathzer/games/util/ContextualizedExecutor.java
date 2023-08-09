@@ -41,7 +41,7 @@ public class ContextualizedExecutor<T> implements Closeable {
 	}
 
 	/** Constructor.
-	 * @param parallelism The number of threads to use to process tasks submitted to {@link #invokeAll(List, Supplier)}
+	 * @param parallelism The number of threads to use to process tasks submitted to {@link #invokeAll(Collection, Supplier)}
 	 */
 	public ContextualizedExecutor(int parallelism) {
 		this.running = new AtomicBoolean();
@@ -92,7 +92,7 @@ public class ContextualizedExecutor<T> implements Closeable {
 	}
 	
 	/** Returns the context of current thread.
-	 * @return an instance returned by the context supplier passed to {@link #invokeAll(List, Supplier)} or null if this method is called
+	 * @return an instance returned by the context supplier passed to {@link #invokeAll(Collection, Supplier)} or null if this method is called
 	 * by a thread not managed by this class.
 	 */
 	@SuppressWarnings("unchecked")
