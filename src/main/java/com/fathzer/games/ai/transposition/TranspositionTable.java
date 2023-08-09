@@ -65,7 +65,6 @@ public interface TranspositionTable<M> {
 			//FIXME Be aware of key collisions that should make move is not possible
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
 			if (move==null /*|| !board.isValid(move)*/) {
-System.out.println("Found nothing for "+zp.getHashKey()); //TODO
 				break;
 			}
 			arrayPV.add(move);

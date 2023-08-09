@@ -1,5 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
+import java.util.function.IntUnaryOperator;
+
 import com.fathzer.games.ai.AlphaBetaState;
 
 public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
@@ -16,10 +18,10 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	}
 	
 	@Override
-	public boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state) {
+	public boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter) {
     	// Update the transposition table
     	if (state.getValue()>state.getAlpha() && state.getValue()<state.getBetaUpdated()) {
-   			return table.store(key, EntryType.EXACT, state.getDepth(), state.getValue(), state.getBestMove(), p -> !p.isValid() || state.getDepth()>=p.getDepth());
+   			return table.store(key, EntryType.EXACT, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), p -> !p.isValid() || state.getDepth()>=p.getDepth());
     	}
     	return false;
 	}

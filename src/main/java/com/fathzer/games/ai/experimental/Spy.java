@@ -11,5 +11,5 @@ public interface Spy<M, B extends MoveGenerator<M>> {
 	default void alphaBetaFromTT(TreeSearchStateStack<M,B> state, AlphaBetaState<M> abState) {}
 	default void storeTT(TreeSearchStateStack<M,B> state, AlphaBetaState<M> abState, boolean store) {}
 	default void cut(TreeSearchStateStack<M,B> state, M move) {}
-	default void exit(TreeSearchStateStack<M,B> state, Event evt, int value) {}
+	default void exit(TreeSearchStateStack<M,B> state, Event evt) {}
 }

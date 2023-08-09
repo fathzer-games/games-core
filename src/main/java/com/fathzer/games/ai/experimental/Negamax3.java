@@ -61,26 +61,27 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
         return score;
 	}
 	
-	protected Integer getEndOfSearchScore (TreeSearchStateStack<M,B> stack) {
+	protected boolean getEndOfSearchScore (TreeSearchStateStack<M,B> stack) {
 		final TreeSearchState<M> state = stack.getCurrent();
 		if (state.depth == 0 || isInterrupted()) {
 //System.out.println("Evaluation: "+context.evaluate()+" * "+who);
     		getStatistics().evaluationDone();
-    		final int eval = state.who * getEvaluator().evaluate(stack.position);
-   			spy.exit(stack, EVAL, eval);
-			return eval;
+    		state.value = state.who * getEvaluator().evaluate(stack.position);
+   			spy.exit(stack, EVAL);
+			return true;
         }
     	final Status status = stack.position.getStatus();
 		if (Status.DRAW.equals(status)) {
-			spy.exit(stack, DRAW, 0);
-			return 0;
+			state.value = 0;
+			spy.exit(stack, DRAW);
+			return true;
 		} else if (!Status.PLAYING.equals(status)){
 			// Player looses after nbMoves moves
-            final int matScore = -getEvaluator().getWinScore(stack.maxDepth-state.depth);
-           	spy.exit(stack, MAT, matScore);
-			return matScore;
+            state.value = -getEvaluator().getWinScore(stack.maxDepth-state.depth);
+           	spy.exit(stack, MAT);
+			return true;
 		} else {
-			return null;
+			return false;
 		}
 	}
 	
@@ -91,11 +92,10 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	
 	protected int negamax(TreeSearchStateStack<M,B> searchStack) {
     	spy.enter(searchStack);
-		Integer endOfSearchScore = getEndOfSearchScore(searchStack);
-		if (endOfSearchScore!=null) {
-			return endOfSearchScore;
-		}
 		final TreeSearchState<M> searchState = searchStack.getCurrent();
+		if (getEndOfSearchScore(searchStack)) {
+			return searchState.value;
+		}
 		
 		final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
 		final long key;
@@ -105,7 +105,8 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
 			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin);
 			if (state.isValueSet()) {
-				spy.exit(searchStack, TT, state.getValue());
+				searchState.value = state.getValue();
+				spy.exit(searchStack, TT);
 				return fromTTScore(state.getValue(), searchStack.maxDepth);
 			} else if (state.isAlphaBetaUpdated()) {
 				spy.alphaBetaFromTT(searchStack, state);
@@ -139,14 +140,14 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
         
         if (keyProvider && !isInterrupted()) {
         	// If a transposition table is available
-        	state.setValue(toTTScore(searchState.value,searchState.depth, searchStack.maxDepth));
+        	state.setValue(searchState.value);
         	state.updateAlphaBeta(searchState.alpha, searchState.beta);
         	state.setBestMove(searchState.bestMove);
-        	boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state);
+        	boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> toTTScore(v,searchState.depth, searchStack.maxDepth));
        		spy.storeTT(searchStack, state, store);
         }
 
-       	spy.exit(searchStack, EXIT, searchState.value);
+       	spy.exit(searchStack, EXIT);
         return searchState.value;
     }
 

@@ -131,10 +131,10 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         
         if (keyProvider && !isInterrupted()) {
         	// If a transposition table is available
-        	state.setValue(toTTScore(value, depth, maxDepth));
+        	state.setValue(value);
         	state.updateAlphaBeta(alpha, beta);
         	state.setBestMove(bestMove);
-        	transpositionTable.getPolicy().store(transpositionTable, key, state);
+        	transpositionTable.getPolicy().store(transpositionTable, key, state, v -> toTTScore(v, depth, maxDepth));
         }
         return value;
     }
