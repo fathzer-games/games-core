@@ -95,7 +95,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		if (keyProvider) {
 			key = ((HashProvider)position).getHashKey();
 			TranspositionTableEntry<M> entry = transpositionTable.get(key);
-			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta);
+			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta, v -> fromTTScore(v, maxDepth));
 			if (state.isValueSet()) {
 				return fromTTScore(state.getValue(), maxDepth);
 			} else if (state.isAlphaBetaUpdated()) {

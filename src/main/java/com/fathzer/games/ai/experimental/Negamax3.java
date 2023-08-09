@@ -103,11 +103,11 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		if (keyProvider) {
 			key = ((HashProvider)searchStack.position).getHashKey();
 			TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
-			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin);
+			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> fromTTScore(v, searchStack.maxDepth));
 			if (state.isValueSet()) {
 				searchState.value = state.getValue();
 				spy.exit(searchStack, TT);
-				return fromTTScore(state.getValue(), searchStack.maxDepth);
+				return state.getValue();
 			} else if (state.isAlphaBetaUpdated()) {
 				spy.alphaBetaFromTT(searchStack, state);
 				searchState.alpha = state.getAlphaUpdated();

@@ -15,10 +15,12 @@ public interface TranspositionTablePolicy<M> {
      * @param depth The current depth
      * @param alpha The current alpha value
      * @param beta The current beta value
+	 * @param fromTTScoreConverter A function that will convert the value stored in the table to the value effectively returned in this method's result.
+	 * <br>This could seems strange because there's a lot of examples on the Internet that retrieves directly a value.
+	 * But, unfortunately, this strategy does work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
      * @return The state that should be applied. If a value is set, the search is stopped and the value is returned. If alpha or beta value are changed in returned instance, they are copied in calling search function.
      */
-	AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta);
-	//TODO Add ttToScore param to be symetrical with store
+	AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter);
 	
 	/** Updates the transposition table, if required, after iterating on possible moves.
 	 * <br>This method is responsible for deciding if something should be stored and what should be stored.

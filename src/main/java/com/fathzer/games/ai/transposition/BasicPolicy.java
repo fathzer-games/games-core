@@ -6,11 +6,11 @@ import com.fathzer.games.ai.AlphaBetaState;
 
 public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	@Override
-	public AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta) {
+	public AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter) {
 		final AlphaBetaState<M> state = new AlphaBetaState<>(depth, alpha, beta);
     	if (entry!=null && entry.isValid() && EntryType.EXACT==entry.getEntryType()) {
     		if (entry.getDepth()>=depth) {
-    			state.setValue(entry.getValue());
+    			state.setValue(fromTTScoreConverter.applyAsInt(entry.getValue()));
     		}
     		state.setBestMove(entry.getMove());
     	}
