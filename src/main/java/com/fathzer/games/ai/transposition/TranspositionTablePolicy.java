@@ -27,7 +27,7 @@ public interface TranspositionTablePolicy<M> {
 	 * <br>It typically uses {@link TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)} method to store/update the entry 
 	 * @param table The transposition table
 	 * @param key The key where to store data
-	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int)} updated with alpha, beta and value
+	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int, IntUnaryOperator)} updated with alpha, beta and value
 	 * @param toTTScoreConverter A function that will convert the state value to the value effectively stored in the table.
 	 * <br>This could seems strange because there's a lot of examples on the Internet that stores directly a value.
 	 * But, unfortunately, this strategy does work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
