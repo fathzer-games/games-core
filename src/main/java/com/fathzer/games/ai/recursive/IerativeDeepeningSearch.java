@@ -11,11 +11,11 @@ import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.Evaluation.Type;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
-import com.fathzer.games.ai.recursive.AbstractRecursiveEngine.EventLogger;
-import com.fathzer.games.ai.recursive.AbstractRecursiveEngine.Mute;
+import com.fathzer.games.ai.recursive.IterativeDeepeningEngine.EventLogger;
+import com.fathzer.games.ai.recursive.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.util.EvaluatedMove;
 
-class RecursiveSearch<M, B extends MoveGenerator<M>> {
+class IerativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 	private final SearchParameters params;
 	private long maxTime = Long.MAX_VALUE;
 	private final AI<M> ai;
@@ -23,7 +23,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 	private EventLogger<M> logger;
 	private SearchParameters currentParams;
 	
-	RecursiveSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
+	IerativeDeepeningSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
 		this.params = params;
 		this.maxTime = maxTimeMs;
 		this.ai = ai;

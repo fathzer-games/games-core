@@ -6,9 +6,12 @@
 # games-core
 A core library to help implement two players games
 
+# Known bugs
+- The iterative deepening search always stop deepening when it find a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one. 
+
 ## TODO
 - Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-(
-- AlphaBeta: Verify it's still working and implement move sorting
+- AlphaBeta/Minimax: Verify it's still working and implement move sorting
 - Write tests and Documentation ;-)
 - Test with Sonar
 - Publish artifact on Maven central

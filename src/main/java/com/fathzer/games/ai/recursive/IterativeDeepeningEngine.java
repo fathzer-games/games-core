@@ -15,7 +15,7 @@ import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.util.EvaluatedMove;
 
-public abstract class AbstractRecursiveEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
+public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
 	/** A class that logs events during search.
 	 * @param <T> The class that represents a move
 	 */
@@ -46,10 +46,10 @@ public abstract class AbstractRecursiveEngine<M, B extends MoveGenerator<M>> imp
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
-	private RecursiveSearch<M, B> rs;
+	private IerativeDeepeningSearch<M, B> rs;
 	private AtomicBoolean running;
 	
-	protected AbstractRecursiveEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
+	protected IterativeDeepeningEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
 		this.parallelism = 1;
 		this.searchParams = new SearchParameters(maxDepth);
 		this.evaluator = evaluator;
@@ -109,7 +109,7 @@ public abstract class AbstractRecursiveEngine<M, B extends MoveGenerator<M>> imp
 				throw new IllegalStateException();
 			}
 			try {
-				rs = new RecursiveSearch<>(internal, searchParams, maxTime);
+				rs = new IerativeDeepeningSearch<>(internal, searchParams, maxTime);
 				rs.setEventLogger(logger);
 				final List<EvaluatedMove<M>> result = rs.getBestMoves();
 				for (EvaluatedMove<M> ev:result) {
