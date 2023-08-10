@@ -37,4 +37,13 @@ public interface Evaluator<T> {
 	default boolean isWinLooseScore(int score, int maxDepth) {
 		return getNbHalfMovesToWin(Math.abs(score)) <= maxDepth;
 	}
+	
+	default Evaluation toEvaluation(int score, int maxDepth) {
+		if (isWinLooseScore(score, maxDepth)) {
+			final int endCount = (getNbHalfMovesToWin(Math.abs(score))+1)/2;
+			return score>0 ? Evaluation.win(endCount,score) : Evaluation.loose(endCount,score); 
+		} else {
+			return Evaluation.score(score);
+		}
+	}
 }

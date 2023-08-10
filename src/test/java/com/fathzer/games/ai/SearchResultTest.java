@@ -1,6 +1,7 @@
 package com.fathzer.games.ai;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static com.fathzer.games.ai.Evaluation.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,13 +16,13 @@ class SearchResultTest {
 	void test() {
 		SearchResult<Integer> fns = new SearchResult<>(3, 2);
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
-		fns.add(1, 0);
+		fns.add(1, score(0));
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
-		fns.add(2, 3);
+		fns.add(2, score(3));
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
-		fns.add(3, -3);
+		fns.add(3, score(-3));
 		assertEquals(-6, fns.getLow());
-		fns.add(4, 6);
+		fns.add(4, score(6));
 		assertEquals(-3, fns.getLow());
 		
 		assertEquals(Arrays.asList(4,2,1), fns.getCut().stream().map(e -> e.getContent()).collect(Collectors.toList()));
@@ -29,7 +30,7 @@ class SearchResultTest {
 		
 		{
 		// Add ex-aequo
-		fns.add(5, 0);
+		fns.add(5, score(0));
 		assertEquals(-3, fns.getLow());
 		final List<Integer> cut = fns.getCut().stream().map(e -> e.getContent()).collect(Collectors.toList());
 		assertEquals(4, cut.size());
@@ -39,7 +40,7 @@ class SearchResultTest {
 		}
 		
 		// Add other ex aequos that reduce the cut list
-		fns.add(6, 6);
+		fns.add(6, score(6));
 		System.out.println(fns.getList());
 		final List<Integer> cut2 = fns.getCut().stream().map(e -> e.getContent()).collect(Collectors.toList());
 		assertEquals(3, cut2.size());

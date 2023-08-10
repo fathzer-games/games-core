@@ -9,7 +9,7 @@ import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 
 /**
  * A Negamax with alpha beta pruning implementation.
@@ -28,8 +28,8 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		SearchResult<M> result = super.getBestMoves(params);
 		if ((getGamePosition() instanceof HashProvider) && transpositionTable!=null && !isInterrupted()) {
 			// Store best move info in table
-			final Evaluation<M> best = result.getList().get(0);
-			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, params.getDepth(), best.getValue(), best.getContent(), p->true);
+			final EvaluatedMove<M> best = result.getList().get(0);
+			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
 		}
 		return result;
     }

@@ -13,6 +13,7 @@ public class SearchParameters {
 	private int accuracy;
 	
 	/** Constructor.
+	 * <br>By default search size is 1 and accuracy is 0
 	 * @param depth The search depth (must be &gt; 0)
 	 * @throws IllegalArgumentException if depth &lt;=0
 	 */

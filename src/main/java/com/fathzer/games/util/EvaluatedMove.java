@@ -5,13 +5,18 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Evaluation<M> implements Comparable<Evaluation<M>> {
+import com.fathzer.games.ai.Evaluation;
+
+/** A move with its evaluation.
+ * @param <M> The type of move
+ */
+public class EvaluatedMove<M> implements Comparable<EvaluatedMove<M>> {
 	private final M content;
-    private final int value;
+    private final Evaluation value;
     private List<M> pv;
     private Function<M,List<M>> pvBuilder;
     
-    public Evaluation(M what, int evaluation) {
+    public EvaluatedMove(M what, Evaluation evaluation) {
     	this.content = what;
     	this.value = evaluation;
     }
@@ -20,8 +25,12 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 		return content;
 	}
 
-	public int getValue() {
+	public Evaluation getEvaluation() {
 		return value;
+	}
+	
+	public int getScore() {
+		return value.getScore();
 	}
 	
 	/** Gets the <a href="https://en.wikipedia.org/wiki/Variation_(game_tree)">principal variation</a> of this move.
@@ -45,8 +54,8 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 	}
 
 	@Override
-    public int compareTo(Evaluation<M> other) {
-        return other.value - value;
+    public int compareTo(EvaluatedMove<M> other) {
+        return other.getEvaluation().compareTo(value);
     }
 
 	/**
@@ -64,17 +73,17 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		final Evaluation<?> other = (Evaluation<?>) obj;
-		return this.value==other.value;
+		final EvaluatedMove<?> other = (EvaluatedMove<?>) obj;
+		return this.value.equals(other.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return value;
+		return value.hashCode();
 	}
 	
 	public String toString(Function<M,String> toString) {
-		return toString.apply(content)+"("+this.getValue()+")";
+		return toString.apply(content)+"("+this.getEvaluation()+")";
 	}
 	
 	@Override
@@ -82,7 +91,7 @@ public class Evaluation<M> implements Comparable<Evaluation<M>> {
 		return toString(Object::toString);
 	}
 
-	public static <M> String toString(Collection<Evaluation<M>> moves, Function<M,String> toString) {
+	public static <M> String toString(Collection<EvaluatedMove<M>> moves, Function<M,String> toString) {
 		return moves.stream().map(m -> m.toString(toString)).collect(Collectors.joining(", ", "[", "]"));
 	}
 }

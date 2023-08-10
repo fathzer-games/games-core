@@ -8,24 +8,22 @@ import java.util.TimerTask;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AI;
-import com.fathzer.games.ai.Evaluator;
+import com.fathzer.games.ai.Evaluation.Type;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.recursive.AbstractRecursiveEngine.EventLogger;
 import com.fathzer.games.ai.recursive.AbstractRecursiveEngine.Mute;
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 
 class RecursiveSearch<M, B extends MoveGenerator<M>> {
-	private final Evaluator<B> evaluator;
 	private final SearchParameters params;
 	private long maxTime = Long.MAX_VALUE;
 	private final AI<M> ai;
-	private List<Evaluation<M>> orderedMoves;
+	private List<EvaluatedMove<M>> orderedMoves;
 	private EventLogger<M> logger;
 	private SearchParameters currentParams;
 	
-	RecursiveSearch(Evaluator<B> evaluator, AI<M> ai, SearchParameters params, long maxTimeMs) {
-		this.evaluator = evaluator;
+	RecursiveSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
 		this.params = params;
 		this.maxTime = maxTimeMs;
 		this.ai = ai;
@@ -40,7 +38,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 		this.logger = logger;
 	}
 	
-	private List<Evaluation<M>> buildBestMoves() {
+	private List<EvaluatedMove<M>> buildBestMoves() {
 		final long start = System.currentTimeMillis();
 		this.currentParams = new SearchParameters(getStartDepth(), params.getSize(), params.getAccuracy());
 		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
@@ -60,7 +58,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 				return bestMoves.getCut();
 			}
 		}
-		final List<Evaluation<M>> ended = new ArrayList<>(bestMoves.getList().size());
+		final List<EvaluatedMove<M>> ended = new ArrayList<>(bestMoves.getList().size());
 		do {
 			// Re-use best moves order to speedup next search
 			final List<M> moves = getMovesToDeepen(bestMoves.getList(), ended);
@@ -71,8 +69,8 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
 				} else {
-					for (Evaluation<M> ev:deeper.getList()) {
-						bestMoves.update(ev.getContent(), ev.getValue());
+					for (EvaluatedMove<M> ev:deeper.getList()) {
+						bestMoves.update(ev.getContent(), ev.getEvaluation());
 					}
 				}
 			}
@@ -81,7 +79,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 			}
 		} while (currentParams.getDepth()<params.getDepth());
 		timer.cancel();
-		final List<Evaluation<M>> result = bestMoves.getCut();
+		final List<EvaluatedMove<M>> result = bestMoves.getCut();
 		result.addAll(ended);
 		return result;
 	}
@@ -94,14 +92,14 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 		return currentDepth+2;
 	}
 
-	public List<Evaluation<M>> getBestMoves() {
+	public List<EvaluatedMove<M>> getBestMoves() {
 		if (orderedMoves==null) {
 			orderedMoves = buildBestMoves();
 		}
 		return orderedMoves;
 	}
 	
-	private List<M> getMovesToDeepen(List<Evaluation<M>> evaluations, List<Evaluation<M>> ended) {
+	private List<M> getMovesToDeepen(List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
 		if (isEndOfGame(evaluations.get(0))) {
 			// if best move is a win/loose, continuing analysis is useless
 			logger.logEndDetected(currentParams.getDepth());
@@ -110,7 +108,7 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 		// Separate move that leads to loose (put in finished). These moves do not need to be deepened. Store others in toDeepen
 		// We don't put 'finished' moves in ended directly to preserve the evaluation order 
 		final List<M> toDeepen = new ArrayList<>(evaluations.size());
-		final List<Evaluation<M>> finished = new ArrayList<>();
+		final List<EvaluatedMove<M>> finished = new ArrayList<>();
 		evaluations.stream().forEach(e -> {
 			if (isEndOfGame(e)) {
 				finished.add(e);
@@ -122,8 +120,8 @@ class RecursiveSearch<M, B extends MoveGenerator<M>> {
 		return toDeepen;
 	}
 	
-	private boolean isEndOfGame(Evaluation<M> mv) {
-		return evaluator.isWinLooseScore(mv.getValue(), params.getDepth());
+	private boolean isEndOfGame(EvaluatedMove<M> mv) {
+		return mv.getEvaluation().getType()!=Type.EVAL;
 	}
 
 	public int getMaxDepth() {

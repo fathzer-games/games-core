@@ -13,7 +13,7 @@ import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.TranspositionTable;
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 
 public abstract class AbstractRecursiveEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
 	/** A class that logs events during search.
@@ -94,35 +94,25 @@ public abstract class AbstractRecursiveEngine<M, B extends MoveGenerator<M>> imp
 	
 	@Override
 	public M apply(B board) {
-		final List<Evaluation<M>> bestMoves = getBestMoves(board);
+		final List<EvaluatedMove<M>> bestMoves = getBestMoves(board);
 		return bestMoves.get(RND.nextInt(bestMoves.size())).getContent();
 	}
-	
-	private List<Class<?>> getClassHierarchy(Class<?> aClass) {
-		final List<Class<?>> result = new java.util.ArrayList<>();
-		while (aClass != Object.class) {
-			result.add(aClass);
-			aClass = aClass.getSuperclass();
-		}
-		return result;
-	}
 
-	public List<Evaluation<M>> getBestMoves(B board) {
+	public List<EvaluatedMove<M>> getBestMoves(B board) {
 		setViewPoint(evaluator, board);
 		// TODO Test if it is really a new position?
 		transpositionTable.newPosition();
 		try (ExecutionContext<M,B> context = buildExecutionContext(board)) {
 			final Negamax<M,B> internal = buildNegaMax(context, evaluator);
-System.out.println("Internal is a "+getClassHierarchy(internal.getClass()));//TODO
 			internal.setTranspositonTable(transpositionTable);
 			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException();
 			}
 			try {
-				rs = new RecursiveSearch<>(evaluator, internal, searchParams, maxTime);
+				rs = new RecursiveSearch<>(internal, searchParams, maxTime);
 				rs.setEventLogger(logger);
-				final List<Evaluation<M>> result = rs.getBestMoves();
-				for (Evaluation<M> ev:result) {
+				final List<EvaluatedMove<M>> result = rs.getBestMoves();
+				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, searchParams.getDepth()));
 				}
 				return result;

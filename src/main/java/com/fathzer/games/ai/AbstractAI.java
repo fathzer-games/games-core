@@ -51,11 +51,11 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 			@Override
 			public void run() {
             	final int low = search.getLow();
-				final int value = rootEvaluator.apply(m, low);
+				final int score = rootEvaluator.apply(m, low);
 				if (!isInterrupted()) {
 					// Do not return interrupted evaluations, they are false
 //if (depth==8) System.out.println(m+" by thread "+Thread.currentThread()+" at depth "+depth+" with low="+low+"=> value="+value+". Interrupted="+isInterrupted());
-            		search.add(m, value);
+            		search.add(m, getEvaluator().toEvaluation(score, params.getDepth()));
 				}
 			}
 		}).collect(Collectors.toList());
