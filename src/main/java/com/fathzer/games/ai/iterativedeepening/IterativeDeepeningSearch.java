@@ -1,4 +1,4 @@
-package com.fathzer.games.ai.recursive;
+package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,14 +8,14 @@ import java.util.TimerTask;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AI;
-import com.fathzer.games.ai.Evaluation.Type;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.EventLogger;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
-import com.fathzer.games.ai.recursive.IterativeDeepeningEngine.EventLogger;
-import com.fathzer.games.ai.recursive.IterativeDeepeningEngine.Mute;
-import com.fathzer.games.util.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
-class IerativeDeepeningSearch<M, B extends MoveGenerator<M>> {
+class IterativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 	private final SearchParameters params;
 	private long maxTime = Long.MAX_VALUE;
 	private final AI<M> ai;
@@ -23,7 +23,7 @@ class IerativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 	private EventLogger<M> logger;
 	private SearchParameters currentParams;
 	
-	IerativeDeepeningSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
+	IterativeDeepeningSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
 		this.params = params;
 		this.maxTime = maxTimeMs;
 		this.ai = ai;

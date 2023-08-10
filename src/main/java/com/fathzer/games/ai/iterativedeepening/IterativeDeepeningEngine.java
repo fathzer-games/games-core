@@ -1,4 +1,4 @@
-package com.fathzer.games.ai.recursive;
+package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.List;
 import java.util.Random;
@@ -6,14 +6,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.Evaluator;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.TranspositionTable;
-import com.fathzer.games.util.EvaluatedMove;
 
 public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
 	/** A class that logs events during search.
@@ -46,7 +46,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
-	private IerativeDeepeningSearch<M, B> rs;
+	private IterativeDeepeningSearch<M, B> rs;
 	private AtomicBoolean running;
 	
 	protected IterativeDeepeningEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
@@ -109,7 +109,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 				throw new IllegalStateException();
 			}
 			try {
-				rs = new IerativeDeepeningSearch<>(internal, searchParams, maxTime);
+				rs = new IterativeDeepeningSearch<>(internal, searchParams, maxTime);
 				rs.setEventLogger(logger);
 				final List<EvaluatedMove<M>> result = rs.getBestMoves();
 				for (EvaluatedMove<M> ev:result) {

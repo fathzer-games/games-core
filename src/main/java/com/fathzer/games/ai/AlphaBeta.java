@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 
 /**

@@ -1,7 +1,7 @@
 package com.fathzer.games.ai;
 
+import static com.fathzer.games.ai.evaluation.Evaluation.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static com.fathzer.games.ai.Evaluation.*;
 
 import java.util.Arrays;
 import java.util.HashSet;

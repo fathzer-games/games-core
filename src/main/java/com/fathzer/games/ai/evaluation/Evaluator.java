@@ -1,4 +1,4 @@
-package com.fathzer.games.ai;
+package com.fathzer.games.ai.evaluation;
 
 import com.fathzer.games.Color;
 

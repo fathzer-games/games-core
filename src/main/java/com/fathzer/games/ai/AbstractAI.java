@@ -5,6 +5,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 
 public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> {

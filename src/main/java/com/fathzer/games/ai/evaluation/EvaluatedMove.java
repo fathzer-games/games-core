@@ -1,11 +1,9 @@
-package com.fathzer.games.util;
+package com.fathzer.games.ai.evaluation;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import com.fathzer.games.ai.Evaluation;
 
 /** A move with its evaluation.
  * @param <M> The type of move

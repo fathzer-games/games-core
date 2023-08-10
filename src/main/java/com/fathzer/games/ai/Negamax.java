@@ -5,11 +5,12 @@ import java.util.List;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
-import com.fathzer.games.util.EvaluatedMove;
 
 /**
  * A Negamax with alpha beta pruning implementation.

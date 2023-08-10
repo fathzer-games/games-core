@@ -1,8 +1,10 @@
-package com.fathzer.games.ai;
+package com.fathzer.games.ai.evaluation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
+
+import com.fathzer.games.ai.evaluation.Evaluation;
 
 class EvaluationTest {
 
