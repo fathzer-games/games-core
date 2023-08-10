@@ -4,13 +4,19 @@
 [![javadoc](https://javadoc.io/badge2/com.fathzer/games-core/javadoc.svg)](https://javadoc.io/doc/com.fathzer/games-core)
 
 # games-core
-A core library to help implement two players games
+A core library to help implement two players game engines
+
+It provides you with ready to use and highly configurable [iterative deepening](https://www.chessprogramming.org/Iterative_Deepening) [Negamax](https://en.wikipedia.org/wiki/Negamax) implementation using configurable [transposition table](https://en.wikipedia.org/wiki/Transposition_table).
+
+In order to have a working engine for your favorite game, you have to implement your a MoveGenerator and Evaluator for this game ... and use one of the provided ai (I recommend IterativeDeepeningEngine).  
+You can implement your own transposition table and its policy (which positions to save or to reuse during the search). This library contains a basic implementation, try it to see if it is enough for your need.
 
 # Known bugs
 - The iterative deepening search always stop deepening when it find a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one. 
 
 ## TODO
-- Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-(
+- Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-( But maybe it was because when I tested it there was a bug in mat score storage...
+- Implement quiesce evaluation
 - AlphaBeta/Minimax: Verify it's still working and implement move sorting
 - Write tests and Documentation ;-)
 - Test with Sonar
