@@ -95,7 +95,7 @@ public class SearchParameters {
 	 * @throws IllegalArgumentException if accuracy &lt;0
 	 */
 	public void setAccuracy(int accuracy) {
-		if (accuracy<=0) {
+		if (accuracy<0) {
 			throw new IllegalArgumentException("Accuracy should be strictly positive");
 		}
 		this.accuracy = accuracy;

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.EventLogger;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
@@ -15,19 +14,21 @@ import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
-class IterativeDeepeningSearch<M, B extends MoveGenerator<M>> {
+class IterativeDeepeningSearch<M> {
 	private final SearchParameters params;
-	private long maxTime = Long.MAX_VALUE;
+	private final DeepeningPolicy deepeningPolicy;
 	private final AI<M> ai;
+	private long maxTime = Long.MAX_VALUE;
+	private SearchParameters currentParams;
 	private List<EvaluatedMove<M>> orderedMoves;
 	private EventLogger<M> logger;
-	private SearchParameters currentParams;
 	
-	IterativeDeepeningSearch(AI<M> ai, SearchParameters params, long maxTimeMs) {
+	IterativeDeepeningSearch(AI<M> ai, SearchParameters params, DeepeningPolicy deepeningPolicy, long maxTimeMs) {
 		this.params = params;
 		this.maxTime = maxTimeMs;
 		this.ai = ai;
 		this.logger = new Mute<>();
+		this.deepeningPolicy = deepeningPolicy;
 	}
 	
 	public void interrupt() {
@@ -40,7 +41,7 @@ class IterativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 	
 	private List<EvaluatedMove<M>> buildBestMoves() {
 		final long start = System.currentTimeMillis();
-		this.currentParams = new SearchParameters(getStartDepth(), params.getSize(), params.getAccuracy());
+		this.currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), params.getSize(), params.getAccuracy());
 		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
 		logger.logSearch(currentParams.getDepth(), ai.getStatistics(), bestMoves);
 		final Timer timer = new Timer(true);
@@ -62,9 +63,11 @@ class IterativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 		do {
 			// Re-use best moves order to speedup next search
 			final List<M> moves = getMovesToDeepen(bestMoves.getList(), ended);
-			currentParams.setDepth(getNextDepth(currentParams.getDepth()));
-			if (!moves.isEmpty()) {
+			final int nextDepth = deepeningPolicy.getNextDepth(currentParams.getDepth());
+			if (!moves.isEmpty() && nextDepth>0) {
+				currentParams.setDepth(nextDepth);
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
+				deepeningPolicy.addSearchStage(nextDepth, deeper);
 				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
@@ -79,17 +82,12 @@ class IterativeDeepeningSearch<M, B extends MoveGenerator<M>> {
 			}
 		} while (currentParams.getDepth()<params.getDepth());
 		timer.cancel();
-		final List<EvaluatedMove<M>> result = bestMoves.getCut();
-		result.addAll(ended);
-		return result;
-	}
-
-	protected int getStartDepth() {
-		return 2;
-	}
-
-	protected int getNextDepth(int currentDepth) {
-		return currentDepth+2;
+		// Warning, ended should be added carefully or loosing position will be returned in the best positions
+		// For example, if we simple add the ended moves to bestMove.getCut().
+		for (EvaluatedMove<M> em:ended) {
+			bestMoves.add(em.getContent(), em.getEvaluation());
+		}
+		return bestMoves.getCut();
 	}
 
 	public List<EvaluatedMove<M>> getBestMoves() {

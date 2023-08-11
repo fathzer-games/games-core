@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.Negamax;
@@ -38,15 +39,16 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	 */
 	public static final class Mute<T> implements EventLogger<T> {}
 	
-	private static final Random RND = new Random(); 
+	public static final Random RND = new Random(); 
 
 	private final Evaluator<B> evaluator;
+	private Supplier<DeepeningPolicy> deepBuilder;
 	private SearchParameters searchParams;
 	private long maxTime = Long.MAX_VALUE;
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
-	private IterativeDeepeningSearch<M, B> rs;
+	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
 	protected IterativeDeepeningEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
@@ -56,6 +58,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.transpositionTable = tt;
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
+		this.deepBuilder = () -> new DeepeningPolicy() {};
 	}
 	
 	public void interrupt() {
@@ -76,6 +79,10 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		return searchParams;
 	}
 
+	public long getMaxTime() {
+		return maxTime;
+	}
+
 	public void setMaxTime(long maxTime) {
 		this.maxTime = maxTime;
 	}
@@ -92,6 +99,10 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		return transpositionTable;
 	}
 	
+	public void setDeepeningPolicyBuilder(Supplier<DeepeningPolicy> deepBuilder) {
+		this.deepBuilder = deepBuilder;
+	}
+
 	@Override
 	public M apply(B board) {
 		final List<EvaluatedMove<M>> bestMoves = getBestMoves(board);
@@ -109,7 +120,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 				throw new IllegalStateException();
 			}
 			try {
-				rs = new IterativeDeepeningSearch<>(internal, searchParams, maxTime);
+				rs = new IterativeDeepeningSearch<>(internal, searchParams, deepBuilder.get(), maxTime);
 				rs.setEventLogger(logger);
 				final List<EvaluatedMove<M>> result = rs.getBestMoves();
 				for (EvaluatedMove<M> ev:result) {
