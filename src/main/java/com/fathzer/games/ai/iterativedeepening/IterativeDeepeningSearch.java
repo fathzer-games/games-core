@@ -1,7 +1,6 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,7 +11,6 @@ import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
 class IterativeDeepeningSearch<M> {
 	private final SearchParameters params;
@@ -62,12 +60,12 @@ class IterativeDeepeningSearch<M> {
 		final List<EvaluatedMove<M>> ended = new ArrayList<>(bestMoves.getList().size());
 		do {
 			// Re-use best moves order to speedup next search
-			final List<M> moves = getMovesToDeepen(bestMoves.getList(), ended);
-			final int nextDepth = deepeningPolicy.getNextDepth(currentParams.getDepth());
-			if (!moves.isEmpty() && nextDepth>0) {
-				currentParams.setDepth(nextDepth);
+			final List<M> moves = deepeningPolicy.getMovesToDeepen(currentParams.getDepth(), bestMoves.getList(), ended);
+			if (moves.isEmpty()) {
+				logger.logEndedByPolicy(currentParams.getDepth());
+			} else {
+				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
-				deepeningPolicy.addSearchStage(nextDepth, deeper);
 				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
@@ -95,31 +93,6 @@ class IterativeDeepeningSearch<M> {
 			orderedMoves = buildBestMoves();
 		}
 		return orderedMoves;
-	}
-	
-	private List<M> getMovesToDeepen(List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
-		if (isEndOfGame(evaluations.get(0))) {
-			// if best move is a win/loose, continuing analysis is useless
-			logger.logEndDetected(currentParams.getDepth());
-			return Collections.emptyList();
-		}
-		// Separate move that leads to loose (put in finished). These moves do not need to be deepened. Store others in toDeepen
-		// We don't put 'finished' moves in ended directly to preserve the evaluation order 
-		final List<M> toDeepen = new ArrayList<>(evaluations.size());
-		final List<EvaluatedMove<M>> finished = new ArrayList<>();
-		evaluations.stream().forEach(e -> {
-			if (isEndOfGame(e)) {
-				finished.add(e);
-			} else {
-				toDeepen.add(e.getContent());
-			}
-		});
-		ended.addAll(0, finished);
-		return toDeepen;
-	}
-	
-	private boolean isEndOfGame(EvaluatedMove<M> mv) {
-		return mv.getEvaluation().getType()!=Type.EVAL;
 	}
 
 	public int getMaxDepth() {

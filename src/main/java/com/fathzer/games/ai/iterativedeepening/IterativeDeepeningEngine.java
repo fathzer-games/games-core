@@ -29,7 +29,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 			// Does nothing by default
 		}
 
-		default void logEndDetected(int depth) {
+		default void logEndedByPolicy(int depth) {
 			// Does nothing by default
 		}
 	}

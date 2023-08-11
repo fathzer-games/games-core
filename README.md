@@ -15,6 +15,7 @@ You can implement your own transposition table and its policy (which positions t
 - The iterative deepening search always stop deepening when it find a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one. 
 
 ## TODO
+- EvaluatedMove.compareTo does not sort in natural order which can be confusing
 - Negamax: Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-( But maybe it was because when I tested it there was a bug in mat score storage...
 - Implement quiesce evaluation
 - AlphaBeta/Minimax: Verify it's still working and implement move sorting

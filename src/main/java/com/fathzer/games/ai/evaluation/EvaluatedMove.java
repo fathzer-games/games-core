@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
+
 /** A move with its evaluation.
  * @param <M> The type of move
  */
@@ -29,6 +31,10 @@ public class EvaluatedMove<M> implements Comparable<EvaluatedMove<M>> {
 	
 	public int getScore() {
 		return value.getScore();
+	}
+	
+	public boolean isEnd() {
+		return value.getType()!=Type.EVAL;
 	}
 	
 	/** Gets the <a href="https://en.wikipedia.org/wiki/Variation_(game_tree)">principal variation</a> of this move.
