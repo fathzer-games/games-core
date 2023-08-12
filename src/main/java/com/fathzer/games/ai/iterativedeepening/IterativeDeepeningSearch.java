@@ -64,15 +64,14 @@ class IterativeDeepeningSearch<M> {
 			if (moves.isEmpty()) {
 				logger.logEndedByPolicy(currentParams.getDepth());
 			} else {
+				final int previousDepth = currentParams.getDepth();
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
 				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
 				} else {
-					for (EvaluatedMove<M> ev:deeper.getList()) {
-						bestMoves.update(ev.getContent(), ev.getEvaluation());
-					}
+					deepeningPolicy.mergeInterrupted(bestMoves, previousDepth, deeper.getList(), currentParams.getDepth());
 				}
 			}
 			if (ai.isInterrupted() || moves.isEmpty()) {
