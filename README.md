@@ -17,10 +17,9 @@ You can implement your own transposition table and its policy (which positions t
 ## TODO
 - EvaluatedMove.compareTo does not sort in natural order which can be confusing
 - Negamax: 
-  - Store cut moves in transposition table, see if we can speed up sort in case a best move is registered for position (currently, there's a lot of list content manipulation). Try to understand why Wikipedia tt implementation seems not to work :-( But maybe it was because when I tested it there was a bug in mat score storage...
   - Do not invoke MoveGenerator.getMoves before trying the best move from TT. It require the MoveGenerator to be able to test if move is valid.
 - Implement quiesce evaluation
-- AlphaBeta/Minimax: Verify it's still working and implement move sorting
+- AlphaBeta/Minimax: Verify it's still working and implement move sorting in alpha beta
 - Write tests and Documentation ;-)
 - Test with Sonar
 - Publish artifact on Maven central
