@@ -157,7 +157,12 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		if (best!=null) {
 			int index = moves.indexOf(best);
 			if (index<0) {
-				throw new IllegalArgumentException("Strange, best move "+best+" does not exists");
+				// Remember, move can not be possible (if it come from a different game position with same hash key
+				// We can simply ignore the best move if it is not possible
+				if (Boolean.getBoolean("HashCollisionChase")) {
+					//TODO Let it there for a while, it already help to find a bug in hash key building...
+					throw new IllegalArgumentException("Strange, best move "+best+" does not exists (hash="+((HashProvider)getGamePosition()).getHashKey()+")");
+				}
 			} else if (index!=0) {
 				// Put best move in first place
 				result.add(0, result.remove(index));

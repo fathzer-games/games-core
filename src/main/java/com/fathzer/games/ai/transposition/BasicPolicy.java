@@ -3,10 +3,12 @@ package com.fathzer.games.ai.transposition;
 import static com.fathzer.games.ai.transposition.EntryType.*;
 
 import java.util.function.IntUnaryOperator;
-import java.util.function.Predicate;
 
 import com.fathzer.games.ai.AlphaBetaState;
 
+/** A transposition table policy that records exact, lower or upper score with best/cut moves.
+ * @param <M> The type of moves
+ */
 public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	@Override
 	public AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter) {
@@ -16,8 +18,8 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 				final int value = fromTTScoreConverter.applyAsInt(entry.getValue());
     			if (EXACT==entry.getEntryType()) {
 					state.setValue(value);
-    			} else {
-    				acceptNonExactRecord(entry, alpha, beta, value, state);
+//    			} else {
+//    				acceptNonExactRecord(entry, alpha, beta, value, state);
     			}
     		}
     		state.setBestMove(entry.getMove());
@@ -25,8 +27,7 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 		return state;
 	}
 
-	protected void acceptNonExactRecord(TranspositionTableEntry<M> entry, int alpha, int beta, final int value,
-			final AlphaBetaState<M> state) {
+	protected void acceptNonExactRecord(TranspositionTableEntry<M> entry, int alpha, int beta, final int value, final AlphaBetaState<M> state) {
 		boolean updated = false;
 		if (LOWER_BOUND==entry.getEntryType()) {
 			updated = value>alpha;
@@ -59,10 +60,23 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
     		type = EXACT;
     	}
     	// Update the transposition table
-		return table.store(key, type, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), replacePredicate(state.getDepth()));
+		return table.store(key, type, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), p-> shouldReplace(p, state.getDepth(), type));
 	}
 
-	protected Predicate<TranspositionTableEntry<M>> replacePredicate(int depth) {
-		return p -> !p.isValid() || depth>=p.getDepth();
+	protected boolean shouldReplace(TranspositionTableEntry<M> entry, int newDepth, EntryType newType) {
+		if (!entry.isValid()) {
+			// Always write if no entry is in the table
+			return true;
+		}
+		if (entry.getEntryType()==EXACT && newType!=EXACT) {
+			// Never replace exact by non exact
+			return false;
+		}
+		if (newType==EXACT && entry.getEntryType()!=EXACT) {
+			// Always replace non exact by exact
+			return true;
+		}
+		// replace lower depth entries by higher depth
+		return newDepth>entry.getDepth();
 	}
 }
