@@ -41,7 +41,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	
 	public static final Random RND = new Random(); 
 
-	private final Evaluator<B> evaluator;
+	private Evaluator<B> evaluator;
 	private Supplier<DeepeningPolicy> deepBuilder;
 	private SearchParameters searchParams;
 	private long maxTime = Long.MAX_VALUE;
@@ -73,6 +73,10 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 
 	public void setParallelism(int parallelism) {
 		this.parallelism = parallelism;
+	}
+	
+	public void setEvaluator(Evaluator<B> evaluator) {
+		this.evaluator = evaluator;
 	}
 
 	public SearchParameters getSearchParams() {
