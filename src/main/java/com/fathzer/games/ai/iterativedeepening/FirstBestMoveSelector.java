@@ -5,12 +5,13 @@ import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.moveSelector.MoveSelector;
 
-public class FirstBestMoveSelector<M> extends MoveSelector<M> {
+public class FirstBestMoveSelector<M> extends MoveSelector<M, IterativeDeepeningSearch<M>> {
 	
 	@Override
-	public List<EvaluatedMove<M>> select(IterativeDeepeningSearch<M> search, List<EvaluatedMove<M>> result) {
-		return super.select(search, filter(search.getSearchHistory(), result));
+	public List<EvaluatedMove<M>> select(IterativeDeepeningSearch<M> data, List<EvaluatedMove<M>> result) {
+		return super.select(data, filter(data.getSearchHistory(), result));
 	}
 
 	protected List<EvaluatedMove<M>> filter(List<SearchResult<M>> history, List<EvaluatedMove<M>> bestMoves) {

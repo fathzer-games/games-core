@@ -13,6 +13,8 @@ import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
+import com.fathzer.games.ai.moveSelector.MoveSelector;
+import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 
 public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
@@ -46,7 +48,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
-	private MoveSelector<M> moveSelector;
+	private MoveSelector<M,IterativeDeepeningSearch<M>> moveSelector;
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
@@ -79,11 +81,11 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.evaluator = evaluator;
 	}
 	
-	public MoveSelector<M> getMoveSelector() {
+	public MoveSelector<M,IterativeDeepeningSearch<M>> getMoveSelector() {
 		return moveSelector;
 	}
 
-	public void setMoveSelector(MoveSelector<M> moveSelector) {
+	public void setMoveSelector(MoveSelector<M,IterativeDeepeningSearch<M>> moveSelector) {
 		this.moveSelector = moveSelector;
 	}
 
