@@ -7,13 +7,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class PerfTParser {
 	private String startPositionPrefix = "start";
 	private String resultPrefix = "perft";
 	private String namePrefix = "name";
-	private Function<String, String> startPositionCustomizer = Function.identity();
+	private UnaryOperator<String> startPositionCustomizer = s->s;
 	
 	public final PerfTParser withStartPositionPrefix(String startPositionPrefix) {
 		this.startPositionPrefix = startPositionPrefix;
@@ -30,7 +30,7 @@ public class PerfTParser {
 		return this;
 	}
 	
-	public final PerfTParser withStartPositionCustomizer(Function<String, String> startPositionCustomizer) {
+	public final PerfTParser withStartPositionCustomizer(UnaryOperator<String> startPositionCustomizer) {
 		this.startPositionCustomizer = startPositionCustomizer;
 		return this;
 	}
