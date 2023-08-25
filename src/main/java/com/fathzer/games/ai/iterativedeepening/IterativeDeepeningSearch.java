@@ -12,13 +12,14 @@ import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
-class IterativeDeepeningSearch<M> {
+public class IterativeDeepeningSearch<M> {
 	private final SearchParameters params;
 	private final DeepeningPolicy deepeningPolicy;
 	private final AI<M> ai;
 	private long maxTime = Long.MAX_VALUE;
 	private SearchParameters currentParams;
 	private List<EvaluatedMove<M>> orderedMoves;
+	private List<SearchResult<M>> searchHistory;
 	private EventLogger<M> logger;
 	
 	IterativeDeepeningSearch(AI<M> ai, SearchParameters params, DeepeningPolicy deepeningPolicy, long maxTimeMs) {
@@ -38,9 +39,11 @@ class IterativeDeepeningSearch<M> {
 	}
 	
 	private List<EvaluatedMove<M>> buildBestMoves() {
+		this.searchHistory = new ArrayList<>();
 		final long start = System.currentTimeMillis();
 		this.currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), params.getSize(), params.getAccuracy());
 		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
+		searchHistory.add(bestMoves);
 		logger.logSearch(currentParams.getDepth(), ai.getStatistics(), bestMoves);
 		final Timer timer = new Timer(true);
 		if (maxTime!=Long.MAX_VALUE) {
@@ -67,6 +70,7 @@ class IterativeDeepeningSearch<M> {
 				final int previousDepth = currentParams.getDepth();
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
+				searchHistory.add(deeper);
 				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
@@ -92,6 +96,13 @@ class IterativeDeepeningSearch<M> {
 			orderedMoves = buildBestMoves();
 		}
 		return orderedMoves;
+	}
+	
+	public List<SearchResult<M>> getSearchHistory() {
+		if (orderedMoves==null) {
+			orderedMoves = buildBestMoves();
+		}
+		return this.searchHistory;
 	}
 
 	public int getMaxDepth() {

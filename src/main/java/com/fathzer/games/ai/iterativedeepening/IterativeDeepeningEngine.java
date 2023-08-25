@@ -1,7 +1,6 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -39,7 +38,6 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	 */
 	public static final class Mute<T> implements EventLogger<T> {}
 	
-	public static final Random RND = new Random(); 
 
 	private Evaluator<B> evaluator;
 	private Supplier<DeepeningPolicy> deepBuilder;
@@ -48,6 +46,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
+	private MoveSelector<M> moveSelector;
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
@@ -59,6 +58,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
 		this.deepBuilder = () -> new DeepeningPolicy() {};
+		this.moveSelector = new RandomMoveSelector<>();
 	}
 	
 	public void interrupt() {
@@ -77,6 +77,14 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	
 	public void setEvaluator(Evaluator<B> evaluator) {
 		this.evaluator = evaluator;
+	}
+	
+	public MoveSelector<M> getMoveSelector() {
+		return moveSelector;
+	}
+
+	public void setMoveSelector(MoveSelector<M> moveSelector) {
+		this.moveSelector = moveSelector;
 	}
 
 	public SearchParameters getSearchParams() {
@@ -109,11 +117,15 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 
 	@Override
 	public M apply(B board) {
-		final List<EvaluatedMove<M>> bestMoves = getBestMoves(board);
-		return bestMoves.get(RND.nextInt(bestMoves.size())).getContent();
+		final IterativeDeepeningSearch<M> search = search(board);
+		return this.moveSelector.select(search, search.getBestMoves()).get(0).getContent();
 	}
 
 	public List<EvaluatedMove<M>> getBestMoves(B board) {
+		return search(board).getBestMoves();
+	}
+	
+	protected IterativeDeepeningSearch<M> search(B board) {
 		setViewPoint(evaluator, board);
 		// TODO Test if it is really a new position?
 		transpositionTable.newPosition();
@@ -130,7 +142,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, searchParams.getDepth()));
 				}
-				return result;
+				return rs;
 			} finally {
 				running.set(false);
 			}
