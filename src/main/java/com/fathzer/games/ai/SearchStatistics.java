@@ -42,4 +42,9 @@ public class SearchStatistics {
 	public long getDurationMs() {
 		return System.currentTimeMillis()-startMs;
 	}
+	@Override
+	public String toString() {
+		return "SearchStatistics [moveGenerationCount=" + moveGenerationCount + ", generatedMoveCount="
+				+ generatedMoveCount + ", movePlayedCount=" + movePlayedCount + ", evalCount=" + evalCount + "]";
+	}
 }

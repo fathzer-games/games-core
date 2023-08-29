@@ -39,7 +39,7 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		statistics.clear();
 		List<M> moves = getGamePosition().getMoves();
 		getStatistics().movesGenerated(moves.size());
-		if (getClass().isAssignableFrom(MoveSorter.class)) {
+		if (MoveSorter.class.isAssignableFrom(getClass())) {
 			moves = ((MoveSorter<M>)this).sort(moves);
 		}
 		return this.getBestMoves(moves, params);
@@ -55,7 +55,6 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 				final int score = rootEvaluator.apply(m, low);
 				if (!isInterrupted()) {
 					// Do not return interrupted evaluations, they are false
-//if (depth==8) System.out.println(m+" by thread "+Thread.currentThread()+" at depth "+depth+" with low="+low+"=> value="+value+". Interrupted="+isInterrupted());
             		search.add(m, getEvaluator().toEvaluation(score, params.getDepth()));
 				}
 			}

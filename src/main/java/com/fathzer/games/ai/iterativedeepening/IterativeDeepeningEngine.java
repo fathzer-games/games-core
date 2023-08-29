@@ -113,6 +113,10 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		return transpositionTable;
 	}
 	
+	public void setTranspositionTable(TranspositionTable<M> transpositionTable) {
+		this.transpositionTable = transpositionTable;
+	}
+
 	public void setDeepeningPolicyBuilder(Supplier<DeepeningPolicy> deepBuilder) {
 		this.deepBuilder = deepBuilder;
 	}
@@ -130,7 +134,9 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	protected IterativeDeepeningSearch<M> search(B board) {
 		setViewPoint(evaluator, board);
 		// TODO Test if it is really a new position?
-		transpositionTable.newPosition();
+		if (transpositionTable!=null) {
+			transpositionTable.newPosition();
+		}
 		try (ExecutionContext<M,B> context = buildExecutionContext(board)) {
 			final Negamax<M,B> internal = buildNegaMax(context, evaluator);
 			internal.setTranspositonTable(transpositionTable);
