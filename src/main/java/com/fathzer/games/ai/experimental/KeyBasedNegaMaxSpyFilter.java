@@ -47,11 +47,9 @@ public abstract class KeyBasedNegaMaxSpyFilter<M,B extends MoveGenerator<M>> {
 	 * @return true if filter switches to off
 	 */
 	public boolean exit(TreeSearchStateStack<M, B> state) {
-		if (isOn()) {
-			if (getKey(state)==searchedKey && state.getCurrentDepth()==enteringDepth) {
-				enteringDepth=-1;
-				return true;
-			}
+		if (isOn() && getKey(state)==searchedKey && state.getCurrentDepth()==enteringDepth) {
+			enteringDepth=-1;
+			return true;
 		}
 		return false;
 	}

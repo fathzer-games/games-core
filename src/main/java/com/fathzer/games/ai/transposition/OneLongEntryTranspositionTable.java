@@ -21,13 +21,13 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	private final ReadWriteLock lock;
 	private final int size; // The number of slots either table will have
 	private TranspositionTablePolicy<M> policy;
-		
+
 	/** Constructor.
 	 * @param sizeInMB The table size in MB
 	 */
-	protected OneLongEntryTranspositionTable(int sizeInMB) {
-		this.size = (1024 * 1024 / 8 / SLOTS)*sizeInMB;
-		table = new AtomicLongArray(size * SLOTS);
+	protected OneLongEntryTranspositionTable(int size, SizeUnit unit) {
+		this.size = (int) ((long)size*unit.getSize()) / 8 / SLOTS;
+		table = new AtomicLongArray(this.size * SLOTS);
 		this.lock = new ReentrantReadWriteLock();
 		policy = new BasicPolicy<>();
 	}
@@ -54,7 +54,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		final OneLongEntry<M> entry = new OneLongEntry<>(this::toMove);
 		lock.writeLock().lock();
 		try {
-			entry.set(key, table.get(index)==key ? table.get(index+1) : 0);
+			entry.set(table.get(index), table.get(index+1));
 			final boolean written = validator.test(entry);
 			if (written) {
 				table.set(index, key);
@@ -98,12 +98,18 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 
 	private class TTIterator implements Iterator<TranspositionTableEntry<M>> {
+		private final int max;
 		private int index = 0;
-		private int max = size*SLOTS;
 		private OneLongEntry<M> entry = new OneLongEntry<>(OneLongEntryTranspositionTable.this::toMove);
 		
-		@Override
-		public boolean hasNext() {
+		private TTIterator() {
+			index = 0;
+			max = size*SLOTS;
+			entry = new OneLongEntry<>(OneLongEntryTranspositionTable.this::toMove);
+			prepareNext();
+		}
+		
+		private void prepareNext() {
 			while (index<max) {
 				final long value = table.get(index+1);
 				if (value!=0) {
@@ -112,16 +118,25 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 				}
 				index += SLOTS;
 			}
-			return index<max;
+			if (index>=max) {
+				entry=null;
+			}
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return entry!=null;
 		}
 
 		@Override
 		public TranspositionTableEntry<M> next() {
-			if (index>=max) {
+			if (entry==null) {
 				throw new NoSuchElementException();
 			}
+			final TranspositionTableEntry<M> result = entry;
 			index += SLOTS;
-			return entry;
+			prepareNext();
+			return result;
 		}
 	}
 }

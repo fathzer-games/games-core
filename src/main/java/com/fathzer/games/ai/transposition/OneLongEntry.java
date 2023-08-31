@@ -72,4 +72,9 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 	public M getMove() {
 		return toMove.apply((int)(value & MOVE_MASK));
 	}
+	
+	@Override
+	public String toString() {
+		return key+":"+getEntryType()+" "+getValue()+" at "+getDepth()+" -> "+getMove();
+	}
 }
