@@ -101,6 +101,10 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.maxTime = maxTime;
 	}
 
+	public EventLogger<M> getLogger() {
+		return logger;
+	}
+
 	public void setLogger(EventLogger<M> logger) {
 		this.logger = logger;
 	}

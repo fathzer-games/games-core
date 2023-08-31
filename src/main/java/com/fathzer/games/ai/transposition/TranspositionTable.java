@@ -1,6 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -99,5 +100,19 @@ public interface TranspositionTable<M> {
 			board.unmakeMove();
 		}
 	}
+	
+	/** Gets the maximum entry count in the table.
+	 * @return an integer
+	 */
+	int getSize();
 
+	/** Gets an iterator on all the table entry.
+	 * <br>This method is optional, the default implementation throws an UnsupportedOperationException
+	 * @return An iterator on all entries currently in the table.
+	 * <b>Warning</b>Calling {@link #store(long, EntryType, int, int, Object, Predicate)} during
+	 *  the iterator use may have unpredictable results. 
+	 */
+	default Iterator<TranspositionTableEntry<M>> getEntries() {
+		throw new UnsupportedOperationException();
+	}
 }

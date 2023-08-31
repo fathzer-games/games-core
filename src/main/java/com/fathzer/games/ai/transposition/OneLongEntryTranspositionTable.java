@@ -1,5 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -82,6 +84,44 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		// Clears the table
 		for (int i=0; i<table.length();i++) {
 			table.set(i, 0);
+		}
+	}
+	
+	@Override
+	public int getSize() {
+		return size;
+	}
+	
+	@Override
+	public Iterator<TranspositionTableEntry<M>> getEntries() {
+		return new TTIterator();
+	}
+
+	private class TTIterator implements Iterator<TranspositionTableEntry<M>> {
+		private int index = 0;
+		private int max = size*SLOTS;
+		private OneLongEntry<M> entry = new OneLongEntry<>(OneLongEntryTranspositionTable.this::toMove);
+		
+		@Override
+		public boolean hasNext() {
+			while (index<max) {
+				final long value = table.get(index+1);
+				if (value!=0) {
+					entry.set(table.get(index), value);
+					break;
+				}
+				index += SLOTS;
+			}
+			return index<max;
+		}
+
+		@Override
+		public TranspositionTableEntry<M> next() {
+			if (index>=max) {
+				throw new NoSuchElementException();
+			}
+			index += SLOTS;
+			return entry;
 		}
 	}
 }
