@@ -17,13 +17,19 @@ public class PerfT<M> {
 	
 	public PerfT(ContextualizedExecutor<MoveGenerator<M>> exec) {
 		this.exec = exec;
-		this.playLeaves = false;
+		this.playLeaves = true;
 	}
 	
 	public boolean isPlayLeaves() {
 		return playLeaves;
 	}
 
+	/** Sets this PerfT to play the moves corresponding to tree leaves or not.
+	 * <br>The default setting is to play the leave moves.
+	 * @param playLeaves true to play the leave moves false to not play them.
+	 * <br>Warning, if the tested move generator returns <a href="https://www.chessprogramming.org/Pseudo-Legal_Move">pseudo legal</a> moves, setting <i>playLeaves</i> to false leads to erroneous results.
+	 * Indeed, every non legal leave move returned by the move generator will not be tested and will be counted as a legal move.
+	 */
 	public void setPlayLeaves(boolean playLeaves) {
 		this.playLeaves = playLeaves;
 	}
@@ -64,10 +70,13 @@ public class PerfT<M> {
 			leaves = 1;
 		} else {
 			final MoveGenerator<M> moveGenerator = exec.getContext();
-			moveGenerator.makeMove(move);
-			result.addMoveMade();
-			leaves = get(depth, result);
-			moveGenerator.unmakeMove();
+			if (moveGenerator.makeMove(move)) {
+				result.addMoveMade();
+				leaves = get(depth, result);
+				moveGenerator.unmakeMove();
+			} else {
+				leaves = 0;
+			}
 		}
 		return new Divide<>(move, leaves);
 	}
@@ -81,17 +90,18 @@ public class PerfT<M> {
     		return 1;
     	}
     	final MoveGenerator<M> generator = exec.getContext();
-		final List<M> state = generator.getMoves();
-		result.addMovesFound(state.size());
+		final List<M> moves = generator.getMoves();
+		result.addMovesFound(moves.size());
 		if (depth==1 && !playLeaves) {
-			return state.size();
+			return moves.size();
 		}
 		long count = 0;
-		for (M move : state) {
-            generator.makeMove(move);
-            result.addMoveMade();
-            count += get(depth-1, result);
-            generator.unmakeMove();
+		for (M move : moves) {
+            if (generator.makeMove(move)) {
+	            result.addMoveMade();
+	            count += get(depth-1, result);
+	            generator.unmakeMove();
+            }
 		}
         return count;
     }

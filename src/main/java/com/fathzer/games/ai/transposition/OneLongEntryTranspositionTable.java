@@ -23,7 +23,8 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	private TranspositionTablePolicy<M> policy;
 
 	/** Constructor.
-	 * @param sizeInMB The table size in MB
+	 * @param size The table size
+	 * @param unit The unit used to pass the size
 	 */
 	protected OneLongEntryTranspositionTable(int size, SizeUnit unit) {
 		this.size = (int) ((long)size*unit.getSize()) / 8 / SLOTS;

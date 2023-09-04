@@ -40,7 +40,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return getBestMoves(moves, params, (m,alpha)-> rootEvaluation(m,params.getDepth(),alpha));
     }
 
-	private int rootEvaluation(M move, final int depth, int alpha) {
+	private Integer rootEvaluation(M move, final int depth, int alpha) {
     	if (alpha==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
     		// So using it as alpha value makes negamax fail 
@@ -48,11 +48,14 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	}
     	final MoveGenerator<M> moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        moveGenerator.makeMove(move);
-        getStatistics().movePlayed();
-        final int score = -negamax(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
-        moveGenerator.unmakeMove();
-        return score;
+        if (moveGenerator.makeMove(move)) {
+	        getStatistics().movePlayed();
+	        final int score = -negamax(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
+	        moveGenerator.unmakeMove();
+	        return score;
+        } else {
+        	return null;
+        }
 	}
 	
 	/** Called when a cut occurs.
@@ -113,20 +116,21 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         int value = Integer.MIN_VALUE;
         M bestMove = null;
         for (M move : moves) {
-            position.makeMove(move);
-            getStatistics().movePlayed();
-            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
-            position.unmakeMove();
-            if (score > value) {
-                value = score;
-                bestMove = move;
-                if (score > alpha) {
-                	alpha = score;
-                    if (score >= beta) {
-                    	cut(move, alpha, beta, score, depth);
-                    	break;
-                    }
-                }
+            if (position.makeMove(move)) {
+	            getStatistics().movePlayed();
+	            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
+	            position.unmakeMove();
+	            if (score > value) {
+	                value = score;
+	                bestMove = move;
+	                if (score > alpha) {
+	                	alpha = score;
+	                    if (score >= beta) {
+	                    	cut(move, alpha, beta, score, depth);
+	                    	break;
+	                    }
+	                }
+	            }
             }
         }
         

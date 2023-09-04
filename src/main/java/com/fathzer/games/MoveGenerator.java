@@ -7,10 +7,11 @@ import java.util.List;
  */
 public interface MoveGenerator<M> {
     /**
-     * Play the given move and modify the state of the game.
+     * Plays the given move and modify the state of the game if the move is correct.
      * @param move The move to play
+     * @return true if the move is correct and was played, false if it is not correct and has been ignored
      */
-	void makeMove(M move);
+	boolean makeMove(M move);
 	
     /**
      * Undo the last move and restore the state of the game.

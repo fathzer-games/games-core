@@ -41,10 +41,13 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		result.lastMove = null;
 	}
 	
-	public void makeMove(M move) {
-		position.makeMove(move);
-		get(currentDepth).lastMove = move;
-		next();
+	public boolean makeMove(M move) {
+		final boolean validMove = position.makeMove(move);
+		if (validMove) {
+			get(currentDepth).lastMove = move;
+			next();
+		}
+		return validMove;
 	}
 
 	private TreeSearchState<M> next() {

@@ -44,7 +44,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		return getBestMoves(moves, params, (m,alpha)-> rootEvaluation(m,params.getDepth(),alpha));
     }
 
-	private int rootEvaluation(M move, final int depth, int alpha) {
+	private Integer rootEvaluation(M move, final int depth, int alpha) {
     	if (alpha==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
     		// So using it as alpha value makes negamax fail 
@@ -54,11 +54,14 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(position, depth);
         stack.init(stack.getCurrent(), alpha, Integer.MAX_VALUE);
-        stack.makeMove(move);
-        getStatistics().movePlayed();
-    	final int score = -negamax(stack);
-        stack.unmakeMove();
-        return score;
+        if (stack.makeMove(move)) {
+	        getStatistics().movePlayed();
+	    	final int score = -negamax(stack);
+	        stack.unmakeMove();
+	        return score;
+        } else {
+        	return null;
+        }
 	}
 	
 	protected boolean getEndOfSearchScore (TreeSearchStateStack<M,B> stack) {
@@ -121,21 +124,22 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		final List<M> moves = sort(state==null?null:state.getBestMove(), searchStack.position.getMoves());
     	getStatistics().movesGenerated(moves.size());
         for (M move : moves) {
-        	searchStack.makeMove(move);
-            getStatistics().movePlayed();
-            final int score = -negamax(searchStack);
-            searchStack.unmakeMove();
-            if (score > searchState.value) {
-            	searchState.value = score;
-                searchState.bestMove = move;
-                if (score > searchState.alpha) {
-                	searchState.alpha = score;
-                    if (score >= searchState.beta) {
-                   		spy.cut(searchStack, move);
-                    	break;
-                    }
-                }
-            }
+        	if (searchStack.makeMove(move)) {
+	            getStatistics().movePlayed();
+	            final int score = -negamax(searchStack);
+	            searchStack.unmakeMove();
+	            if (score > searchState.value) {
+	            	searchState.value = score;
+	                searchState.bestMove = move;
+	                if (score > searchState.alpha) {
+	                	searchState.alpha = score;
+	                    if (score >= searchState.beta) {
+	                   		spy.cut(searchStack, move);
+	                    	break;
+	                    }
+	                }
+	            }
+        	}
         }
         
         if (keyProvider && !isInterrupted()) {

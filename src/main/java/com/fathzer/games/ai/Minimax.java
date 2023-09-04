@@ -15,7 +15,7 @@ import com.fathzer.games.ai.exec.ExecutionContext;
  * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
  */
 @Deprecated
-public abstract class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
+public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 
     protected Minimax(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
 		super(exec, evaluator);
@@ -26,7 +26,7 @@ public abstract class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M
 		return getBestMoves(moves, params, (m,l)->minimax(Collections.singletonList(m),params.getDepth(),1,params.getDepth()));
     }
 
-    private int minimax(List<M> moves, final int depth, final int who, int maxDepth) {
+    private Integer minimax(List<M> moves, final int depth, final int who, int maxDepth) {
     	final B position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
@@ -36,38 +36,42 @@ public abstract class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M
 			if (Status.DRAW.equals(status)) {
 				return 0;
 			} else if (!Status.PLAYING.equals(status)){
-				int nbMoves = (maxDepth-depth+1)/2;
-				return -getEvaluator().getWinScore(nbMoves);
+				return -getEvaluator().getWinScore(maxDepth-depth)*who;
 			} else {
 				moves = position.getMoves();
 				getStatistics().movesGenerated(moves.size());
 			}
         }
     	int bestScore;
+    	boolean hasValidMoves = false;
         if (who > 0) {
             // max
             bestScore = Integer.MIN_VALUE;
             for (M move : moves) {
-                position.makeMove(move);
-                getStatistics().movePlayed();
-                int score = minimax(null, depth-1, -who, maxDepth);
-                position.unmakeMove();
-                if (score > bestScore) {
-                    bestScore = score;
+                if (position.makeMove(move)) {
+                	hasValidMoves = true;
+	                getStatistics().movePlayed();
+	                int score = minimax(null, depth-1, -who, maxDepth);
+	                position.unmakeMove();
+	                if (score > bestScore) {
+	                    bestScore = score;
+	                }
                 }
             }
         } else {
             // min
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
-                position.makeMove(move);
-                int score = minimax(null, depth-1, -who, maxDepth);
-                position.unmakeMove();
-                if (score < bestScore) {
-                    bestScore = score;
+                if (position.makeMove(move)) {
+                	hasValidMoves = true;
+	                int score = minimax(null, depth-1, -who, maxDepth);
+	                position.unmakeMove();
+	                if (score < bestScore) {
+	                    bestScore = score;
+	                }
                 }
             }
         }
-        return bestScore;
+        return hasValidMoves ? bestScore : null;
     }
 }
