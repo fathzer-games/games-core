@@ -1,6 +1,5 @@
 package com.fathzer.games.ai;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
@@ -23,7 +22,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 
 	@Override
     public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,l)->alphabeta(Collections.singletonList(m),params.getDepth(),1,params.getDepth(),l,Integer.MAX_VALUE));
+		return getBestMoves(moves, params, (m,l)->rootEvaluation(m,params.getDepth(),l));
     }
 	
 	protected void alphaCut(M move, int alpha, int score, int depth) {
@@ -34,32 +33,49 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 //		System.out.println ("beta cut on "+move+"at depth "+depth+" with score="+score+" (beta is "+beta+")");
 	}
 	
-    private Integer alphabeta(List<M> moves, final int depth, final int who, int maxDepth, int alpha, int beta) {
+	private Integer rootEvaluation(M move, final int depth, int alpha) {
+    	if (alpha==Integer.MIN_VALUE) {
+    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
+    		// So using it as alpha value makes negamax fail 
+    		alpha += 1;
+    	}
+    	final MoveGenerator<M> moveGenerator = getGamePosition();
+//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
+        if (moveGenerator.makeMove(move)) {
+	        getStatistics().movePlayed();
+	        final int score = alphabeta(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
+	        moveGenerator.unmakeMove();
+	        return score;
+        } else {
+        	return null;
+        }
+	}
+	
+    private int alphabeta(final int depth, int maxDepth, int alpha, int beta, final int who) {
     	final B position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
             return who * getEvaluator().evaluate(position);
-        } else if (moves==null) {
+        } else {
         	final Status status = position.getStatus();
 			if (Status.DRAW.equals(status)) {
 				return 0;
 			} else if (!Status.PLAYING.equals(status)){
 				return -getEvaluator().getWinScore(maxDepth-depth)*who;
-			} else {
-				moves = sort(position.getMoves());
-				getStatistics().movesGenerated(moves.size());
 			}
         }
+		List<M> moves = sort(position.getMoves());
+		getStatistics().movesGenerated(moves.size());
         int bestScore;
     	boolean hasValidMoves = false;
         if (who > 0) {
-            bestScore = Integer.MIN_VALUE;
+            bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
                 if (position.makeMove(move)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
-	                final int score = alphabetaScore(depth, who, maxDepth, alpha, beta);
+	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
 	                position.unmakeMove();
 	                if (score > bestScore) {
 	                    bestScore = score;
@@ -72,7 +88,6 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 	//					System.out.println ("alpha changed on "+move+" from "+alpha+" to "+v);
 						alpha = bestScore;
 					}
-	                alpha = Math.max(bestScore, alpha);
                 }
             }
         } else {
@@ -81,7 +96,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
                 if (position.makeMove(move)) {
                 	hasValidMoves = true;
-	                final int score = alphabetaScore(depth, who, maxDepth, alpha, beta);
+	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
 	                position.unmakeMove();
 	                if (score < bestScore) {
 	                    bestScore = score;
@@ -97,10 +112,11 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
                 }
             }
         }
-        return hasValidMoves ? bestScore : null;
+        // Let's imagine check mate with no detection at the beginning of the search and all pseudo moves are impossible (because of check mate)
+        // hasValidMoves should be useful there.
+        if (!hasValidMoves) {
+        	throw new IllegalStateException("This should not happen with early mate detection");
+        }
+        return bestScore;
     }
-
-	protected int alphabetaScore(final int depth, final int who, int maxDepth, final int alpha, final int beta) {
-		return alphabeta(null, depth - 1, -who, maxDepth, alpha, beta);
-	}
 }

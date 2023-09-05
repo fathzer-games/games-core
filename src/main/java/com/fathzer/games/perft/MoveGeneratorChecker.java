@@ -1,5 +1,6 @@
 package com.fathzer.games.perft;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -16,7 +17,9 @@ import com.fathzer.games.util.ContextualizedExecutor;
 public class MoveGeneratorChecker {
 	/** Details of PerfT count error.
 	 */
-	public static class PerfTCountError {
+	public static class PerfTCountError implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
 		private final String startPosition;
 		private final long expectedCount;
 		private final long actualCount;
@@ -72,8 +75,8 @@ public class MoveGeneratorChecker {
 	private final Collection<PerfTTestData> tests;
 	private Consumer<PerfTCountError> countErrorManager = e -> { throw new PerfTCountException(e); };
 	private Consumer<RuntimeException> errorManager = e -> { throw e; };
-	// Sonar says there's a bug there, because ParfT is mutable. Sonar is not totally wrong...
-	// But it doesn't matter. We use this reference only to ensure that current interrupt method
+	// Sonar says there's a bug there, because PerfT is mutable. Sonar is not totally wrong...
+	// But it doesn't matter. We use this reference only to ensure that interrupt method of current
 	// is called when this test is cancelled. This class creates the Perft instance stored in current
 	// and never exposes it.
 	private volatile PerfT<?> current;

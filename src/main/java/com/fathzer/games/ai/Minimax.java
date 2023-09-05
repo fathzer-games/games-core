@@ -1,6 +1,5 @@
 package com.fathzer.games.ai;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
@@ -23,35 +22,52 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 
 	@Override
     public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,l)->minimax(Collections.singletonList(m),params.getDepth(),1,params.getDepth()));
+		return getBestMoves(moves, params, (m,l)->rootEvaluation(m,params.getDepth(), l));
     }
+	
+	private Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
+    	if (lowestInterestingScore==Integer.MIN_VALUE) {
+    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
+    		// So using it as alpha value makes negamax fail 
+    		lowestInterestingScore += 1;
+    	}
+    	final MoveGenerator<M> moveGenerator = getGamePosition();
+//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
+        if (moveGenerator.makeMove(move)) {
+	        getStatistics().movePlayed();
+	        final int score = minimax(depth-1, depth, -1);
+	        moveGenerator.unmakeMove();
+	        return score;
+        } else {
+        	return null;
+        }
+	}
 
-    private Integer minimax(List<M> moves, final int depth, final int who, int maxDepth) {
+    private int minimax(final int depth, int maxDepth, final int who) {
     	final B position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
             return who * getEvaluator().evaluate(position);
-        } else if (moves==null) {
+        } else {
         	final Status status = position.getStatus();
 			if (Status.DRAW.equals(status)) {
 				return 0;
 			} else if (!Status.PLAYING.equals(status)){
 				return -getEvaluator().getWinScore(maxDepth-depth)*who;
-			} else {
-				moves = position.getMoves();
-				getStatistics().movesGenerated(moves.size());
 			}
         }
+		List<M> moves = position.getMoves();
+		getStatistics().movesGenerated(moves.size());
     	int bestScore;
     	boolean hasValidMoves = false;
         if (who > 0) {
             // max
-            bestScore = Integer.MIN_VALUE;
+            bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
                 if (position.makeMove(move)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
-	                int score = minimax(null, depth-1, -who, maxDepth);
+	                int score = minimax(depth-1, maxDepth, -who);
 	                position.unmakeMove();
 	                if (score > bestScore) {
 	                    bestScore = score;
@@ -64,7 +80,7 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             for (M move : moves) {
                 if (position.makeMove(move)) {
                 	hasValidMoves = true;
-	                int score = minimax(null, depth-1, -who, maxDepth);
+	                int score = minimax(depth-1, maxDepth, -who);
 	                position.unmakeMove();
 	                if (score < bestScore) {
 	                    bestScore = score;
@@ -72,6 +88,11 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
                 }
             }
         }
-        return hasValidMoves ? bestScore : null;
+        // Let's imagine check mate with no detection at the beginning of the search and all pseudo moves are impossible (because of check mate)
+        // hasValidMoves should be useful there.
+        if (!hasValidMoves) {
+        	throw new IllegalStateException("This should not happen with early mate detection");
+        }
+        return bestScore;
     }
 }
