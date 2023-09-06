@@ -47,7 +47,11 @@ class MinimaxTest {
 		}
 
 		List<EvaluatedMove<Move>> search(BiFunction<ExecutionContext<Move, ChessLibMoveGenerator>, Evaluator<ChessLibMoveGenerator>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder) {
-			return MinimaxTest.search(supplier, depth, ev, aiBuilder);
+			return search(aiBuilder, new SearchParameters(depth, Integer.MAX_VALUE, 0));
+		}
+
+		List<EvaluatedMove<Move>> search(BiFunction<ExecutionContext<Move, ChessLibMoveGenerator>, Evaluator<ChessLibMoveGenerator>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder, SearchParameters params) {
+			return MinimaxTest.search(supplier, ev, aiBuilder, params);
 		}
 
 		public Evaluator<ChessLibMoveGenerator> getEvaluator() {
@@ -56,7 +60,7 @@ class MinimaxTest {
 	}
 
 	@Test
-	void test() {
+	void matIn1ForBlacks() {
 		ChessLibTest t = new ChessLibTest("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5", 2);
 		final List<EvaluatedMove<Move>> expected = Arrays.asList(
 				new EvaluatedMove<>(new Move(C3,C2), Evaluation.win(1, t.getEvaluator().getWinScore(1))),
@@ -72,11 +76,63 @@ class MinimaxTest {
 		assertEquals(expected, t.search(Negamax::new));
 		assertEquals(expected, t.search(Negamax3::new));
 	}
+
+	@Test
+	void matIn2ForWhites() {
+		ChessLibTest t = new ChessLibTest("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1", 4);
+		final EvaluatedMove<Move> expected = new EvaluatedMove<>(new Move(B3,A1), Evaluation.win(2, t.getEvaluator().getWinScore(3)));
+		final List<EvaluatedMove<Move>> search = t.search(Negamax::new);
+		assertEquals(expected, search.get(0));
+		assertTrue(search.get(1).getScore()<search.get(0).getScore());
+		assertEquals(search, t.search(Minimax::new));
+		assertEquals(search, t.search(AlphaBeta::new));
+		assertEquals(search, t.search(Negamax3::new));
+	}
+
+	@Test
+	void threeMatsIn1ForWhites() {
+		ChessLibTest t = new ChessLibTest("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5", 2);
+		final List<EvaluatedMove<Move>> search = t.search(Negamax::new);
+		final Evaluation max = search.get(0).getEvaluation();
+		search.stream().limit(3).forEach(m -> assertEquals(max, m.getEvaluation()));
+		assertNotEquals(max, search.get(3).getEvaluation());
+		assertEquals(search, t.search(Minimax::new));
+		assertEquals(search, t.search(AlphaBeta::new));
+		assertEquals(search, t.search(Negamax3::new));
+	}
+
+	@Test
+	void matIn2ForBlacks() {
+		ChessLibTest t = new ChessLibTest("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1", 4);
+		final EvaluatedMove<Move> expected = new EvaluatedMove<>(new Move(G6,H6), Evaluation.win(2, t.getEvaluator().getWinScore(3)));
+		final List<EvaluatedMove<Move>> search = t.search(Negamax::new);
+		assertEquals(expected, search.get(0));
+		assertTrue(search.get(1).getScore()<search.get(0).getScore());
+		assertEquals(search, t.search(Minimax::new));
+		assertEquals(search, t.search(AlphaBeta::new));
+		assertEquals(search, t.search(Negamax3::new));
+	}
 	
-	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(Supplier<B> supplier, int depth, Evaluator<B> evaluator, BiFunction<ExecutionContext<M, B>, Evaluator<B>, AbstractAI<M, B>> aiBuilder) {
+	@Test
+	void matIn3ForWhites() {
+		ChessLibTest t = new ChessLibTest("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1", 6);
+		SearchParameters params = new SearchParameters(6);
+		final EvaluatedMove<Move> expected = new EvaluatedMove<>(new Move(D1,D7), Evaluation.win(3, t.getEvaluator().getWinScore(5)));
+		matIn3forWhitesAssert(expected, t.search(Negamax::new, params));
+		matIn3forWhitesAssert(expected, t.search(Negamax3::new, params));
+		matIn3forWhitesAssert(expected, t.search(AlphaBeta::new, params));
+	}
+	
+	<M> void matIn3forWhitesAssert(EvaluatedMove<M> expectedBest, List<EvaluatedMove<M>> moves) {
+		assertEquals(expectedBest, moves.get(0));
+		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());
+	}
+
+
+	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(Supplier<B> supplier, Evaluator<B> evaluator, BiFunction<ExecutionContext<M, B>, Evaluator<B>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
 		try (ExecutionContext<M, B> context = new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(4))) {
 			AbstractAI<M, B> ai = aiBuilder.apply(context, evaluator);
-			return ai.getBestMoves(new SearchParameters(depth, Integer.MAX_VALUE, 0)).getList();
+			return ai.getBestMoves(params).getList();
 		}
 	}
 }

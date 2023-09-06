@@ -43,7 +43,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         if (moveGenerator.makeMove(move)) {
 	        getStatistics().movePlayed();
-	        final int score = alphabeta(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
+	        final int score = alphabeta(depth-1, depth, alpha, Integer.MAX_VALUE, -1);
 	        moveGenerator.unmakeMove();
 	        return score;
         } else {
