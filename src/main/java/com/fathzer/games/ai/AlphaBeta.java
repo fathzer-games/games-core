@@ -20,35 +20,16 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 		super(exec, evaluator);
 	}
 
-	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,l)->rootEvaluation(m,params.getDepth(),l));
-    }
-	
+    @Override
+	protected int getRootScore(final int depth, int lowestInterestingScore) {
+		return alphabeta(depth-1, depth, lowestInterestingScore, Integer.MAX_VALUE, -1);
+	}	
 	protected void alphaCut(M move, int alpha, int score, int depth) {
 //		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+score+" (alpha is "+alpha+")");
 	}
 
 	protected void betaCut(M move, int beta, int score, int depth) {
 //		System.out.println ("beta cut on "+move+"at depth "+depth+" with score="+score+" (beta is "+beta+")");
-	}
-	
-	private Integer rootEvaluation(M move, final int depth, int alpha) {
-    	if (alpha==Integer.MIN_VALUE) {
-    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
-    		// So using it as alpha value makes negamax fail 
-    		alpha += 1;
-    	}
-    	final MoveGenerator<M> moveGenerator = getGamePosition();
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        if (moveGenerator.makeMove(move)) {
-	        getStatistics().movePlayed();
-	        final int score = alphabeta(depth-1, depth, alpha, Integer.MAX_VALUE, -1);
-	        moveGenerator.unmakeMove();
-	        return score;
-        } else {
-        	return null;
-        }
 	}
 	
     private int alphabeta(final int depth, int maxDepth, int alpha, int beta, final int who) {

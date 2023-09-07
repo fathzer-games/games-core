@@ -20,27 +20,9 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 		super(exec, evaluator);
 	}
 
-	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,l)->rootEvaluation(m,params.getDepth(), l));
-    }
-	
-	private Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
-    	if (lowestInterestingScore==Integer.MIN_VALUE) {
-    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
-    		// So using it as alpha value makes negamax fail 
-    		lowestInterestingScore += 1;
-    	}
-    	final MoveGenerator<M> moveGenerator = getGamePosition();
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        if (moveGenerator.makeMove(move)) {
-	        getStatistics().movePlayed();
-	        final int score = minimax(depth-1, depth, -1);
-	        moveGenerator.unmakeMove();
-	        return score;
-        } else {
-        	return null;
-        }
+    @Override
+	protected int getRootScore(final int depth, int lowestInterestingScore) {
+		return minimax(depth-1, depth, -1);
 	}
 
     private int minimax(final int depth, int maxDepth, final int who) {

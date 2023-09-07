@@ -35,27 +35,8 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return result;
     }
 
-	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,alpha)-> rootEvaluation(m,params.getDepth(),alpha));
-    }
-
-	private Integer rootEvaluation(M move, final int depth, int alpha) {
-    	if (alpha==Integer.MIN_VALUE) {
-    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
-    		// So using it as alpha value makes negamax fail 
-    		alpha += 1;
-    	}
-    	final MoveGenerator<M> moveGenerator = getGamePosition();
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        if (moveGenerator.makeMove(move)) {
-	        getStatistics().movePlayed();
-	        final int score = -negamax(depth-1, depth, -Integer.MAX_VALUE, -alpha, -1);
-	        moveGenerator.unmakeMove();
-	        return score;
-        } else {
-        	return null;
-        }
+	protected int getRootScore(final int depth, int lowestInterestingScore) {
+		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore, -1);
 	}
 	
 	/** Called when a cut occurs.

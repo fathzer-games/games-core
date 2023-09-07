@@ -45,6 +45,31 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		return this.getBestMoves(moves, params);
     }
 
+	@Override
+    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
+		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(),lowestInterestingScore));
+    }
+
+	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
+    	if (lowestInterestingScore==Integer.MIN_VALUE) {
+    		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
+    		// So using it as alpha value makes negamax fail 
+    		lowestInterestingScore += 1;
+    	}
+    	final B moveGenerator = getGamePosition();
+//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
+        if (moveGenerator.makeMove(move)) {
+	        getStatistics().movePlayed();
+	        final int score = getRootScore(depth, lowestInterestingScore);
+	        moveGenerator.unmakeMove();
+	        return score;
+        } else {
+        	return null;
+        }
+	}
+	
+	protected abstract int getRootScore(final int depth, int lowestInterestingScore);
+
 	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
 		statistics.clear();
         final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());

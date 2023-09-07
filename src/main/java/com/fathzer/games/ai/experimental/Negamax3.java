@@ -39,21 +39,16 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		return result;
     }
 
-	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		return getBestMoves(moves, params, (m,alpha)-> rootEvaluation(m,params.getDepth(),alpha));
-    }
-
-	private Integer rootEvaluation(M move, final int depth, int alpha) {
-    	if (alpha==Integer.MIN_VALUE) {
+	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
+    	if (lowestInterestingScore==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
     		// So using it as alpha value makes negamax fail 
-    		alpha += 1;
+    		lowestInterestingScore += 1;
     	}
-    	final B position = getGamePosition();
+    	final B moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(position, depth);
-        stack.init(stack.getCurrent(), alpha, Integer.MAX_VALUE);
+        final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(moveGenerator, depth);
+        stack.init(stack.getCurrent(), lowestInterestingScore, Integer.MAX_VALUE);
         if (stack.makeMove(move)) {
 	        getStatistics().movePlayed();
 	    	final int score = -negamax(stack);
