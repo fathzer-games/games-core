@@ -163,7 +163,9 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	
 	protected abstract ExecutionContext<M,B> buildExecutionContext(B board);
 	
-	protected abstract Negamax<M,B> buildNegaMax(ExecutionContext<M,B> context, Evaluator<B> evaluator);
+	protected Negamax<M,B> buildNegaMax(ExecutionContext<M,B> context, Evaluator<B> evaluator) {
+		return new Negamax<>(context, evaluator);
+	}
 	
 	protected abstract void setViewPoint(Evaluator<B> evaluator, B board);
 }

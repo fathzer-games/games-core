@@ -116,8 +116,11 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			state = null;
 		}
 
-		final List<M> moves = sort(state==null?null:state.getBestMove(), searchStack.position.getMoves());
+		final List<M> moves = searchStack.position.getMoves();
     	getStatistics().movesGenerated(moves.size());
+    	if (state!=null) {
+    		insert(state.getBestMove(), moves);
+    	}
         for (M move : moves) {
         	if (searchStack.makeMove(move)) {
 	            getStatistics().movePlayed();

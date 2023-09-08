@@ -92,8 +92,11 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 			state = null;
 		}
 
-		final List<M> moves = sort(state==null?null:state.getBestMove(), position.getMoves());
+		final List<M> moves = position.getMoves();
     	getStatistics().movesGenerated(moves.size());
+    	if (state!=null) {
+    		insert(state.getBestMove(), moves);
+    	}
         int value = Integer.MIN_VALUE;
         M bestMove = null;
         for (M move : moves) {
@@ -137,22 +140,19 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     	this.transpositionTable = table;
     }
 
-	protected List<M> sort(M best, List<M> moves) {
+	protected void insert(M best, List<M> moves) {
 		if (best!=null) {
-			int index = moves.indexOf(best);
-			if (index<0) {
+			if (moves.remove(best)) {
+				moves.add(0, best);
+			} else {
 				// Remember, move can not be possible (if it come from a different game position with same hash key
 				// We can simply ignore the best move if it is not possible
 				if (Boolean.getBoolean("HashCollisionChase")) {
 					//TODO Let it there for a while, it already help to find a bug in hash key building...
 					throw new IllegalArgumentException("Strange, best move "+best+" does not exists (hash="+((HashProvider)getGamePosition()).getHashKey()+")");
 				}
-			} else if (index!=0) {
-				// Put best move in first place
-				moves.add(0, moves.remove(index));
 			}
 		}
-		return moves;
 	}
 	
 	protected int toTTScore(int value, int depth, int maxDepth) {
