@@ -15,7 +15,7 @@ import com.fathzer.games.ai.exec.ExecutionContext;
  * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
  */
 @Deprecated
-public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements MoveSorter<M> {
+public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	protected AlphaBeta(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
 		super(exec, evaluator);
 	}
@@ -45,7 +45,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imp
 				return -getEvaluator().getWinScore(maxDepth-depth)*who;
 			}
         }
-		List<M> moves = sort(position.getMoves());
+		List<M> moves = position.getMoves();
 		getStatistics().movesGenerated(moves.size());
         int bestScore;
     	boolean hasValidMoves = false;

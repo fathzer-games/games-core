@@ -17,7 +17,7 @@ import com.fathzer.games.ai.transposition.TranspositionTableEntry;
  * @param <M> The type of the moves
  * @param <B> The type of the {@link MoveGenerator} to use
  */
-public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements MoveSorter<M> {
+public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     private TranspositionTable<M> transpositionTable;
     
 	public Negamax(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
@@ -138,7 +138,6 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     }
 
 	protected List<M> sort(M best, List<M> moves) {
-		final List<M> result = sort(moves);
 		if (best!=null) {
 			int index = moves.indexOf(best);
 			if (index<0) {
@@ -150,10 +149,10 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 				}
 			} else if (index!=0) {
 				// Put best move in first place
-				result.add(0, result.remove(index));
+				moves.add(0, moves.remove(index));
 			}
 		}
-		return result;
+		return moves;
 	}
 	
 	protected int toTTScore(int value, int depth, int maxDepth) {

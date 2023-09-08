@@ -39,9 +39,6 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		statistics.clear();
 		List<M> moves = getGamePosition().getMoves();
 		getStatistics().movesGenerated(moves.size());
-		if (MoveSorter.class.isAssignableFrom(getClass())) {
-			moves = ((MoveSorter<M>)this).sort(moves);
-		}
 		return this.getBestMoves(moves, params);
     }
 

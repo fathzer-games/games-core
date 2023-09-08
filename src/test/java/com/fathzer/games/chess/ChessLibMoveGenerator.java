@@ -1,5 +1,6 @@
 package com.fathzer.games.chess;
 
+import java.util.Comparator;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
@@ -10,7 +11,8 @@ import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider {
-	private Board board;
+	private final Board board;
+	private Comparator<Move> comparator;
 	
 	public ChessLibMoveGenerator(Board board) {
 		this.board = board.clone();
@@ -28,7 +30,11 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	
 	@Override
 	public List<Move> getMoves() {
-		return board.pseudoLegalMoves();
+		final List<Move> moves = board.pseudoLegalMoves();
+		if (comparator!=null) {
+			moves.sort(comparator);
+		}
+		return moves;
 	}
 
 	@Override
@@ -46,5 +52,9 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	
 	public Board getBoard() {
 		return this.board; 
+	}
+
+	public void setMoveComparator(Comparator<Move> comparator) {
+		this.comparator = comparator;
 	}
 }
