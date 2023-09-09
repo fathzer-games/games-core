@@ -20,9 +20,8 @@ public interface MoveGenerator<M> {
 	
     /**
      * Lists every valid moves of the current player.
-     * @return a list of moves. Please note this list can not be empty in some draw situations (for example when a chess game ends because of insufficient material).
+     * @return a list of moves. Please note this list can be not empty in some draw situations (for example when a chess game ends because of insufficient material).
      * <br>Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted with the (a priori) best moves first.
-     * @param <M> The move class
      * @see <a href="https://www.chessprogramming.org/Move_Ordering">Move Ordering on Chess Programming Wiki</a>
      */
 	List<M> getMoves();
