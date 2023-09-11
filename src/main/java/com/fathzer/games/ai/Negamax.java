@@ -69,11 +69,18 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
 		final B position = getGamePosition();
-		Integer endOfSearchScore = getEndOfSearchScore(position, depth, maxDepth, who);
-		if (endOfSearchScore!=null) {
-			return endOfSearchScore;
-		}
-		
+//		Integer endOfSearchScore = getEndOfSearchScore(position, depth, maxDepth, who);
+//		if (endOfSearchScore!=null) {
+//			return endOfSearchScore;
+//		}
+    	if (depth == 0 || isInterrupted()) {
+    		getStatistics().evaluationDone();
+    		return who * getEvaluator().evaluate(position);
+        }
+    	if (position.isRepetition()==Status.DRAW) {
+    		return 0;
+    	}
+
 		final boolean keyProvider = (position instanceof HashProvider) && transpositionTable!=null;
 		final long key;
 		final AlphaBetaState<M> state;
@@ -99,8 +106,10 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     	}
         int value = Integer.MIN_VALUE;
         M bestMove = null;
+        boolean noValidMove = true; 
         for (M move : moves) {
             if (position.makeMove(move)) {
+            	noValidMove = false;
 	            getStatistics().movePlayed();
 	            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
 	            position.unmakeMove();
@@ -116,6 +125,11 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	                }
 	            }
             }
+        }
+        
+        if (noValidMove) {
+			// Player looses after nbMoves half moves
+        	value = position.onNoValidMove()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth);
         }
         
         if (keyProvider && !isInterrupted()) {

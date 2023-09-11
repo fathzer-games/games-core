@@ -31,4 +31,7 @@ public interface MoveGenerator<M> {
      * @return a status
      */
 	Status getStatus();
+	
+	Status isRepetition();
+	Status onNoValidMove();
 }
