@@ -31,7 +31,7 @@ public interface Evaluator<T> {
 	 * @return The number of half moves passed to {@link #getWinScore(int)}
 	 */
 	default int getNbHalfMovesToWin(int winScore) {
-		return Short.MAX_VALUE-winScore;
+		return Short.MAX_VALUE-Math.abs(winScore);
 	}
 	
 	default boolean isWinLooseScore(int score, int maxDepth) {

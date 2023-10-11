@@ -39,6 +39,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		return result;
     }
 
+	@Override
 	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
     	if (lowestInterestingScore==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
@@ -59,39 +60,18 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
         }
 	}
 	
-	protected boolean getEndOfSearchScore (TreeSearchStateStack<M,B> stack) {
-		final TreeSearchState<M> state = stack.getCurrent();
-		if (state.depth == 0 || isInterrupted()) {
-//System.out.println("Evaluation: "+context.evaluate()+" * "+who);
-    		getStatistics().evaluationDone();
-    		state.value = state.who * getEvaluator().evaluate(stack.position);
-   			spy.exit(stack, EVAL);
-			return true;
-        }
-    	final Status status = stack.position.getStatus();
-		if (Status.DRAW.equals(status)) {
-			state.value = 0;
-			spy.exit(stack, DRAW);
-			return true;
-		} else if (!Status.PLAYING.equals(status)){
-			// Player looses after nbMoves moves
-            state.value = -getEvaluator().getWinScore(stack.maxDepth-state.depth);
-           	spy.exit(stack, MAT);
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
 	@Override
     protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
 		throw new IllegalStateException("Should not be called anymore");
 	}
 	
 	protected int negamax(TreeSearchStateStack<M,B> searchStack) {
-    	spy.enter(searchStack);
+		spy.enter(searchStack);
 		final TreeSearchState<M> searchState = searchStack.getCurrent();
-		if (getEndOfSearchScore(searchStack)) {
+		if (searchState.depth == 0 || isInterrupted()) {
+			getStatistics().evaluationDone();
+			searchState.value = searchState.who * getEvaluator().evaluate(searchStack.position);
+			spy.exit(searchStack, EVAL);
 			return searchState.value;
 		}
 		
@@ -101,7 +81,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		if (keyProvider) {
 			key = ((HashProvider)searchStack.position).getHashKey();
 			TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
-			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> fromTTScore(v, searchStack.maxDepth));
+			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> scoreToTT(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
 			if (state.isValueSet()) {
 				searchState.value = state.getValue();
 				spy.exit(searchStack, TT);
@@ -117,40 +97,56 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		}
 
 		final List<M> moves = searchStack.position.getMoves();
-    	getStatistics().movesGenerated(moves.size());
-    	if (state!=null) {
-    		insert(state.getBestMove(), moves);
-    	}
-        for (M move : moves) {
-        	if (searchStack.makeMove(move)) {
-	            getStatistics().movePlayed();
-	            final int score = -negamax(searchStack);
-	            searchStack.unmakeMove();
-	            if (score > searchState.value) {
-	            	searchState.value = score;
-	                searchState.bestMove = move;
-	                if (score > searchState.alpha) {
-	                	searchState.alpha = score;
-	                    if (score >= searchState.beta) {
-	                   		spy.cut(searchStack, move);
-	                    	break;
-	                    }
-	                }
-	            }
-        	}
-        }
-        
-        if (keyProvider && !isInterrupted()) {
-        	// If a transposition table is available
-        	state.setValue(searchState.value);
-        	state.updateAlphaBeta(searchState.alpha, searchState.beta);
-        	state.setBestMove(searchState.bestMove);
-        	boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> toTTScore(v,searchState.depth, searchStack.maxDepth));
-       		spy.storeTT(searchStack, state, store);
-        }
+		getStatistics().movesGenerated(moves.size());
+		if (state != null) {
+			insert(state.getBestMove(), moves);
+		}
+		boolean noValidMove = true;
+		for (M move : moves) {
+			if (searchStack.makeMove(move)) {
+				noValidMove = false;
+				getStatistics().movePlayed();
+				final int score = -negamax(searchStack);
+				searchStack.unmakeMove();
+				if (score > searchState.value) {
+					searchState.value = score;
+					searchState.bestMove = move;
+					if (score > searchState.alpha) {
+						searchState.alpha = score;
+						if (score >= searchState.beta) {
+							spy.cut(searchStack, move);
+							break;
+						}
+					}
+				}
+			}
+		}
 
-       	spy.exit(searchStack, EXIT);
-        return searchState.value;
+		if (noValidMove) {
+			// Player can't move it's a draw or a loose
+			//TODO Maybe there's some games where the player wins if it can't move...
+			searchState.value = searchStack.position.onNoValidMove() == Status.DRAW ? 0
+					: -getEvaluator().getWinScore(searchStack.maxDepth - searchState.depth);
+			if (searchState.value > searchState.alpha) {
+				searchState.alpha = searchState.value;
+			}
+		}
+
+		if (keyProvider && !isInterrupted()) {
+			// If a transposition table is available
+			state.setValue(searchState.value);
+			state.updateAlphaBeta(searchState.alpha, searchState.beta);
+			state.setBestMove(searchState.bestMove);
+			boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
+			spy.storeTT(searchStack, state, store);
+		}
+
+		if (noValidMove) {
+			spy.exit(searchStack, searchState.value == 0 ? DRAW : MAT);
+		} else {
+			spy.exit(searchStack, EXIT);
+		}
+		return searchState.value;
     }
 
 	public void setSpy(Spy<M,B> spy) {

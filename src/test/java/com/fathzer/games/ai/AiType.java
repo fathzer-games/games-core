@@ -11,7 +11,7 @@ import com.fathzer.games.chess.ChessLibMoveGenerator;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 
-enum AiType {
+public enum AiType {
 	Negamax(Negamax::new), Negamax3(Negamax3::new), AlphaBeta(AlphaBeta::new), Minimax(Minimax::new);
 	
 	private final BiFunction<ExecutionContext<Move, ChessLibMoveGenerator>, Evaluator<ChessLibMoveGenerator>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder;

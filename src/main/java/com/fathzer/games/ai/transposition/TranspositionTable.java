@@ -93,7 +93,7 @@ public interface TranspositionTable<M> {
 	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
 		board.makeMove(move);
 		try {
-			final List<M> result = collectPV(board, maxDepth);
+			final List<M> result = collectPV(board, maxDepth-1);
 			result.add(0, move);
 			return result;
 		} finally {

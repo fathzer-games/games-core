@@ -16,8 +16,8 @@ public interface TranspositionTablePolicy<M> {
      * @param alpha The current alpha value
      * @param beta The current beta value
 	 * @param fromTTScoreConverter A function that will convert the value stored in the table to the value effectively returned in this method's result.
-	 * <br>This could seems strange because there's a lot of examples on the Internet that retrieves directly a value.
-	 * But, unfortunately, this strategy does work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
+	 * <br>This could seems strange because there's a lot of examples on the Internet that returns directly the stored value.
+	 * But, unfortunately, this strategy does not work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
      * @return The state that should be applied. If a value is set, the search is stopped and the value is returned. If alpha or beta value are changed in returned instance, they are copied in calling search function.
      */
 	AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter);
@@ -29,8 +29,8 @@ public interface TranspositionTablePolicy<M> {
 	 * @param key The key where to store data
 	 * @param state The state returned by {@link #accept(TranspositionTableEntry, int, int, int, IntUnaryOperator)} updated with alpha, beta and value
 	 * @param toTTScoreConverter A function that will convert the state value to the value effectively stored in the table.
-	 * <br>This could seems strange because there's a lot of examples on the Internet that stores directly a value.
-	 * But, unfortunately, this strategy does work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
+	 * <br>This could seems strange because there's a lot of examples on the Internet that stores directly the state value.
+	 * But, unfortunately, this strategy does not work with win/loose score and recursive deepening. The <a href="https://github.com/maksimKorzh/chess_programming/blob/master/src/bbc/tt_search_mating_scores/TT_mate_scoring.txt">following text</a> explains the problem.
 	 * @return true if state is stored, false if it is ignored
 	 * @see TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)
 	 */

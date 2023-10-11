@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.ai.evaluation.Evaluation;
-
 class EvaluationTest {
 
 	@Test
@@ -35,5 +33,4 @@ class EvaluationTest {
 		assertEquals("LOOSE+2",loose2.toString());
 		assertEquals("-1",badScore.toString());
 	}
-
 }
