@@ -37,7 +37,7 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		statistics.clear();
-		List<M> moves = getGamePosition().getMoves();
+		List<M> moves = getGamePosition().getMoves(false);
 		getStatistics().movesGenerated(moves.size());
 		return this.getBestMoves(moves, params);
     }

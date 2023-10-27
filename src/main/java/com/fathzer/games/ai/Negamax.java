@@ -79,7 +79,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 			state = null;
 		}
 
-		final List<M> moves = position.getMoves();
+		final List<M> moves = position.getMoves(false);
     	getStatistics().movesGenerated(moves.size());
     	if (state!=null) {
     		insert(state.getBestMove(), moves);

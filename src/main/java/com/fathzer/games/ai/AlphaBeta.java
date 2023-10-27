@@ -37,15 +37,12 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
             return who * getEvaluator().evaluate(position);
-        } else {
-        	final Status status = position.getStatus();
-			if (Status.DRAW.equals(status)) {
-				return 0;
-			} else if (!Status.PLAYING.equals(status)){
-				return -getEvaluator().getWinScore(maxDepth-depth)*who;
-			}
         }
-		List<M> moves = position.getMoves();
+    	if (position.isRepetition()==Status.DRAW) {
+    		return 0;
+    	}
+
+		List<M> moves = position.getMoves(false);
 		getStatistics().movesGenerated(moves.size());
         int bestScore;
     	boolean hasValidMoves = false;
@@ -93,10 +90,8 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
                 }
             }
         }
-        // Let's imagine check mate with no detection at the beginning of the search and all pseudo moves are impossible (because of check mate)
-        // hasValidMoves should be useful there.
         if (!hasValidMoves) {
-        	throw new IllegalStateException("This should not happen with early mate detection");
+        	return position.onNoValidMove()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth)*who;
         }
         return bestScore;
     }

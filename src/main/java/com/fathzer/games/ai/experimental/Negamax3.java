@@ -74,6 +74,10 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			spy.exit(searchStack, EVAL);
 			return searchState.value;
 		}
+    	if (searchStack.position.isRepetition()==Status.DRAW) {
+			spy.exit(searchStack, DRAW);
+    		return 0;
+    	}
 		
 		final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
 		final long key;
@@ -96,7 +100,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			state = null;
 		}
 
-		final List<M> moves = searchStack.position.getMoves();
+		final List<M> moves = searchStack.position.getMoves(false);
 		getStatistics().movesGenerated(moves.size());
 		if (state != null) {
 			insert(state.getBestMove(), moves);
