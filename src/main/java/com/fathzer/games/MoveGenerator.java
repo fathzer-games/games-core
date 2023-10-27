@@ -1,6 +1,7 @@
 package com.fathzer.games;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** A class able to play moves and to compute the state of a game (the list of possible moves or who has won).
  * @param <M> The class that represents a move.
@@ -32,6 +33,22 @@ public interface MoveGenerator<M> {
      * @see <a href="https://www.chessprogramming.org/Move_Ordering">Move Ordering on Chess Programming Wiki</a>
      */
 	List<M> getMoves(boolean quiesce);
+	
+	/**
+	 * Lists every legal moves of the current player.
+	 * <br>The default implementation uses {@link #getMoves(boolean)}, {@link #makeMove(Object)} and {@link #unmakeMove()}
+	 * check if moves are valid. The implementor is free to override this method to implement an optimized computation.
+	 * @return
+	 */
+	default List<M> getLegalMoves() {
+		return getMoves(false).stream().filter(m -> {
+			final boolean ok = makeMove(m);
+			if (ok) {
+				unmakeMove();
+			}
+			return ok;
+		}).collect(Collectors.toList());
+	}
 
 	Status isRepetition();
 	Status onNoValidMove();
