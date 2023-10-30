@@ -74,9 +74,10 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			spy.exit(searchStack, EVAL);
 			return searchState.value;
 		}
-    	if (searchStack.position.isRepetition()==Status.DRAW) {
-			spy.exit(searchStack, DRAW);
-    		return 0;
+    	final Status fastAnalysisStatus = searchStack.position.getContextualStatus();
+    	if (fastAnalysisStatus!=Status.PLAYING) {
+			spy.exit(searchStack, END_GAME);
+    		return getScore(fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
     	}
 		
 		final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
@@ -129,8 +130,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		if (noValidMove) {
 			// Player can't move it's a draw or a loose
 			//TODO Maybe there's some games where the player wins if it can't move...
-			searchState.value = searchStack.position.onNoValidMove() == Status.DRAW ? 0
-					: -getEvaluator().getWinScore(searchStack.maxDepth - searchState.depth);
+			searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
 			if (searchState.value > searchState.alpha) {
 				searchState.alpha = searchState.value;
 			}
@@ -146,7 +146,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		}
 
 		if (noValidMove) {
-			spy.exit(searchStack, searchState.value == 0 ? DRAW : MAT);
+			spy.exit(searchStack, END_GAME);
 		} else {
 			spy.exit(searchStack, EXIT);
 		}

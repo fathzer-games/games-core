@@ -31,9 +31,11 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     		getStatistics().evaluationDone();
             return who * getEvaluator().evaluate(position);
         }
-    	if (position.isRepetition()==Status.DRAW) {
-    		return 0;
+    	final Status fastAnalysisStatus = position.getContextualStatus();
+		if (fastAnalysisStatus==Status.DRAW) {
+        	return getScore(position.getEndGameStatus(), depth, maxDepth)*who;
     	}
+		
 		List<M> moves = position.getMoves(false);
 		getStatistics().movesGenerated(moves.size());
     	int bestScore;
@@ -67,7 +69,7 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             }
         }
         if (!hasValidMoves) {
-        	return position.onNoValidMove()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth)*who;
+        	return position.getEndGameStatus()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth)*who;
         }
         return bestScore;
     }

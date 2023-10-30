@@ -52,12 +52,12 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	
 
 	@Override
-	public Status isRepetition() {
+	public Status getContextualStatus() {
 		return board.getHalfMoveCounter()>50 || board.isInsufficientMaterial() || board.isRepetition() ? Status.DRAW : Status.PLAYING;
 	}
 
 	@Override
-	public Status onNoValidMove() {
+	public Status getEndGameStatus() {
 		if (board.isKingAttacked()) {
 			return board.getSideToMove()==Side.BLACK ? Status.WHITE_WON : Status.BLACK_WON;
 		} else {

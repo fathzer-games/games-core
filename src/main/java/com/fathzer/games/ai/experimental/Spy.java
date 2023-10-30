@@ -4,7 +4,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 
 public interface Spy<M, B extends MoveGenerator<M>> {
-	public enum Event {EVAL, MAT, DRAW, EXIT, TT}
+	public enum Event {EVAL, END_GAME, EXIT, TT}
 
 	default void enter(TreeSearchStateStack<M,B> state) {}
 	default void alphaBetaFromTT(TreeSearchStateStack<M,B> state, AlphaBetaState<M> abState) {}

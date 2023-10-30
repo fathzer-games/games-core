@@ -5,6 +5,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
 
@@ -93,5 +94,14 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 	@Override
 	public void interrupt() {
 		interrupted = true;
+	}
+	
+	protected int getScore(final Status status, final int depth, int maxDepth) {
+		if (Status.DRAW==status) {
+			return 0;
+		} else {
+			//FIXME Maybe there's some games where the player wins if it can't move...
+			return -getEvaluator().getWinScore(maxDepth-depth);
+		}
 	}
 }

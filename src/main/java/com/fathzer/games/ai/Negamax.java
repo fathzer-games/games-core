@@ -57,8 +57,9 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     		getStatistics().evaluationDone();
     		return who * getEvaluator().evaluate(position);
         }
-    	if (position.isRepetition()==Status.DRAW) {
-    		return 0;
+    	final Status fastAnalysisStatus = position.getContextualStatus();
+    	if (fastAnalysisStatus!=Status.PLAYING) {
+    		return getScore(fastAnalysisStatus, depth, maxDepth);
     	}
 
 		final boolean keyProvider = (position instanceof HashProvider) && transpositionTable!=null;
@@ -109,8 +110,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         
         if (noValidMove) {
 			// Player can't move it's a draw or a loose
-			//TODO Maybe there's some games where the player wins if it can't move...
-        	value = position.onNoValidMove()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth);
+        	value = getScore(position.getEndGameStatus(), depth, maxDepth);
         	if (value>alpha) {
         		alpha = value;
         	}
