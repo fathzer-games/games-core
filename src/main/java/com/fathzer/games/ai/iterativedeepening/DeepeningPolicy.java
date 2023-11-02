@@ -10,11 +10,27 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
 /** A policy that manages how to deepen the search.
  * <br>Typically, it decides at which depth to start, what increment to add at each step, and if we should end prematurely. 
  */
-public interface DeepeningPolicy {
+public class DeepeningPolicy {
+	private final long maxTime;
+	private final long start;
+	
+	public DeepeningPolicy(long maxTimeMs) {
+		this.maxTime = maxTimeMs;
+		this.start = System.currentTimeMillis();
+	}
+	
+	public long getSpent() {
+		return System.currentTimeMillis()-start;
+	}
+	
+	public long getMaxTime() {
+		return maxTime;
+	}
+	
 	/** Gets the start depth.
 	 * @return the start depth, default is 2.
 	 */
-	default int getStartDepth() {
+	public int getStartDepth() {
 		return 2;
 	}
 
@@ -22,8 +38,12 @@ public interface DeepeningPolicy {
 	 * @param currentDepth currentDepth
 	 * @return next depth, a negative value to stop deepening. Default is currentDepth+1 
 	 */
-	default int getNextDepth(int currentDepth) {
+	public int getNextDepth(int currentDepth) {
 		return currentDepth+1;
+	}
+	
+	public boolean isEnoughTimeToDeepen(int depth) {
+		return getSpent()>maxTime/2;
 	}
 
 	/** This method is called every time a search is made to determine which moves should be deepened.
@@ -35,9 +55,9 @@ public interface DeepeningPolicy {
 	 * <br>The default implementation returns an empty list if first move has a win or loose evaluation. If not, all moves that are not ended, but custom policy can use this data,
 	 * for instance, to decide that result is stable enough to stop deepening before max depth is reached.
 	 */
-	default <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
-		if (evaluations.get(0).isEnd()) {
-			// if best move is a win/loose, continuing analysis is useless
+	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
+		if (evaluations.get(0).isEnd() || !isEnoughTimeToDeepen(depth)) {
+			// if best move is a win/loose, or we have not enough time to complete analysis, continuing analysis is useless.
 			return Collections.emptyList();
 		}
 		// Separate moves that lead to loose (put in finished). These moves do not need to be deepened. Store others in toDeepen
@@ -66,10 +86,9 @@ public interface DeepeningPolicy {
 	 * @param partialList The best moves obtained by interrupted search.
 	 * @param interruptionDepth The depth at which interruption occurred.
 	 */
-	default <M> void mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
+	public <M> void mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
 		for (EvaluatedMove<M> ev : partialList) {
 			bestMoves.update(ev.getContent(), ev.getEvaluation());
 		}
 	}
-
 }

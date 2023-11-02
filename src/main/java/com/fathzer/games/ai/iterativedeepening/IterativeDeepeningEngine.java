@@ -59,7 +59,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.transpositionTable = tt;
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
-		this.deepBuilder = () -> new DeepeningPolicy() {};
+		this.deepBuilder = () -> new DeepeningPolicy(Long.MAX_VALUE) {};
 		this.moveSelector = new RandomMoveSelector<>();
 	}
 	
