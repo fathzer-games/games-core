@@ -12,12 +12,13 @@ In order to have a working engine for your favorite game, you have to implement 
 You can implement your own transposition table and its policy (which positions to save or how to reuse them during the search). This library contains a basic implementation, try it to see if it is enough for your needs.
 
 # Known bugs
-- The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi).
-- The iterative deepening search always stop deepening when it find a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one.
+- The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).
+- The iterative deepening search always stops deepening when it finds a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one.
 - Using non exact entries in transposition table to update the alpha/beta values leads to invalid results.  
 For example: 4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46 in JChess engine at depth 7 returns a score of -1600 (PV: c7-c6, e7-d7, c6-b6, c5-a4, b6-a5, d7-b5) instead of M-3 (PV: c7-c6, f6-h8, g1-g2, e7-e8, c6-c5, e8-d8, g2-f2).
 
 ## TODO
+- There's probably a bug or something very misleading in ClockSettings: withNNext has a number of plies arguments, but it seems that the usage is to deal with number of moves (not plies which are half moves).
 - PerfT could use getLegalMoves instead of getMoves(). It would save the move sort cost.
 - Maybe TTAi scoreToTT and ttToScore would be at a better place in TranspositionTablePolicy. Another, maybe better, approach is to compute fixed (mat) values in Negamax class and have a flag in the table (and in its store method) to explicitly set the stored value as a fixed value. It would allow those values to be used regardless of the depth at which they are recorded.
 - EvaluatedMove.compareTo does not sort in natural order which can be confusing
