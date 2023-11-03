@@ -13,18 +13,13 @@ import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 public class IterativeDeepeningSearch<M> {
-	private final SearchParameters params;
 	private final DeepeningPolicy deepeningPolicy;
 	private final AI<M> ai;
-	private long maxTime = Long.MAX_VALUE;
-	private SearchParameters currentParams;
 	private List<EvaluatedMove<M>> orderedMoves;
 	private List<SearchResult<M>> searchHistory;
 	private EventLogger<M> logger;
 	
-	IterativeDeepeningSearch(AI<M> ai, SearchParameters params, DeepeningPolicy deepeningPolicy, long maxTimeMs) {
-		this.params = params;
-		this.maxTime = maxTimeMs;
+	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;
@@ -39,26 +34,26 @@ public class IterativeDeepeningSearch<M> {
 	}
 	
 	private List<EvaluatedMove<M>> buildBestMoves() {
+		deepeningPolicy.start();
 		this.searchHistory = new ArrayList<>();
-		final long start = System.currentTimeMillis();
-		this.currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), params.getSize(), params.getAccuracy());
+		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
 		searchHistory.add(bestMoves);
 		logger.logSearch(currentParams.getDepth(), ai.getStatistics(), bestMoves);
+		final long maxTime = deepeningPolicy.getMaxTime();
+		final long remaining = maxTime-(deepeningPolicy.getSpent());
+		if ((bestMoves.getList().size()==1 && !deepeningPolicy.isDeepenOnForced()) || remaining<=0) {
+			return bestMoves.getCut();
+		}
 		final Timer timer = new Timer(true);
 		if (maxTime!=Long.MAX_VALUE) {
-			final long remaining = maxTime-(System.currentTimeMillis()-start);
-			if (remaining>0) {
-				timer.schedule(new TimerTask(){
-					@Override
-					public void run() {
-						ai.interrupt();
-						logger.logTimeOut(currentParams.getDepth());
-					}
-				}, remaining);
-			} else {
-				return bestMoves.getCut();
-			}
+			timer.schedule(new TimerTask(){
+				@Override
+				public void run() {
+					ai.interrupt();
+					logger.logTimeOut(currentParams.getDepth());
+				}
+			}, remaining);
 		}
 		final List<EvaluatedMove<M>> ended = new ArrayList<>(bestMoves.getList().size());
 		do {
@@ -81,7 +76,7 @@ public class IterativeDeepeningSearch<M> {
 			if (ai.isInterrupted() || moves.isEmpty()) {
 				break;
 			}
-		} while (currentParams.getDepth()<params.getDepth());
+		} while (currentParams.getDepth()<deepeningPolicy.getDepth());
 		timer.cancel();
 		// Warning, ended should be added carefully or loosing position will be returned in the best positions
 		// For example, if we simple add the ended moves to bestMove.getCut().
@@ -106,6 +101,6 @@ public class IterativeDeepeningSearch<M> {
 	}
 
 	public int getMaxDepth() {
-		return params.getDepth();
+		return deepeningPolicy.getDepth();
 	}
 }

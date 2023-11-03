@@ -4,29 +4,52 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 /** A policy that manages how to deepen the search.
  * <br>Typically, it decides at which depth to start, what increment to add at each step, and if we should end prematurely. 
  */
-public class DeepeningPolicy {
-	private final long maxTime;
-	private final long start;
+public class DeepeningPolicy extends SearchParameters {
+	private long maxTime;
+	private long start;
+	private boolean deepenOnForced;
 	
-	public DeepeningPolicy(long maxTimeMs) {
-		this.maxTime = maxTimeMs;
+	public DeepeningPolicy(int maxDepth) {
+		super(maxDepth);
+		this.maxTime = Long.MAX_VALUE;
+		this.start = -1;
+		this.deepenOnForced = true;
+	}
+	
+	public void start() {
 		this.start = System.currentTimeMillis();
 	}
 	
 	public long getSpent() {
+		if (start<0) {
+			throw new IllegalStateException("Not yet started");
+		}
 		return System.currentTimeMillis()-start;
 	}
 	
+	public void setMaxTime(long maxTime) {
+		this.maxTime = maxTime;
+	}
+
 	public long getMaxTime() {
 		return maxTime;
 	}
 	
+	public boolean isDeepenOnForced() {
+		return deepenOnForced;
+	}
+
+	public void setDeepenOnForced(boolean deepenOnForced) {
+		this.deepenOnForced = deepenOnForced;
+	}
+
 	/** Gets the start depth.
 	 * @return the start depth, default is 2.
 	 */

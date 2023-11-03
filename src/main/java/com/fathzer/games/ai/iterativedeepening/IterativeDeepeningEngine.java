@@ -3,11 +3,9 @@ package com.fathzer.games.ai.iterativedeepening;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.Negamax;
-import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -42,9 +40,7 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	
 
 	private Evaluator<B> evaluator;
-	private Supplier<DeepeningPolicy> deepBuilder;
-	private SearchParameters searchParams;
-	private long maxTime = Long.MAX_VALUE;
+	private DeepeningPolicy deepeningPolicy;
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EventLogger<M> logger;
@@ -54,12 +50,11 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	
 	protected IterativeDeepeningEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
 		this.parallelism = 1;
-		this.searchParams = new SearchParameters(maxDepth);
 		this.evaluator = evaluator;
 		this.transpositionTable = tt;
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
-		this.deepBuilder = () -> new DeepeningPolicy(Long.MAX_VALUE) {};
+		this.deepeningPolicy = new DeepeningPolicy(maxDepth);
 		this.moveSelector = new RandomMoveSelector<>();
 	}
 	
@@ -89,18 +84,6 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.moveSelector = moveSelector;
 	}
 
-	public SearchParameters getSearchParams() {
-		return searchParams;
-	}
-
-	public long getMaxTime() {
-		return maxTime;
-	}
-
-	public void setMaxTime(long maxTimeMs) {
-		this.maxTime = maxTimeMs;
-	}
-
 	public EventLogger<M> getLogger() {
 		return logger;
 	}
@@ -121,8 +104,12 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.transpositionTable = transpositionTable;
 	}
 
-	public void setDeepeningPolicyBuilder(Supplier<DeepeningPolicy> deepBuilder) {
-		this.deepBuilder = deepBuilder;
+	public DeepeningPolicy getDeepeningPolicy() {
+		return deepeningPolicy;
+	}
+
+	public void setDeepeningPolicy(DeepeningPolicy policy) {
+		this.deepeningPolicy = policy;
 	}
 
 	@Override
@@ -148,11 +135,11 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 				throw new IllegalStateException();
 			}
 			try {
-				rs = new IterativeDeepeningSearch<>(internal, searchParams, deepBuilder.get(), maxTime);
+				rs = new IterativeDeepeningSearch<>(internal, deepeningPolicy);
 				rs.setEventLogger(logger);
 				final List<EvaluatedMove<M>> result = rs.getBestMoves();
 				for (EvaluatedMove<M> ev:result) {
-					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, searchParams.getDepth()));
+					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
 				}
 				return rs;
 			} finally {
