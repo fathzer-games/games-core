@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 
 public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 	private final List<TreeSearchState<M>> states;
@@ -41,8 +42,8 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		result.lastMove = null;
 	}
 	
-	public boolean makeMove(M move) {
-		final boolean validMove = position.makeMove(move);
+	public boolean makeMove(M move, MoveConfidence confidence) {
+		final boolean validMove = position.makeMove(move, confidence);
 		if (validMove) {
 			get(currentDepth).lastMove = move;
 			next();

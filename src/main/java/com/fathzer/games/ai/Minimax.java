@@ -3,6 +3,7 @@ package com.fathzer.games.ai;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
@@ -44,7 +45,7 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             // max
             bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
-                if (position.makeMove(move)) {
+                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
 	                int score = minimax(depth-1, maxDepth, -who);
@@ -58,7 +59,7 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             // min
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
-                if (position.makeMove(move)) {
+                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                int score = minimax(depth-1, maxDepth, -who);
 	                position.unmakeMove();

@@ -5,6 +5,7 @@ import java.util.List;
 import static com.fathzer.games.ai.experimental.Spy.Event.*;
 
 import com.fathzer.games.Status;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
@@ -18,7 +19,8 @@ import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
 
 /**
- * A Negamax with alpha beta pruning implementation.
+ * An experimental of a Negamax with alpha beta pruning implementation and transposition table.
+ * <br>It has the same functionalities than {@link Negamax} except it allows easier search debugging at the price of a (little) performance loss.
  * @param <M> Implementation of the Move interface to use
  */
 public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
@@ -50,7 +52,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(moveGenerator, depth);
         stack.init(stack.getCurrent(), lowestInterestingScore, Integer.MAX_VALUE);
-        if (stack.makeMove(move)) {
+        if (stack.makeMove(move, MoveConfidence.UNSAFE)) {
 	        getStatistics().movePlayed();
 	    	final int score = -negamax(stack);
 	        stack.unmakeMove();
@@ -101,40 +103,39 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			state = null;
 		}
 
-		final List<M> moves = searchStack.position.getMoves(false);
-		getStatistics().movesGenerated(moves.size());
-		if (state != null) {
-			insert(state.getBestMove(), moves);
-		}
-		boolean noValidMove = true;
-		for (M move : moves) {
-			if (searchStack.makeMove(move)) {
-				noValidMove = false;
-				getStatistics().movePlayed();
-				final int score = -negamax(searchStack);
-				searchStack.unmakeMove();
-				if (score > searchState.value) {
-					searchState.value = score;
-					searchState.bestMove = move;
-					if (score > searchState.alpha) {
-						searchState.alpha = score;
-						if (score >= searchState.beta) {
-							spy.cut(searchStack, move);
-							break;
-						}
+        boolean noValidMove = true;
+    	final M moveFromTT = state!=null ? state.getBestMove() : null;
+
+		// Try move from TT
+    	boolean moveFromTTBreaks = false;
+    	if (moveFromTT!=null && searchStack.makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
+        	noValidMove = false;
+			if (onValidMove(searchStack, moveFromTT)) {
+				moveFromTTBreaks = true;
+			}
+    	}
+    	if (!moveFromTTBreaks) {
+    		// Try other moves
+			final List<M> moves = searchStack.position.getMoves(false);
+			getStatistics().movesGenerated(moves.size());
+			for (M move : moves) {
+				if (searchStack.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+					noValidMove = false;
+					if (onValidMove(searchStack, move)) {
+						break;
 					}
 				}
 			}
-		}
-
-		if (noValidMove) {
-			// Player can't move it's a draw or a loose
-			//TODO Maybe there's some games where the player wins if it can't move...
-			searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
-			if (searchState.value > searchState.alpha) {
-				searchState.alpha = searchState.value;
+	
+			if (noValidMove) {
+				// Player can't move it's a draw or a loose
+				//TODO Maybe there's some games where the player wins if it can't move...
+				searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
+				if (searchState.value > searchState.alpha) {
+					searchState.alpha = searchState.value;
+				}
 			}
-		}
+    	}
 
 		if (keyProvider && !isInterrupted()) {
 			// If a transposition table is available
@@ -152,6 +153,25 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		}
 		return searchState.value;
     }
+	
+	private boolean onValidMove(TreeSearchStateStack<M,B> searchStack, M move) {
+		getStatistics().movePlayed();
+		final int score = -negamax(searchStack);
+		searchStack.unmakeMove();
+		final TreeSearchState<M> searchState = searchStack.getCurrent();
+		if (score > searchState.value) {
+			searchState.value = score;
+			searchState.bestMove = move;
+			if (score > searchState.alpha) {
+				searchState.alpha = score;
+				if (score >= searchState.beta) {
+					spy.cut(searchStack, move);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	public void setSpy(Spy<M,B> spy) {
 		this.spy = spy;

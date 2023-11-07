@@ -5,6 +5,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
@@ -56,7 +57,7 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
     	}
     	final B moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        if (moveGenerator.makeMove(move)) {
+        if (moveGenerator.makeMove(move, MoveConfidence.UNSAFE)) {
 	        getStatistics().movePlayed();
 	        final int score = getRootScore(depth, lowestInterestingScore);
 	        moveGenerator.unmakeMove();

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
 
@@ -39,7 +40,7 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 	
 	private int evaluate(M move) {
 		// Play the evaluated move 
-		this.board.makeMove(move);
+		this.board.makeMove(move, MoveConfidence.LEGAL);
 		try {
 			// Gets the opponent responses
 			final List<M> moves = this.board.getLegalMoves();
@@ -60,7 +61,7 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 	
 	private int evaluateOpponentMove (M oppMove) {
 		// Play the response and evaluate the obtained board
-		board.makeMove(oppMove);
+		board.makeMove(oppMove, MoveConfidence.LEGAL);
 		try {
 			return evaluator.applyAsInt(board);
 		} finally {

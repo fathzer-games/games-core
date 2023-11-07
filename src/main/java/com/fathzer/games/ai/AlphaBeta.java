@@ -3,6 +3,7 @@ package com.fathzer.games.ai;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.exec.ExecutionContext;
@@ -51,7 +52,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                if (position.makeMove(move)) {
+                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
 	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
@@ -73,7 +74,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                if (position.makeMove(move)) {
+                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
 	                position.unmakeMove();

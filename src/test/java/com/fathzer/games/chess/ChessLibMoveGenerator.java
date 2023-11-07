@@ -19,8 +19,13 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	}
 	
 	@Override
-	public boolean makeMove(Move move) {
-		return board.doMove(move);
+	public boolean makeMove(Move move, MoveConfidence confidence) {
+		try {
+			return board.doMove(move, MoveConfidence.UNSAFE==confidence);
+		} catch (RuntimeException e) {
+			// Can throw an exception if no piece is at move from cell
+			return false;
+		}
 	}
 	
 	@Override

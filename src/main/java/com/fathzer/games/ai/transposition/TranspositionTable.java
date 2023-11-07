@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.HashProvider;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
@@ -63,14 +64,13 @@ public interface TranspositionTable<M> {
 		TranspositionTableEntry<M> entry = get(zp.getHashKey());
 
 		for (int i=0;i<maxDepth;i++) {
-			//FIXME Be aware of key collisions that should make move is not possible
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
-			if (move==null /*|| !board.isValid(move)*/) {
+			if (move!=null && board.makeMove(move, MoveConfidence.UNSAFE)) {
+				arrayPV.add(move);
+				entry = get(zp.getHashKey());
+			} else {
 				break;
 			}
-			arrayPV.add(move);
-			board.makeMove(move);
-			entry = get(zp.getHashKey());
 		}
 
 		// Unmake the moves
@@ -91,13 +91,16 @@ public interface TranspositionTable<M> {
 	 * @return The moves
 	 */
 	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
-		board.makeMove(move);
-		try {
-			final List<M> result = collectPV(board, maxDepth-1);
-			result.add(0, move);
-			return result;
-		} finally {
-			board.unmakeMove();
+		if (board.makeMove(move, MoveConfidence.UNSAFE)) {
+			try {
+				final List<M> result = collectPV(board, maxDepth-1);
+				result.add(0, move);
+				return result;
+			} finally {
+				board.unmakeMove();
+			}
+		} else {
+			throw new IllegalArgumentException("Move is not legal");
 		}
 	}
 	

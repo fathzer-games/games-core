@@ -8,6 +8,7 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.util.ContextualizedExecutor;
 
 public class PerfT<M> {
@@ -70,7 +71,7 @@ public class PerfT<M> {
 			leaves = 1;
 		} else {
 			final MoveGenerator<M> moveGenerator = exec.getContext();
-			if (moveGenerator.makeMove(move)) {
+			if (moveGenerator.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
 				result.addMoveMade();
 				leaves = get(depth, result);
 				moveGenerator.unmakeMove();
@@ -97,7 +98,7 @@ public class PerfT<M> {
 		}
 		long count = 0;
 		for (M move : moves) {
-            if (generator.makeMove(move)) {
+            if (generator.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
 	            result.addMoveMade();
 	            count += get(depth-1, result);
 	            generator.unmakeMove();
