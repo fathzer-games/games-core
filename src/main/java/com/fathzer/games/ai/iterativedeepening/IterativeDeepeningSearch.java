@@ -56,7 +56,7 @@ public class IterativeDeepeningSearch<M> {
 			}, remaining);
 		}
 		final List<EvaluatedMove<M>> ended = new ArrayList<>(bestMoves.getList().size());
-		do {
+		while (currentParams.getDepth()<deepeningPolicy.getDepth()) {
 			// Re-use best moves order to speedup next search
 			final List<M> moves = deepeningPolicy.getMovesToDeepen(currentParams.getDepth(), bestMoves.getList(), ended);
 			if (moves.isEmpty()) {
@@ -76,7 +76,7 @@ public class IterativeDeepeningSearch<M> {
 			if (ai.isInterrupted() || moves.isEmpty()) {
 				break;
 			}
-		} while (currentParams.getDepth()<deepeningPolicy.getDepth());
+		}
 		timer.cancel();
 		// Warning, ended should be added carefully or loosing position will be returned in the best positions
 		// For example, if we simple add the ended moves to bestMove.getCut().

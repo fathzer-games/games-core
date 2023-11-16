@@ -51,10 +51,10 @@ public class DeepeningPolicy extends SearchParameters {
 	}
 
 	/** Gets the start depth.
-	 * @return the start depth, default is 2.
+	 * @return the start depth, default is min(2,maxDepth).
 	 */
 	public int getStartDepth() {
-		return 2;
+		return Math.min(2, getDepth());
 	}
 
 	/** Get next depth.

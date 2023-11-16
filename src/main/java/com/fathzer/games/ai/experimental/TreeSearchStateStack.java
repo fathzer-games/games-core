@@ -1,6 +1,7 @@
 package com.fathzer.games.ai.experimental;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
@@ -74,5 +75,14 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 
 	public int getMaxDepth() {
 		return maxDepth;
+	}
+	
+	public List<M> getMoveStack() {
+		int depth = getCurrent().depth;
+		List<M> result = new LinkedList<>();
+		for (int i = maxDepth; i > depth; i--) {
+			result.add(get(i).lastMove);
+		}
+		return result;
 	}
 }
