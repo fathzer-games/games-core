@@ -6,7 +6,13 @@ import java.util.function.IntUnaryOperator;
 
 import com.fathzer.games.ai.AlphaBetaState;
 
-/** A transposition table policy that records exact, lower or upper score with best/cut moves.
+/** A basic transposition table policy that records exact, lower or upper score and best/cut.
+ * <br>It restores all best moves and exact values recorded at a higher depth (closer to the root of evaluation).
+ * <br>Here are the overwrite rules:<ul>
+ * <li>Never replace exact entries by inexact ones</li>
+ * <li>Always replace inexact entries by exact ones</li>
+ * <li>In other cases, replace entries if new one has higher depth</li>
+ * </ul>
  * @param <M> The type of moves
  */
 public class BasicPolicy<M> implements TranspositionTablePolicy<M> {

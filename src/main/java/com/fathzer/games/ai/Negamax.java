@@ -89,7 +89,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	if (moveFromTT!=null && position.makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
     		// Try move from TT
         	noValidMove = false;
-            getStatistics().movePlayed();
+            getStatistics().moveFromTTPlayed();
             final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
             position.unmakeMove();
             if (score > value) {

@@ -70,7 +70,6 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 	protected abstract int getRootScore(final int depth, int lowestInterestingScore);
 
 	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
-		statistics.clear();
         final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
 		final List<Runnable> tasks = moves.stream().map(m -> new Runnable() {
 			@Override

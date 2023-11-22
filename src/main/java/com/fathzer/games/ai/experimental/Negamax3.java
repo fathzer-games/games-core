@@ -56,6 +56,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	        getStatistics().movePlayed();
 	    	final int score = -negamax(stack);
 	        stack.unmakeMove();
+	        spy.moveUnmade(stack, null, move);
 	        return score;
         } else {
         	return null;
@@ -68,96 +69,105 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	}
 	
 	protected int negamax(TreeSearchStateStack<M,B> searchStack) {
-		spy.enter(searchStack);
-		final TreeSearchState<M> searchState = searchStack.getCurrent();
-		if (searchState.depth == 0 || isInterrupted()) {
-			getStatistics().evaluationDone();
-			searchState.value = searchState.who * getEvaluator().evaluate(searchStack.position);
-			spy.exit(searchStack, EVAL);
-			return searchState.value;
-		}
-    	final Status fastAnalysisStatus = searchStack.position.getContextualStatus();
-    	if (fastAnalysisStatus!=Status.PLAYING) {
-			spy.exit(searchStack, END_GAME);
-    		return getScore(fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
-    	}
-		
-		final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
-		final long key;
-		final AlphaBetaState<M> state;
-		if (keyProvider) {
-			key = ((HashProvider)searchStack.position).getHashKey();
-			TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
-			state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
-			if (state.isValueSet()) {
-				searchState.value = state.getValue();
-				spy.exit(searchStack, TT);
-				return state.getValue();
-			} else if (state.isAlphaBetaUpdated()) {
-				spy.alphaBetaFromTT(searchStack, state);
-				searchState.alpha = state.getAlphaUpdated();
-				searchState.beta = state.getBetaUpdated();
+		try {
+			spy.enter(searchStack);
+			final TreeSearchState<M> searchState = searchStack.getCurrent();
+			if (searchState.depth == 0 || isInterrupted()) {
+				getStatistics().evaluationDone();
+				searchState.value = searchState.who * getEvaluator().evaluate(searchStack.position);
+				spy.exit(searchStack, EVAL);
+				return searchState.value;
 			}
-		} else {
-			key = 0;
-			state = null;
-		}
-
-        boolean noValidMove = true;
-    	final M moveFromTT = state!=null ? state.getBestMove() : null;
-
-		// Try move from TT
-    	boolean moveFromTTBreaks = false;
-    	if (moveFromTT!=null && searchStack.makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
-        	noValidMove = false;
-			if (onValidMove(searchStack, moveFromTT)) {
-				moveFromTTBreaks = true;
+	    	final Status fastAnalysisStatus = searchStack.position.getContextualStatus();
+	    	if (fastAnalysisStatus!=Status.PLAYING) {
+				spy.exit(searchStack, END_GAME);
+	    		return getScore(fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
+	    	}
+			
+			final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
+			final long key;
+			final AlphaBetaState<M> state;
+			if (keyProvider) {
+				key = ((HashProvider)searchStack.position).getHashKey();
+				TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
+				state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
+				if (state.isValueSet()) {
+					searchState.value = state.getValue();
+					spy.exit(searchStack, TT);
+					return state.getValue();
+				} else if (state.isAlphaBetaUpdated()) {
+					spy.alphaBetaFromTT(searchStack, state);
+					searchState.alpha = state.getAlphaUpdated();
+					searchState.beta = state.getBetaUpdated();
+				}
+			} else {
+				key = 0;
+				state = null;
 			}
-    	}
-    	if (!moveFromTTBreaks) {
-    		// Try other moves
-			final List<M> moves = searchStack.position.getMoves(false);
-			getStatistics().movesGenerated(moves.size());
-			for (M move : moves) {
-				if (searchStack.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
-					noValidMove = false;
-					if (onValidMove(searchStack, move)) {
-						break;
+	
+	        boolean noValidMove = true;
+	    	final M moveFromTT = state!=null ? state.getBestMove() : null;
+	
+			// Try move from TT
+	    	boolean moveFromTTBreaks = false;
+	    	if (moveFromTT!=null && searchStack.makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
+	        	noValidMove = false;
+	    		getStatistics().moveFromTTPlayed();
+				if (onValidMove(searchStack, null, moveFromTT)) {
+					moveFromTTBreaks = true;
+				}
+	    	}
+	    	if (!moveFromTTBreaks) {
+	    		// Try other moves
+				final List<M> moves = searchStack.position.getMoves(false);
+	        	spy.movesComputed(searchStack, moves);
+				getStatistics().movesGenerated(moves.size());
+				for (M move : moves) {
+					if (searchStack.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+						noValidMove = false;
+						getStatistics().movePlayed();
+						if (onValidMove(searchStack, moves, move)) {
+							break;
+						}
 					}
 				}
+		
+				if (noValidMove) {
+					// Player can't move it's a draw or a loose
+					//TODO Maybe there's some games where the player wins if it can't move...
+					searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
+					if (searchState.value > searchState.alpha) {
+						searchState.alpha = searchState.value;
+					}
+				}
+	    	}
+	
+			if (keyProvider && !isInterrupted()) {
+				// If a transposition table is available
+				state.setValue(searchState.value);
+				state.updateAlphaBeta(searchState.alpha, searchState.beta);
+				state.setBestMove(searchState.bestMove);
+				boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> scoreToTT(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
+				spy.storeTT(searchStack, state, store);
 			}
 	
 			if (noValidMove) {
-				// Player can't move it's a draw or a loose
-				//TODO Maybe there's some games where the player wins if it can't move...
-				searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
-				if (searchState.value > searchState.alpha) {
-					searchState.alpha = searchState.value;
-				}
+				spy.exit(searchStack, END_GAME);
+			} else {
+				spy.exit(searchStack, EXIT);
 			}
-    	}
-
-		if (keyProvider && !isInterrupted()) {
-			// If a transposition table is available
-			state.setValue(searchState.value);
-			state.updateAlphaBeta(searchState.alpha, searchState.beta);
-			state.setBestMove(searchState.bestMove);
-			boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> scoreToTT(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
-			spy.storeTT(searchStack, state, store);
+			return searchState.value;
+		} catch (RuntimeException e) {
+			spy.exception(searchStack, e);
+			throw e;
 		}
-
-		if (noValidMove) {
-			spy.exit(searchStack, END_GAME);
-		} else {
-			spy.exit(searchStack, EXIT);
-		}
-		return searchState.value;
     }
 	
-	private boolean onValidMove(TreeSearchStateStack<M,B> searchStack, M move) {
-		getStatistics().movePlayed();
+	private boolean onValidMove(TreeSearchStateStack<M,B> searchStack, List<M> moves, M move) {
 		final int score = -negamax(searchStack);
 		searchStack.unmakeMove();
+		spy.moveUnmade(searchStack, moves, move);
+
 		final TreeSearchState<M> searchState = searchStack.getCurrent();
 		if (score > searchState.value) {
 			searchState.value = score;

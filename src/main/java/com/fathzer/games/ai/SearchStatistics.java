@@ -7,6 +7,7 @@ public class SearchStatistics {
 	private final AtomicLong moveGenerationCount = new AtomicLong();
 	private final AtomicLong generatedMoveCount = new AtomicLong();
 	private final AtomicLong movePlayedCount = new AtomicLong();
+	private final AtomicLong moveFromTTPlayedCount = new AtomicLong();
 	private long startMs = System.currentTimeMillis();
 	
 	public void clear() {
@@ -28,9 +29,15 @@ public class SearchStatistics {
 	public long getMovePlayedCount() {
 		return movePlayedCount.get();
 	}
+	public long getMoveFromTTPlayedCount() {
+		return moveFromTTPlayedCount.get();
+	}
 	
 	public void movePlayed() {
 		movePlayedCount.incrementAndGet();
+	}
+	public void moveFromTTPlayed() {
+		moveFromTTPlayedCount.incrementAndGet();
 	}
 	public void evaluationDone() {
 		evalCount.incrementAndGet();

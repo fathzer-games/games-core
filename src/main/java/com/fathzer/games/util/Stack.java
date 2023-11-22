@@ -59,4 +59,10 @@ public class Stack<T> {
 		index--;
 		current = backups.get(index);
 	}
+
+	public void clear() {
+		this.backups.clear();
+		this.index = 0;
+		this.current = null;
+	}
 }
