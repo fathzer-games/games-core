@@ -46,7 +46,7 @@ public class PerfT<M> {
 	 * @param legal true to use legal moves, false to use pseudo-legal moves.
 	 * <br>When <i>legal</i> is false, <i>playLeaves</i> is automatically set to true (because not doing this would result in wrong leaves count)
 	 */
-	public void setOnLegalMoves(boolean legal) {
+	public void setLegalMoves(boolean legal) {
 		moveType = legal ? LEGAL : PSEUDO_LEGAL;
 		if (!legal) {
 			playLeaves = true;

@@ -92,7 +92,7 @@ public class MoveGeneratorChecker {
 	
 	/** Sets the count error manager.
 	 * @param countErrorManager A consumer that will receive count errors (when the number of moves found by PerfT is not the expected count in data set.
-	 * <br>By default, it throws a {@link PerfTCountException} that is throws by {@link #run(int, int, TestableMoveGeneratorSupplier)}.
+	 * <br>By default, it throws a {@link PerfTCountException} that is throws by {@link #run(TestableMoveGeneratorSupplier, int, boolean, boolean, int)}.
 	 */
 	public void setCountErrorManager(Consumer<PerfTCountError> countErrorManager) {
 		this.countErrorManager = countErrorManager;
@@ -100,7 +100,7 @@ public class MoveGeneratorChecker {
 
 	/** Sets the error manager.
 	 * @param errorManager A consumer that will receive exceptions that may occurs during the search.
-	 * <br>By default, these exceptions are not caught. So, {@link #run(int, int, TestableMoveGeneratorSupplier)} ends throws the exception.
+	 * <br>By default, these exceptions are not caught. So, {@link #run(TestableMoveGeneratorSupplier, int, boolean, boolean, int)} ends throws the exception.
 	 * <br>Please note the exceptions that can be sent by count error manager are not concerned by this method.
 	 * @see #setCountErrorManager(Consumer)
 	 */
@@ -110,12 +110,14 @@ public class MoveGeneratorChecker {
 
 	/** Executes the test
 	 * @param <M> The class that represents a move
-	 * @param depth The search depth
-	 * @param parallelism The number of threads to use to perform the search 
 	 * @param engine The tested engine.
+	 * @param depth The search depth.
+	 * @param legalMoves true to play only legal moves.
+	 * @param playLeaves true to play leaves move (ignored if <i>legalMoves</i> is false. See {@link PerfT#setPlayLeaves(boolean)} comment).
+	 * @param parallelism The number of threads to use to perform the search 
 	 * @return The number of moves found.
 	 */
-	public <M> long run(int depth, int parallelism, TestableMoveGeneratorSupplier<M> engine) {
+	public <M> long run(TestableMoveGeneratorSupplier<M> engine, int depth, boolean legalMoves, boolean playLeaves, int parallelism) {
 		if (running.compareAndSet(false, true)) {
 			cancelled = false;
 			long count = 0;
@@ -129,6 +131,10 @@ public class MoveGeneratorChecker {
 									break;
 								} else {
 									current = new PerfT<>(threads);
+									if (legalMoves) {
+										current.setLegalMoves(true);
+										current.setPlayLeaves(playLeaves);
+									}
 								}
 							}
 							count += doTest(test, depth, engine);
