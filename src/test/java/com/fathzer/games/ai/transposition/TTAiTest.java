@@ -22,7 +22,7 @@ class TTAiTest {
 
 	@Test
 	void test() {
-		Evaluator<?> ev = new DummyEvaluator();
+		Evaluator<Move, ?> ev = new DummyEvaluator();
 		final TTAi<Move> wse = new DummyTTAi();
 		// A mat in 0 found at depth 3 on 8
 		int encoded = wse.scoreToTT(-32762, 3, 8, ev);

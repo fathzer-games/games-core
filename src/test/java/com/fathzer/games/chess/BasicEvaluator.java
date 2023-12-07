@@ -12,10 +12,16 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.Side;
+import com.github.bhlangonijr.chesslib.move.Move;
 
-public class BasicEvaluator implements Evaluator<ChessLibMoveGenerator> {
+public class BasicEvaluator implements Evaluator<Move, ChessLibMoveGenerator> {
 	public static final Map<PieceType, Integer> PIECE_VALUE;
 	private Color viewPoint;
+	private final ChessLibMoveGenerator board;
+	
+	public BasicEvaluator(ChessLibMoveGenerator board) {
+		this.board = board;
+	}
 	
 	static {
 		Map<PieceType, Integer> map = new EnumMap<>(PieceType.class);
@@ -34,7 +40,7 @@ public class BasicEvaluator implements Evaluator<ChessLibMoveGenerator> {
 	}
 
 	@Override
-	public int evaluate(ChessLibMoveGenerator board) {
+	public int evaluate() {
 		int points = 100*getPoints(board.getBoard());
 		if (BLACK==viewPoint || (viewPoint==null && Side.BLACK==board.getBoard().getSideToMove())) {
 			points = -points;

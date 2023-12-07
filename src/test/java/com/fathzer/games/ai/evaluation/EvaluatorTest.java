@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.bhlangonijr.chesslib.move.Move;
+
 class EvaluatorTest {
 	@Test
 	void test() {
-		Evaluator<?> ev = new DummyEvaluator();
+		Evaluator<Move, ?> ev = new DummyEvaluator();
 		assertEquals(Short.MAX_VALUE, ev.getWinScore(0));
 		assertEquals(Short.MAX_VALUE-1, ev.getWinScore(1));
 		assertEquals(Short.MAX_VALUE-10, ev.getWinScore(10));

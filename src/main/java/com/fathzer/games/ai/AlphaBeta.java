@@ -4,9 +4,8 @@ import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.Status;
-import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.exec.ExecutionContext;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">AlphaBeta</a> based implementation.
@@ -17,8 +16,8 @@ import com.fathzer.games.ai.exec.ExecutionContext;
  */
 @Deprecated
 public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
-	protected AlphaBeta(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
-		super(exec, evaluator);
+	protected AlphaBeta(ExecutionContext<SearchContext<M,B>> exec) {
+		super(exec);
 	}
 
     @Override
@@ -37,7 +36,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     	final B position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
-            return who * getEvaluator().evaluate(position);
+            return who * getEvaluator().evaluate();
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
 		if (fastAnalysisStatus==Status.DRAW) {

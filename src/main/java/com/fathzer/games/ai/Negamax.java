@@ -7,12 +7,11 @@ import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
+import com.fathzer.games.util.exec.ExecutionContext;
 
 /**
  * A Negamax with alpha beta pruning implementation and transposition table usage.
@@ -22,8 +21,8 @@ import com.fathzer.games.ai.transposition.TranspositionTableEntry;
 public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
     private TranspositionTable<M> transpositionTable;
     
-	public Negamax(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
-		super(exec, evaluator);
+	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
+		super(exec);
 	}
 	
 	@Override
@@ -56,7 +55,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		final B position = getGamePosition();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
-    		return who * getEvaluator().evaluate(position);
+    		return who * getEvaluator().evaluate();
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
     	if (fastAnalysisStatus!=Status.PLAYING) {

@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
-import com.fathzer.games.util.ContextualizedExecutor;
+import com.fathzer.games.util.exec.ContextualizedExecutor;
 
 public class PerfT<M> {
 	private boolean playLeaves;

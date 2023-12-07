@@ -10,13 +10,13 @@ import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
+import com.fathzer.games.util.exec.ExecutionContext;
 
 /**
  * An experimental of a Negamax with alpha beta pruning implementation and transposition table.
@@ -26,8 +26,8 @@ import com.fathzer.games.ai.transposition.TranspositionTableEntry;
 public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     private Spy<M,B> spy = new Spy<M,B>() {};
     
-	public Negamax3(ExecutionContext<M,B> exec, Evaluator<B> evaluator) {
-		super(exec, evaluator);
+	public Negamax3(ExecutionContext<SearchContext<M,B>> exec) {
+		super(exec);
 	}
 	
 	@Override
@@ -74,7 +74,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			final TreeSearchState<M> searchState = searchStack.getCurrent();
 			if (searchState.depth == 0 || isInterrupted()) {
 				getStatistics().evaluationDone();
-				searchState.value = searchState.who * getEvaluator().evaluate(searchStack.position);
+				searchState.value = searchState.who * getEvaluator().evaluate();
 				spy.exit(searchStack, EVAL);
 				return searchState.value;
 			}

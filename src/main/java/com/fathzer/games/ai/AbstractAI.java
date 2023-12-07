@@ -8,17 +8,15 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.exec.ExecutionContext;
+import com.fathzer.games.util.exec.ExecutionContext;
 
 public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> {
-	private final ExecutionContext<M,B> context;
-	private final Evaluator<B> evaluator;
+	private final ExecutionContext<SearchContext<M,B>> context;
 	private boolean interrupted;
 	private SearchStatistics statistics;
 	
-	protected AbstractAI(ExecutionContext<M,B> context, Evaluator<B> evaluator) {
+	protected AbstractAI(ExecutionContext<SearchContext<M,B>> context) {
 		this.context = context;
-		this.evaluator = evaluator;
 		this.interrupted = false;
 		this.statistics = new SearchStatistics();
 	}
@@ -29,11 +27,11 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 	}
 
 	protected B getGamePosition() {
-    	return context.getGamePosition();
+    	return context.getContext().getGamePosition();
 	}
 	
-	protected Evaluator<B> getEvaluator() {
-		return evaluator;
+	protected Evaluator<M, B> getEvaluator() {
+		return context.getContext().getEvaluator();
 	}
 
 	@Override

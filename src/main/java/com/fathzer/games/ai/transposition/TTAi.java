@@ -25,7 +25,7 @@ public interface TTAi<M> {
 	 * @param evaluator The evaluator used by the AI.
 	 * @return The score to store in the transposition table
 	 */
-	default int scoreToTT(int score, int depth, int maxDepth, Evaluator<?> evaluator) {
+	default int scoreToTT(int score, int depth, int maxDepth, Evaluator<?, ?> evaluator) {
 		if (evaluator.isWinLooseScore(score, maxDepth)) {
 			final int nbHalfMoves = maxDepth - depth;
 			return score>0 ? score + nbHalfMoves : score - nbHalfMoves;
@@ -43,7 +43,7 @@ public interface TTAi<M> {
 	 * @param evaluator The evaluator used by the AI.
 	 * @return The score to use in the search algorithm
 	 */
-	default int ttToScore(int encodedValue, int depth, int maxDepth, Evaluator<?> evaluator) {
+	default int ttToScore(int encodedValue, int depth, int maxDepth, Evaluator<?, ?> evaluator) {
 		if (evaluator.isWinLooseScore(encodedValue, maxDepth)) {
 			final int nbHalfMoves = maxDepth - depth;
 			return encodedValue>0 ? encodedValue - nbHalfMoves : encodedValue + nbHalfMoves;

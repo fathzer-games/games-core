@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.util.ContextualizedExecutor;
+import com.fathzer.games.util.exec.ContextualizedExecutor;
 
 /** A class that tests a {@link MoveGenerator} against a {@link PerfT} test Data set.
  * <br>The test executes a list of {@link PerfT} test and returns the total number of moves found at a specified depth.

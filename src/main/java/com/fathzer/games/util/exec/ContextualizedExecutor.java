@@ -1,6 +1,5 @@
-package com.fathzer.games.util;
+package com.fathzer.games.util.exec;
 
-import java.io.Closeable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,12 +11,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+import com.fathzer.games.util.PhysicalCores;
+import com.fathzer.games.util.UncheckedException;
+
 /** A kind of an executor service that manages a context attached to every thread it used.
  * <br>When developing a multithreaded game engine typically requires to have a game representation attached to each thread
  * that are processing the requests. This class allows you to attach a context object to every thread of an executor service and then retrieve it with no information but the calling thread. 
  * @param <T> The context's class
  */
-public class ContextualizedExecutor<T> implements Closeable {
+public class ContextualizedExecutor<T> implements AutoCloseable {
 	
 	private static class ContextThread<T> extends Thread {
 		T context;

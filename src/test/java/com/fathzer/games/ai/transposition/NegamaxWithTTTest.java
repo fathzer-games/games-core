@@ -9,15 +9,16 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
-import com.fathzer.games.ai.exec.ExecutionContext;
-import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.games.chess.BasicEvaluator;
 import com.fathzer.games.chess.BasicMoveComparator;
 import com.fathzer.games.chess.ChessLibMoveGenerator;
+import com.fathzer.games.util.exec.ExecutionContext;
+import com.fathzer.games.util.exec.SingleThreadContext;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
@@ -27,12 +28,13 @@ class NegamaxWithTTTest {
 	void test2MatsIn4() {
 		final Board board = new Board();
 		board.loadFromFen("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
-		final Evaluator<ChessLibMoveGenerator> basicEvaluator = new BasicEvaluator();
-		basicEvaluator.setViewPoint(Color.WHITE);
 		final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board);
+		final Evaluator<Move, ChessLibMoveGenerator> basicEvaluator = new BasicEvaluator(mg);
+		basicEvaluator.setViewPoint(Color.WHITE);
 		mg.setMoveComparator(new BasicMoveComparator(mg));
-		try (ExecutionContext<Move, ChessLibMoveGenerator> exec = new SingleThreadContext<>(mg)) {
-			Negamax<Move, ChessLibMoveGenerator> ai = new Negamax<>(exec, basicEvaluator);
+		final SearchContext<Move, ChessLibMoveGenerator> sc = new SearchContext<>(mg, basicEvaluator);
+		try (ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>> exec = new SingleThreadContext<>(sc)) {
+			Negamax<Move, ChessLibMoveGenerator> ai = new Negamax<>(exec);
 			final TT tt = new TT(16, SizeUnit.MB);
 			ai.setTranspositonTable(tt);
 			final Move a5a6 = new Move(Square.A5, Square.A6);

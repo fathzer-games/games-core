@@ -6,14 +6,14 @@ import java.util.function.Function;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.moveSelector.MoveSelector;
 import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
 import com.fathzer.games.ai.transposition.TranspositionTable;
+import com.fathzer.games.util.exec.ExecutionContext;
 
 public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
 	/** A class that logs events during search.
@@ -39,7 +39,6 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	public static final class Mute<T> implements EventLogger<T> {}
 	
 
-	private Evaluator<B> evaluator;
 	private DeepeningPolicy deepeningPolicy;
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
@@ -48,9 +47,8 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
-	protected IterativeDeepeningEngine(Evaluator<B> evaluator, int maxDepth, TranspositionTable<M> tt) {
+	protected IterativeDeepeningEngine(int maxDepth, TranspositionTable<M> tt) {
 		this.parallelism = 1;
-		this.evaluator = evaluator;
 		this.transpositionTable = tt;
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
@@ -72,10 +70,6 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		this.parallelism = parallelism;
 	}
 	
-	public void setEvaluator(Evaluator<B> evaluator) {
-		this.evaluator = evaluator;
-	}
-	
 	public MoveSelector<M,IterativeDeepeningSearch<M>> getMoveSelector() {
 		return moveSelector;
 	}
@@ -90,10 +84,6 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 
 	public void setLogger(EventLogger<M> logger) {
 		this.logger = logger;
-	}
-
-	public Evaluator<B> getEvaluator() {
-		return evaluator;
 	}
 
 	public TranspositionTable<M> getTranspositionTable() {
@@ -123,13 +113,12 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 	}
 	
 	protected IterativeDeepeningSearch<M> search(B board) {
-		setViewPoint(evaluator, board);
 		// TODO Test if it is really a new position?
 		if (transpositionTable!=null) {
 			transpositionTable.newPosition();
 		}
-		try (ExecutionContext<M,B> context = buildExecutionContext(board)) {
-			final Negamax<M,B> internal = buildNegaMax(context, evaluator);
+		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
+			final Negamax<M,B> internal = buildNegaMax(context);
 			internal.setTranspositonTable(transpositionTable);
 			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException();
@@ -148,11 +137,9 @@ public abstract class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> im
 		}
 	}
 	
-	protected abstract ExecutionContext<M,B> buildExecutionContext(B board);
+	protected abstract ExecutionContext<SearchContext<M,B>> buildExecutionContext(B board);
 	
-	protected Negamax<M,B> buildNegaMax(ExecutionContext<M,B> context, Evaluator<B> evaluator) {
-		return new Negamax<>(context, evaluator);
+	protected Negamax<M,B> buildNegaMax(ExecutionContext<SearchContext<M,B>> context) {
+		return new Negamax<>(context);
 	}
-	
-	protected abstract void setViewPoint(Evaluator<B> evaluator, B board);
 }

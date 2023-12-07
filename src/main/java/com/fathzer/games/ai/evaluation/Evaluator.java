@@ -3,24 +3,42 @@ package com.fathzer.games.ai.evaluation;
 import com.fathzer.games.Color;
 
 /** A class that can evaluate a game position.
- * @param <T> The type of the game position
+ * <br>This class supports <a href="https://www.chessprogramming.org/Incremental_Updates">incremental evaluator</a>.
+ * Nevertheless, implementing incremental evaluation can be a complex (but very useful) task. If you prefer not to implement incremental evaluation,
+ * you can ignore {@link #prepareMove(Object)}, {@link #commitMove()} and {@link #unmakeMove()} methods that does nothing by default.
+ * @param <B> The type of the game position
+ * @param <M> The type of a move
  */
-public interface Evaluator<T> {
+public interface Evaluator<M, B> {
 	/** Sets the point of view from which the evaluation should be made. 
 	 * @param color The color from which the evaluation is made, null to evaluate the position from the point of view of the current player.
 	 */
 	void setViewPoint(Color color);
 	
-	/** Evaluates a board's position.
+	/** Initializes the evaluator with current game position.
 	 * @param board The board to evaluate
+	 */
+	default void init(B board) {} //TODO Not sure it should have a default or even exist
+	
+	default void prepareMove(M move) {
+		// By default, the evaluator is not incremental
+	}
+	default void commitMove() {
+		// By default, the evaluator is not incremental
+	}
+	default void unmakeMove() {
+		// By default, the evaluator is not incremental
+	}
+	
+	/** Evaluates the board's position.
 	 * @return An integer
 	 */
-	int evaluate(T board);
+	int evaluate();
 
     /** Gets the score obtained for a win after a number of half moves.
      * <br>The default value is Short.MAX_VALUE - nbHalfMoves
      * @param nbHalfMoves The number of half moves needed to win.
-     * @return a positive int &gt; to any value returned by {@link #evaluate(Object)}
+     * @return a positive int &gt; to any value returned by {@link #evaluate()}
      */
 	default int getWinScore(int nbHalfMoves) {
 		return Short.MAX_VALUE-nbHalfMoves;
