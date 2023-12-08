@@ -19,4 +19,18 @@ public class SearchContext<M, B extends MoveGenerator<M>> {
 	public Evaluator<M, B> getEvaluator() {
 		return evaluator;
 	}
+	
+	public boolean makeMove(M move, MoveGenerator.MoveConfidence confidence) {
+		evaluator.prepareMove(move);
+		if (gamePosition.makeMove(move, confidence)) {
+			evaluator.commitMove();
+			return true;
+		}
+		return false;
+	}
+		
+	public void unmakeMove() {
+		evaluator.unmakeMove();
+		gamePosition.unmakeMove();
+	}
 }

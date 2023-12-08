@@ -51,11 +51,11 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+                if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
 	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
-	                position.unmakeMove();
+	                getContext().unmakeMove();
 	                if (score > bestScore) {
 	                    bestScore = score;
 	                }
@@ -73,10 +73,10 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
 //                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
-                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+                if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
-	                position.unmakeMove();
+	                getContext().unmakeMove();
 	                if (score < bestScore) {
 	                    bestScore = score;
 	                }

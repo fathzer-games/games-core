@@ -6,15 +6,16 @@ import java.util.List;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.ai.SearchContext;
 
 public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 	private final List<TreeSearchState<M>> states;
 	private int currentDepth;
-	public final B position;
+	public final SearchContext<M,B> context;
 	public final int maxDepth;
 	
-	public TreeSearchStateStack(B position, int maxDepth) {
-		this.position = position;
+	public TreeSearchStateStack(SearchContext<M,B> context, int maxDepth) {
+		this.context = context;
 		this.maxDepth = maxDepth;
 		states = new ArrayList<>(maxDepth+1);
 		int who = maxDepth%2==0 ? 1 : -1;
@@ -44,7 +45,7 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 	}
 	
 	public boolean makeMove(M move, MoveConfidence confidence) {
-		final boolean validMove = position.makeMove(move, confidence);
+		final boolean validMove = context.makeMove(move, confidence);
 		if (validMove) {
 			get(currentDepth).lastMove = move;
 			next();
@@ -61,7 +62,7 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 	}
 
 	public void unmakeMove() {
-		position.unmakeMove();
+		context.unmakeMove();
 		currentDepth++;
 	}
 
@@ -69,8 +70,8 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		return currentDepth;
 	}
 
-	public B getPosition() {
-		return position;
+	public SearchContext<M,B> getSearchContext() {
+		return context;
 	}
 
 	public int getMaxDepth() {

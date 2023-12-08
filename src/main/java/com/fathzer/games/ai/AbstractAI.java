@@ -34,6 +34,10 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		return context.getContext().getEvaluator();
 	}
 
+	protected SearchContext<M, B> getContext() {
+		return context.getContext();
+	}
+
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		statistics.clear();
@@ -53,12 +57,11 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
     		// So using it as alpha value makes negamax fail 
     		lowestInterestingScore += 1;
     	}
-    	final B moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        if (moveGenerator.makeMove(move, MoveConfidence.UNSAFE)) {
+        if (context.getContext().makeMove(move, MoveConfidence.UNSAFE)) {
 	        getStatistics().movePlayed();
 	        final int score = getRootScore(depth, lowestInterestingScore);
-	        moveGenerator.unmakeMove();
+	        context.getContext().unmakeMove();
 	        return score;
         } else {
         	return null;

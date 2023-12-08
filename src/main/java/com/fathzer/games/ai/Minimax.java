@@ -44,11 +44,11 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             // max
             bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
-                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+                if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
 	                int score = minimax(depth-1, maxDepth, -who);
-	                position.unmakeMove();
+	                getContext().unmakeMove();
 	                if (score > bestScore) {
 	                    bestScore = score;
 	                }
@@ -58,10 +58,10 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             // min
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
-                if (position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+                if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                int score = minimax(depth-1, maxDepth, -who);
-	                position.unmakeMove();
+	                getContext().unmakeMove();
 	                if (score < bestScore) {
 	                    bestScore = score;
 	                }

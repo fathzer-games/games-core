@@ -48,9 +48,8 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     		// So using it as alpha value makes negamax fail 
     		lowestInterestingScore += 1;
     	}
-    	final B moveGenerator = getGamePosition();
 //System.out.println("Play move "+move+" at depth "+depth+" for "+1);
-        final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(moveGenerator, depth);
+        final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(getContext(), depth);
         stack.init(stack.getCurrent(), lowestInterestingScore, Integer.MAX_VALUE);
         if (stack.makeMove(move, MoveConfidence.UNSAFE)) {
 	        getStatistics().movePlayed();
@@ -78,17 +77,17 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 				spy.exit(searchStack, EVAL);
 				return searchState.value;
 			}
-	    	final Status fastAnalysisStatus = searchStack.position.getContextualStatus();
+	    	final Status fastAnalysisStatus = searchStack.context.getGamePosition().getContextualStatus();
 	    	if (fastAnalysisStatus!=Status.PLAYING) {
 				spy.exit(searchStack, END_GAME);
 	    		return getScore(fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
 	    	}
 			
-			final boolean keyProvider = (searchStack.position instanceof HashProvider) && getTranspositionTable()!=null;
+			final boolean keyProvider = (searchStack.context instanceof HashProvider) && getTranspositionTable()!=null;
 			final long key;
 			final AlphaBetaState<M> state;
 			if (keyProvider) {
-				key = ((HashProvider)searchStack.position).getHashKey();
+				key = ((HashProvider)searchStack.context).getHashKey();
 				TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
 				state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
 				if (state.isValueSet()) {
@@ -119,7 +118,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	    	}
 	    	if (!moveFromTTBreaks) {
 	    		// Try other moves
-				final List<M> moves = searchStack.position.getMoves(false);
+				final List<M> moves = searchStack.context.getGamePosition().getMoves(false);
 	        	spy.movesComputed(searchStack, moves);
 				getStatistics().movesGenerated(moves.size());
 				for (M move : moves) {
@@ -135,7 +134,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 				if (noValidMove) {
 					// Player can't move it's a draw or a loose
 					//TODO Maybe there's some games where the player wins if it can't move...
-					searchState.value = getScore(searchStack.position.getEndGameStatus(), searchState.depth, searchStack.maxDepth);
+					searchState.value = getScore(searchStack.context.getGamePosition().getEndGameStatus(), searchState.depth, searchStack.maxDepth);
 					if (searchState.value > searchState.alpha) {
 						searchState.alpha = searchState.value;
 					}

@@ -85,12 +85,12 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         boolean noValidMove = true;
     	final M moveFromTT = state!=null ? state.getBestMove() : null;
     	boolean moveFromTTBreaks = false;
-    	if (moveFromTT!=null && position.makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
+    	if (moveFromTT!=null && getContext().makeMove(moveFromTT, MoveConfidence.UNSAFE)) {
     		// Try move from TT
         	noValidMove = false;
             getStatistics().moveFromTTPlayed();
             final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
-            position.unmakeMove();
+            getContext().unmakeMove();
             if (score > value) {
                 value = score;
                 bestMove = moveFromTT;
@@ -107,11 +107,11 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     		final List<M> moves = position.getMoves(false);
         	getStatistics().movesGenerated(moves.size());
 	        for (M move : moves) {
-	            if (!move.equals(moveFromTT) && position.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+	            if (!move.equals(moveFromTT) && getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
 	            	noValidMove = false;
 		            getStatistics().movePlayed();
 		            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
-		            position.unmakeMove();
+		            getContext().unmakeMove();
 		            if (score > value) {
 		                value = score;
 		                bestMove = move;
