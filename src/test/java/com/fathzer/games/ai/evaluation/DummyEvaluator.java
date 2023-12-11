@@ -9,7 +9,12 @@ public class DummyEvaluator implements Evaluator<Move, Object> {
 	}
 
 	@Override
-	public int evaluate() {
+	public int evaluate(Object board) {
 		return 0;
+	}
+
+	@Override
+	public Evaluator<Move, Object> fork() {
+		return this;
 	}
 }

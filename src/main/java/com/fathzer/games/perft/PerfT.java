@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
@@ -53,11 +52,11 @@ public class PerfT<M> {
 		}
 	}
 	
-	public PerfTResult<M> divide(final int depth, Supplier<MoveGenerator<M>> generator) {
+	public PerfTResult<M> divide(final int depth, MoveGenerator<M> generator) {
 		if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
 		}
-		final List<M> moves = getMoves(generator.get());
+		final List<M> moves = getMoves(generator);
 		final PerfTResult<M> result = new PerfTResult<>();
 		result.addMovesFound(moves.size());
 		final List<Callable<Divide<M>>> tasks = new ArrayList<>(moves.size());

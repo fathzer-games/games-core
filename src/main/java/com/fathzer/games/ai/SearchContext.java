@@ -2,8 +2,14 @@ package com.fathzer.games.ai;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.util.exec.Forkable;
 
-public class SearchContext<M, B extends MoveGenerator<M>> {
+/** The context of a best move search.
+ * <br>It encapsulates the game position and an position evaluator.
+ * @param <M> The type of moves 
+ * @param <B> The type of the evaluator
+ */
+public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<SearchContext<M, B>> {
 	private B gamePosition;
 	private Evaluator<M, B> evaluator;
 	
@@ -21,7 +27,7 @@ public class SearchContext<M, B extends MoveGenerator<M>> {
 	}
 	
 	public boolean makeMove(M move, MoveGenerator.MoveConfidence confidence) {
-		evaluator.prepareMove(move);
+		evaluator.prepareMove(gamePosition, move);
 		if (gamePosition.makeMove(move, confidence)) {
 			evaluator.commitMove();
 			return true;
@@ -32,5 +38,13 @@ public class SearchContext<M, B extends MoveGenerator<M>> {
 	public void unmakeMove() {
 		evaluator.unmakeMove();
 		gamePosition.unmakeMove();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public SearchContext<M, B> fork() {
+		final B mg = (B)gamePosition.fork();
+		final Evaluator<M, B> ev = evaluator.fork();
+		return new SearchContext<>(mg, ev);
 	}
 }

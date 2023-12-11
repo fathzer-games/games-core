@@ -3,10 +3,12 @@ package com.fathzer.games;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fathzer.games.util.exec.Forkable;
+
 /** A class able to play moves and to compute the state of a game (the list of possible moves or who has won).
  * @param <M> The class that represents a move.
  */
-public interface MoveGenerator<M> {
+public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 	/** The level of confidence of a move.
 	 * <br>Moves sent to makeMove can have different origins, a list of legal move, a list of peuso-legal moves or a move with no guarantees of validity at all.
 	 * <br>Performing checks on a move can be time consuming, knowing the confidence to have on a move allow the move generator to skip some checks in {@link MoveGenerator#makeMove(Object, MoveConfidence)}

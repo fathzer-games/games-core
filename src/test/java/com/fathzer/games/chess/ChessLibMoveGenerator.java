@@ -2,6 +2,7 @@ package com.fathzer.games.chess;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.HashProvider;
@@ -12,10 +13,18 @@ import com.github.bhlangonijr.chesslib.move.Move;
 
 public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider {
 	private final Board board;
-	private Comparator<Move> comparator;
+	private final Comparator<Move> comparator;
+	private Function<Board, Comparator<Move>> moveComparatorBuilder;
 	
-	public ChessLibMoveGenerator(Board board) {
-		this.board = board.clone();
+	@Override
+	public ChessLibMoveGenerator fork() {
+		return new ChessLibMoveGenerator(board.clone(), moveComparatorBuilder);
+	}
+	
+	public ChessLibMoveGenerator(Board board, Function<Board,Comparator<Move>> moveComparatorBuilder) {
+		this.board = board;
+		this.comparator = moveComparatorBuilder.apply(board);
+		this.moveComparatorBuilder = moveComparatorBuilder;
 	}
 	
 	@Override
@@ -50,11 +59,6 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	public Board getBoard() {
 		return this.board; 
 	}
-
-	public void setMoveComparator(Comparator<Move> comparator) {
-		this.comparator = comparator;
-	}
-	
 
 	@Override
 	public Status getContextualStatus() {

@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,12 +27,6 @@ import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
-	static ChessLibMoveGenerator fromFEN(String fen) {
-		Board board = new Board();
-		board.loadFromFen(fen);
-		return new ChessLibMoveGenerator(board);
-	}
-	
 	static class ChessLibTest {
 		private final Board board;
 		private final int depth;
@@ -49,14 +42,11 @@ class MinimaxTest {
 		}
 
 		List<EvaluatedMove<Move>> search(AiType ai, SearchParameters params) {
-			Supplier<SearchContext<Move, ChessLibMoveGenerator>> supplier = () -> {
-				ChessLibMoveGenerator mg = ai.getMVGsupplier(board).get();
-				mg.setMoveComparator(ai==Minimax?null:new BasicMoveComparator(mg));
-				Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator(mg);
-				ev.setViewPoint(board.getSideToMove()==Side.WHITE ? Color.WHITE : Color.BLACK);
-				return new SearchContext<Move, ChessLibMoveGenerator>(mg, ev);
-			};
-			return MinimaxTest.search(supplier, ai.getAiBuilder(), params);
+			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==ai?x->null:BasicMoveComparator::new);
+			Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
+			ev.setViewPoint(board.getSideToMove()==Side.WHITE ? Color.WHITE : Color.BLACK);
+			SearchContext<Move, ChessLibMoveGenerator> ctx = new SearchContext<>(mg, ev);
+			return MinimaxTest.search(ctx, ai.getAiBuilder(), params);
 		}
 		
 		int getWinScore(int nbHalfMoves) {
@@ -134,8 +124,8 @@ class MinimaxTest {
 	}
 
 
-	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(Supplier<SearchContext<M, B>> supplier, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
-		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(4))) {
+	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
+		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
 			AbstractAI<M, B> ai = aiBuilder.apply(context);
 			return ai.getBestMoves(params).getList();
 		}

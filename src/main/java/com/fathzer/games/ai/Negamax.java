@@ -7,6 +7,7 @@ import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -28,10 +29,11 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
-		if ((getGamePosition() instanceof HashProvider) && transpositionTable!=null && !isInterrupted()) {
+		final B gamePosition = getContext().getGamePosition();
+		if ((gamePosition instanceof HashProvider) && transpositionTable!=null && !isInterrupted()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			transpositionTable.store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			transpositionTable.store(((HashProvider)gamePosition).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
 		}
 		return result;
     }
@@ -52,14 +54,16 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
-		final B position = getGamePosition();
-    	if (depth == 0 || isInterrupted()) {
+    	final SearchContext<M, B> context = getContext();
+		final B position = context.getGamePosition();
+     	final Evaluator<M, B> evaluator = context.getEvaluator();
+     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
-    		return who * getEvaluator().evaluate();
+			return who * evaluator.evaluate(position);
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
     	if (fastAnalysisStatus!=Status.PLAYING) {
-    		return getScore(fastAnalysisStatus, depth, maxDepth);
+    		return getScore(evaluator, fastAnalysisStatus, depth, maxDepth);
     	}
 
 		final boolean keyProvider = (position instanceof HashProvider) && transpositionTable!=null;
@@ -68,7 +72,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		if (keyProvider) {
 			key = ((HashProvider)position).getHashKey();
 			TranspositionTableEntry<M> entry = transpositionTable.get(key);
-			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta, v -> ttToScore(v, depth, maxDepth, getEvaluator()));
+			state = transpositionTable.getPolicy().accept(entry, depth, alpha, beta, v -> ttToScore(v, depth, maxDepth, evaluator));
 			if (state.isValueSet()) {
 				return state.getValue();
 			} else if (state.isAlphaBetaUpdated()) {
@@ -128,7 +132,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	        
 	        if (noValidMove) {
 				// Player can't move it's a draw or a loose
-	        	value = getScore(position.getEndGameStatus(), depth, maxDepth);
+	        	value = getScore(evaluator, position.getEndGameStatus(), depth, maxDepth);
 	        	if (value>alpha) {
 	        		alpha = value;
 	        	}
@@ -140,7 +144,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         	state.setValue(value);
         	state.updateAlphaBeta(alpha, beta);
         	state.setBestMove(bestMove);
-        	transpositionTable.getPolicy().store(transpositionTable, key, state, v -> scoreToTT(v, depth, maxDepth, getEvaluator()));
+        	transpositionTable.getPolicy().store(transpositionTable, key, state, v -> scoreToTT(v, depth, maxDepth, evaluator));
         }
         return value;
     }

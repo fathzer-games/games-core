@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.games.util.UncheckedException;
@@ -19,7 +18,7 @@ import com.fathzer.games.util.UncheckedException;
  * that are processing the requests. This class allows you to attach a context object to every thread of an executor service and then retrieve it with no information but the calling thread. 
  * @param <T> The context's class
  */
-public class ContextualizedExecutor<T> implements AutoCloseable {
+public class ContextualizedExecutor<T extends Forkable<T>> implements AutoCloseable {
 	
 	private static class ContextThread<T> extends Thread {
 		T context;
@@ -32,7 +31,7 @@ public class ContextualizedExecutor<T> implements AutoCloseable {
 	private final AtomicBoolean running;
 	private final ExecutorService exec;
 	private final List<ContextThread<T>> threads;
-	private Supplier<T> contextSupplier;
+	private T masterContext;
 	
 	/** Default constructor.
 	 * <br>The created instance will use a number of threads equals to the number of processors.
@@ -43,15 +42,15 @@ public class ContextualizedExecutor<T> implements AutoCloseable {
 	}
 
 	/** Constructor.
-	 * @param parallelism The number of threads to use to process tasks submitted to {@link #invokeAll(Collection, Supplier)}
+	 * @param parallelism The number of threads to use to process tasks submitted to {@link #invokeAll(Collection, Forkable)}
 	 */
 	public ContextualizedExecutor(int parallelism) {
 		this.running = new AtomicBoolean();
 		this.threads = new LinkedList<>();
 		this.exec = Executors.newFixedThreadPool(parallelism, r -> {
 			final ContextThread<T> contextThread = new ContextThread<>(r);
-			contextThread.context = contextSupplier.get();
 			threads.add(contextThread);
+			contextThread.context = masterContext.fork();
 			return contextThread;
 		});
 	}
@@ -59,16 +58,15 @@ public class ContextualizedExecutor<T> implements AutoCloseable {
 	/** Executes some tasks with some thread context.
 	 * @param <V> The class of the task's results.
 	 * @param tasks The list of tasks to execute
-	 * @param contextSupplier A context supplier that will be called one time for each worker thread.
-	 * <br>Please note that the supplier will be called only when invokeAll is called
+	 * @param context A base context that will be copied (using <i>copyFunction</i>) to create in each worker thread.
 	 * @return The futures that corresponds to the executed tasks.
 	 * @throws InterruptedException if the executor is shutdown during the execution of tasks.
 	 * @see #getContext()
 	 */
-	public <V> List<Future<V>> invokeAll(Collection<Callable<V>> tasks, Supplier<T> contextSupplier) throws InterruptedException {
+	public <V> List<Future<V>> invokeAll(Collection<Callable<V>> tasks, T context) throws InterruptedException {
 		if (running.compareAndSet(false, true)) {
-			this.contextSupplier = contextSupplier;
-			threads.forEach(t -> t.context = contextSupplier.get());
+			masterContext = context;
+			threads.forEach(t -> t.context = context.fork());
 			final List<Future<V>> result = exec.invokeAll(tasks);
 			running.set(false);
 			return result;
@@ -94,7 +92,7 @@ public class ContextualizedExecutor<T> implements AutoCloseable {
 	}
 	
 	/** Returns the context of current thread.
-	 * @return an instance returned by the context supplier passed to {@link #invokeAll(Collection, Supplier)} or null if this method is called
+	 * @return an instance returned by the context supplier passed to {@link #invokeAll(Collection, Forkable)} or null if this method is called
 	 * by a thread not managed by this class.
 	 */
 	@SuppressWarnings("unchecked")

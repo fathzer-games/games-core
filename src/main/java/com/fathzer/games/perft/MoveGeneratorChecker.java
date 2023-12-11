@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.util.exec.ContextualizedExecutor;
@@ -117,7 +116,7 @@ public class MoveGeneratorChecker {
 	 * @param parallelism The number of threads to use to perform the search 
 	 * @return The number of moves found.
 	 */
-	public <M> long run(TestableMoveGeneratorSupplier<M> engine, int depth, boolean legalMoves, boolean playLeaves, int parallelism) {
+	public <M, B extends MoveGenerator<M>> long run(TestableMoveGeneratorBuilder<M, B> engine, int depth, boolean legalMoves, boolean playLeaves, int parallelism) {
 		if (running.compareAndSet(false, true)) {
 			cancelled = false;
 			long count = 0;
@@ -125,7 +124,7 @@ public class MoveGeneratorChecker {
 				for (PerfTTestData test : tests) {
 					if (test.getSize()>=depth) {
 						try {
-							engine.setStartPosition(test.getStartPosition());
+							B generator = engine.fromFEN(test.getStartPosition());
 							synchronized(this) {
 								if (cancelled) {
 									break;
@@ -137,7 +136,7 @@ public class MoveGeneratorChecker {
 									}
 								}
 							}
-							count += doTest(test, depth, engine);
+							count += doTest(test, depth, generator);
 						} catch (Exception e) {
 							errorManager.accept(new RuntimeException("Exception for "+test.getStartPosition(), e));
 							cancel();
@@ -151,9 +150,9 @@ public class MoveGeneratorChecker {
 		}
 	}
 	
-	private <M> long doTest(PerfTTestData test, int depth, Supplier<MoveGenerator<M>> moveGeneratorSupplier) {
+	private <M> long doTest(PerfTTestData test, int depth, MoveGenerator<M> moveGenerator) {
 		@SuppressWarnings("unchecked")
-		final long count = ((PerfT<M>)current).divide(depth, moveGeneratorSupplier).getNbLeaves();
+		final long count = ((PerfT<M>)current).divide(depth, moveGenerator).getNbLeaves();
 		final long expected = test.getCount(depth);
 		if (count != expected && !cancelled) {
 			countErrorManager.accept(new PerfTCountError(test.getStartPosition(), expected, count));

@@ -14,6 +14,7 @@ import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
 import com.fathzer.games.util.exec.ExecutionContext;
@@ -33,10 +34,11 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
-		if ((getGamePosition() instanceof HashProvider) && getTranspositionTable()!=null && !isInterrupted()) {
+		final B gamePosition = getContext().getGamePosition();
+		if ((gamePosition instanceof HashProvider) && getTranspositionTable()!=null && !isInterrupted()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			getTranspositionTable().store(((HashProvider)getGamePosition()).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			getTranspositionTable().store(((HashProvider)gamePosition).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
 		}
 		return result;
     }
@@ -71,16 +73,17 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		try {
 			spy.enter(searchStack);
 			final TreeSearchState<M> searchState = searchStack.getCurrent();
+			final Evaluator<M, B> evaluator = searchStack.context.getEvaluator();
 			if (searchState.depth == 0 || isInterrupted()) {
 				getStatistics().evaluationDone();
-				searchState.value = searchState.who * getEvaluator().evaluate();
+				searchState.value = searchState.who * evaluator.evaluate(searchStack.context.getGamePosition());
 				spy.exit(searchStack, EVAL);
 				return searchState.value;
 			}
 	    	final Status fastAnalysisStatus = searchStack.context.getGamePosition().getContextualStatus();
 	    	if (fastAnalysisStatus!=Status.PLAYING) {
 				spy.exit(searchStack, END_GAME);
-	    		return getScore(fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
+	    		return getScore(evaluator, fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
 	    	}
 			
 			final boolean keyProvider = (searchStack.context instanceof HashProvider) && getTranspositionTable()!=null;
@@ -89,7 +92,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			if (keyProvider) {
 				key = ((HashProvider)searchStack.context).getHashKey();
 				TranspositionTableEntry<M> entry = getTranspositionTable().get(key);
-				state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
+				state = getTranspositionTable().getPolicy().accept(entry, searchState.depth, searchState.alphaOrigin, searchState.betaOrigin, v -> ttToScore(v, searchState.depth, searchStack.maxDepth, evaluator));
 				if (state.isValueSet()) {
 					searchState.value = state.getValue();
 					spy.exit(searchStack, TT);
@@ -134,7 +137,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 				if (noValidMove) {
 					// Player can't move it's a draw or a loose
 					//TODO Maybe there's some games where the player wins if it can't move...
-					searchState.value = getScore(searchStack.context.getGamePosition().getEndGameStatus(), searchState.depth, searchStack.maxDepth);
+					searchState.value = getScore(evaluator, searchStack.context.getGamePosition().getEndGameStatus(), searchState.depth, searchStack.maxDepth);
 					if (searchState.value > searchState.alpha) {
 						searchState.alpha = searchState.value;
 					}
@@ -146,7 +149,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 				state.setValue(searchState.value);
 				state.updateAlphaBeta(searchState.alpha, searchState.beta);
 				state.setBestMove(searchState.bestMove);
-				boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> scoreToTT(v, searchState.depth, searchStack.maxDepth, getEvaluator()));
+				boolean store = getTranspositionTable().getPolicy().store(getTranspositionTable(), key, state, v -> scoreToTT(v, searchState.depth, searchStack.maxDepth, evaluator));
 				spy.storeTT(searchStack, state, store);
 			}
 	

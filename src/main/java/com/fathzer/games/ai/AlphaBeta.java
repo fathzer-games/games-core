@@ -6,6 +6,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.Status;
+import com.fathzer.games.ai.evaluation.Evaluator;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning">AlphaBeta</a> based implementation.
@@ -33,14 +34,16 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	}
 	
     private int alphabeta(final int depth, int maxDepth, int alpha, int beta, final int who) {
-    	final B position = getGamePosition();
+    	final SearchContext<M, B> context = getContext();
+    	final B position = context.getGamePosition();
+    	final Evaluator<M, B> evaluator = context.getEvaluator();
     	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
-            return who * getEvaluator().evaluate();
+            return who * evaluator.evaluate(position);
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
 		if (fastAnalysisStatus==Status.DRAW) {
-        	return getScore(position.getEndGameStatus(), depth, maxDepth)*who;
+        	return getScore(evaluator, position.getEndGameStatus(), depth, maxDepth)*who;
     	}
 
 		List<M> moves = position.getMoves(false);
@@ -92,7 +95,7 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
             }
         }
         if (!hasValidMoves) {
-        	return position.getEndGameStatus()==Status.DRAW ? 0 : -getEvaluator().getWinScore(maxDepth-depth)*who;
+        	return position.getEndGameStatus()==Status.DRAW ? 0 : -evaluator.getWinScore(maxDepth-depth)*who;
         }
         return bestScore;
     }

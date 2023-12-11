@@ -26,14 +26,6 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		return statistics;
 	}
 
-	protected B getGamePosition() {
-    	return context.getContext().getGamePosition();
-	}
-	
-	protected Evaluator<M, B> getEvaluator() {
-		return context.getContext().getEvaluator();
-	}
-
 	protected SearchContext<M, B> getContext() {
 		return context.getContext();
 	}
@@ -41,7 +33,7 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		statistics.clear();
-		List<M> moves = getGamePosition().getMoves(false);
+		List<M> moves = getContext().getGamePosition().getMoves(false);
 		getStatistics().movesGenerated(moves.size());
 		return this.getBestMoves(moves, params);
     }
@@ -79,7 +71,7 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 				final Integer score = rootEvaluator.apply(m, low);
 				if (!isInterrupted() && score!=null) {
 					// Do not return interrupted evaluations, they are false
-            		search.add(m, getEvaluator().toEvaluation(score, params.getDepth()));
+            		search.add(m, getContext().getEvaluator().toEvaluation(score, params.getDepth()));
 				}
 			}
 		}).collect(Collectors.toList());
@@ -97,12 +89,12 @@ public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> 
 		interrupted = true;
 	}
 	
-	protected int getScore(final Status status, final int depth, int maxDepth) {
+	protected int getScore(final Evaluator<M,B> evaluator, final Status status, final int depth, int maxDepth) {
 		if (Status.DRAW==status) {
 			return 0;
 		} else {
 			//FIXME Maybe there's some games where the player wins if it can't move...
-			return -getEvaluator().getWinScore(maxDepth-depth);
+			return -evaluator.getWinScore(maxDepth-depth);
 		}
 	}
 }
