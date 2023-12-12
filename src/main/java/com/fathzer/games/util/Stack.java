@@ -41,6 +41,18 @@ public class Stack<T> {
 		return current;
 	}
 	
+	/** Sets the current element.
+	 * @param element The element to set
+	 */
+	public void set(T element) {
+		current = element;
+		if (index>=backups.size()) {
+			backups.add(current);
+		} else {
+			backups.set(index, current);
+		}
+	}
+	
 	/** Moves to the next element.
 	 * <br>Creates the element if needed. 
 	 */
