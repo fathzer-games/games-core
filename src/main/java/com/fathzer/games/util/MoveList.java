@@ -72,7 +72,7 @@ public class MoveList<E> extends AbstractList<E> {
 			final ListIterator<E> iter = list.listIterator();
 			while (iter.hasNext()) {
 				E m = iter.next();
-				if (evaluator.applyAsInt(m)!=Integer.MIN_VALUE) {
+				if (this.evaluator.applyAsInt(m)!=Integer.MIN_VALUE) {
 					toBeSorted.add(m);
 					iter.remove();
 				}
