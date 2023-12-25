@@ -61,10 +61,10 @@ public class MoveList<E> extends AbstractList<E> {
     }
     
     /** Sets the evaluator.
-     * @param evaluator The new evaluator.
+     * @param evaluator The new evaluator. Null to have no sort
      */
     public void setEvaluator(ToIntFunction<E> evaluator) {
-    	this.evaluator = evaluator;
+    	this.evaluator = evaluator == null ? noSort() : evaluator;
     	if (!isEmpty()) {
     		// Split again the elements 
 			list.addAll(toBeSorted);
