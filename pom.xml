@@ -22,8 +22,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<sonar.organization>fathzer-games</sonar.organization>
-	    <maven.compiler.release>8</maven.compiler.release>
-		<animal-sniffer-signature>java18</animal-sniffer-signature>
+		<check-dependencies-java-version>11</check-dependencies-java-version>
+	    <maven.compiler.release>11</maven.compiler.release>
 	</properties>
 
 	<repositories>
@@ -53,13 +53,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>animal-sniffer-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>
