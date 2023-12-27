@@ -2,11 +2,9 @@ package com.fathzer.games.util;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.ToIntFunction;
 
 /** A specialized list optimized to sort moves.
  * Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted with the (a priori) best moves first.
@@ -19,52 +17,56 @@ import java.util.function.ToIntFunction;
  */
 @SuppressWarnings("java:S2160")
 public class MoveList<E> extends AbstractList<E> {
-	private static class NoSort<T> implements ToIntFunction<T> {
+	private static class NoSort<T> implements SelectiveComparator<T> {
 	    @SuppressWarnings("rawtypes")
-	    private static final ToIntFunction NO_SORT = new NoSort<>();
+	    private static final SelectiveComparator NO_SORT = new NoSort<>();
 
 		@Override
-		public int applyAsInt(T value) {
-			return Integer.MIN_VALUE;
+		public int compare(T o1, T o2) {
+			return 0;
+		}
+
+		@Override
+		public boolean test(T t) {
+			return false;
 		}
 	}
 	
     @SuppressWarnings("unchecked")
-    public static final <T> ToIntFunction<T> noSort() {
+    public static final <T> SelectiveComparator<T> noSort() {
         return NoSort.NO_SORT;
     }
 	
     private final List<E> toBeSorted;
     private final List<E> list;
-    private ToIntFunction<E> evaluator;
-    private final Comparator<E> comparator = (e1, e2) -> evaluator.applyAsInt(e2)-evaluator.applyAsInt(e1); 
+    private SelectiveComparator<E> comparator;
     
     /** Constructor.
      * <br>The evaluator used for the sort ... sorts no moves (all moves are evaluated to Integer.MIN_VALUE).
-     * @see #setEvaluator(ToIntFunction)
+     * @see #setComparator(SelectiveComparator)
      */
     public MoveList() {
         this.toBeSorted = new ArrayList<>();
         this.list = new ArrayList<>();
-        this.evaluator = noSort();
+        this.comparator = noSort();
     }
     
     /** Constructor from a list and an evaluator.
      * <br>Warning, there are side effects between the argument list and the created instance. The argument can be changed by this call. 
      * @param moves A list of moves
-     * @param evaluator a move evaluator
+     * @param comparator a move comparator
      */
-    public MoveList(List<E> moves, ToIntFunction<E> evaluator) {
+    public MoveList(List<E> moves, SelectiveComparator<E> comparator) {
         this.toBeSorted = new ArrayList<>();
         this.list = moves;
-    	setEvaluator(evaluator);
+    	setComparator(comparator);
     }
     
-    /** Sets the evaluator.
-     * @param evaluator The new evaluator. Null to have no sort
+    /** Sets the comparator.
+     * @param comparator The new evaluator. Null to have no sort
      */
-    public void setEvaluator(ToIntFunction<E> evaluator) {
-    	this.evaluator = evaluator == null ? noSort() : evaluator;
+    public void setComparator(SelectiveComparator<E> comparator) {
+    	this.comparator = comparator == null ? noSort() : comparator;
     	if (!isEmpty()) {
     		// Split again the elements 
 			list.addAll(toBeSorted);
@@ -72,7 +74,7 @@ public class MoveList<E> extends AbstractList<E> {
 			final ListIterator<E> iter = list.listIterator();
 			while (iter.hasNext()) {
 				E m = iter.next();
-				if (this.evaluator.applyAsInt(m)!=Integer.MIN_VALUE) {
+				if (this.comparator.test(m)) {
 					toBeSorted.add(m);
 					iter.remove();
 				}
@@ -82,7 +84,7 @@ public class MoveList<E> extends AbstractList<E> {
 
 	@Override
 	public boolean add(E e) {
-		return evaluator.applyAsInt(e)==Integer.MIN_VALUE ? list.add(e) : toBeSorted.add(e);
+		return comparator.test(e) ? toBeSorted.add(e) : list.add(e);
 	}
 
 	@Override
@@ -101,7 +103,7 @@ public class MoveList<E> extends AbstractList<E> {
 		toBeSorted.clear();
 	}
 
-	/** Sorts the list elements in descending order accordingly with the evaluator defined in {@link #setEvaluator(ToIntFunction)}
+	/** Sorts the list elements in descending order accordingly with the comparator defined in {@link #setComparator(SelectiveComparator)}
 	 */
 	public void sort() {
 		toBeSorted.sort(comparator);

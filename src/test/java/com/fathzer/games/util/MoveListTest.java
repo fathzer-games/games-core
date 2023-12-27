@@ -7,12 +7,21 @@ import org.junit.jupiter.api.Test;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.function.ToIntFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MoveListTest {
-	private static final ToIntFunction<Integer> EVALUATOR = i -> i%2==0 ? Integer.MIN_VALUE : i;
+	private static final SelectiveComparator<Integer> COMPARATOR = new SelectiveComparator<Integer>() {
+		@Override
+		public boolean test(Integer t) {
+			return t%2!=0;
+		}
+
+		@Override
+		public int compare(Integer o1, Integer o2) {
+			return Integer.compare(o2, o1);
+		}
+	};
 	
     @Test
     void testDualListIterator() {
@@ -21,7 +30,7 @@ class MoveListTest {
 
         // Create the iterator
         MoveList<Integer> mvList = new MoveList<>();
-        mvList.setEvaluator(EVALUATOR);
+        mvList.setComparator(COMPARATOR);
         mvList.addAll(list1);
         mvList.sort();
         
