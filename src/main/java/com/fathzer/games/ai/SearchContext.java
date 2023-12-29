@@ -1,5 +1,8 @@
 package com.fathzer.games.ai;
 
+import java.util.function.Supplier;
+
+import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.exec.Forkable;
@@ -46,5 +49,14 @@ public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<Se
 		final B mg = (B)gamePosition.fork();
 		final Evaluator<M, B> ev = evaluator.fork();
 		return new SearchContext<>(mg, ev);
+	}
+	
+	public static <M, B extends MoveGenerator<M>> SearchContext<M, B> get(B board, Supplier<Evaluator<M, B>> evaluatorBuilder) {
+		@SuppressWarnings("unchecked")
+		final B b = (B) board.fork();
+		final Evaluator<M, B> evaluator = evaluatorBuilder.get();
+		evaluator.init(board);
+		evaluator.setViewPoint(b.isWhiteToMove()?Color.WHITE : Color.BLACK);
+		return new SearchContext<>(b, evaluator);
 	}
 }

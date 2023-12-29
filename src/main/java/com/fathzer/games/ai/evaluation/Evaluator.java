@@ -6,7 +6,7 @@ import com.fathzer.games.util.exec.Forkable;
 /** A class that can evaluate a game position.
  * <br>This class supports <a href="https://www.chessprogramming.org/Incremental_Updates">incremental evaluator</a>.
  * Nevertheless, implementing incremental evaluation can be a complex (but very useful) task. If you prefer not to implement incremental evaluation,
- * you can ignore {@link #fork()} {@link #prepareMove(Object, Object)}, {@link #commitMove()} and {@link #unmakeMove()} methods that does nothing by default.
+ * you can ignore {@link #fork()}, {@link #init(Object)} {@link #prepareMove(Object, Object)}, {@link #commitMove()} and {@link #unmakeMove()} methods that does nothing by default.
  * @param <B> The type of the game position
  * @param <M> The type of a move
  */
@@ -15,6 +15,14 @@ public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
 	 * @param color The color from which the evaluation is made, null to evaluate the position from the point of view of the current player.
 	 */
 	void setViewPoint(Color color);
+	
+	/** Initializes the evaluator with a board.
+	 * <br>The default implementation does nothing. It is the right thing to do for an evaluator that is not incremental.
+	 * @param board The board. 
+	 */
+	default void init(B board) {
+		// By default, the evaluator is not incremental
+	}
 	
 	default void prepareMove(B board, M move) {
 		// By default, the evaluator is not incremental

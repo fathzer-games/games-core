@@ -25,6 +25,11 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 		 */
 		UNSAFE}
 	
+	/** Checks whether white player should play.
+	 * @return true if white has to play, false if it is black
+	 */
+	boolean isWhiteToMove();
+	
     /**
      * Plays the given move and modify the state of the game if the move is correct.
      * @param move The move to play
