@@ -10,7 +10,7 @@ import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.exec.ExecutionContext;
 
-public abstract class AbstractAI<M,B extends MoveGenerator<M>> implements AI<M> {
+public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M> {
 	private final ExecutionContext<SearchContext<M,B>> context;
 	private boolean interrupted;
 	private SearchStatistics statistics;

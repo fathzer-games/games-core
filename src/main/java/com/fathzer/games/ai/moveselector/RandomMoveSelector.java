@@ -1,4 +1,4 @@
-package com.fathzer.games.ai.moveSelector;
+package com.fathzer.games.ai.moveselector;
 
 import java.util.Collections;
 import java.util.List;
