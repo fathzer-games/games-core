@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.moveSelector.MoveSelector;
+import com.fathzer.games.ai.moveselector.MoveSelector;
 
 public class FirstBestMoveSelector<M> extends MoveSelector<M, IterativeDeepeningSearch<M>> {
 	

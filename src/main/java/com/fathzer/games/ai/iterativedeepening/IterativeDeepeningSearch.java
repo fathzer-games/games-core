@@ -17,7 +17,7 @@ public class IterativeDeepeningSearch<M> {
 	private final AI<M> ai;
 	private List<EvaluatedMove<M>> orderedMoves;
 	private List<SearchResult<M>> searchHistory;
-	private EventLogger<M> logger;
+	private EventLogger<M, ?> logger;
 	
 	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
@@ -29,7 +29,7 @@ public class IterativeDeepeningSearch<M> {
 		this.ai.interrupt();
 	}
 	
-	public void setEventLogger(EventLogger<M> logger) {
+	public void setEventLogger(EventLogger<M, ?> logger) {
 		this.logger = logger;
 	}
 	
