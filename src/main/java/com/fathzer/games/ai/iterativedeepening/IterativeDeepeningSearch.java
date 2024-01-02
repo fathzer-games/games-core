@@ -6,8 +6,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.fathzer.games.ai.AI;
-import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.EventLogger;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.SearchEventLogger;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -17,7 +17,7 @@ public class IterativeDeepeningSearch<M> {
 	private final AI<M> ai;
 	private List<EvaluatedMove<M>> orderedMoves;
 	private List<SearchResult<M>> searchHistory;
-	private EventLogger<M, ?> logger;
+	private SearchEventLogger<M> logger;
 	
 	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
@@ -29,7 +29,7 @@ public class IterativeDeepeningSearch<M> {
 		this.ai.interrupt();
 	}
 	
-	public void setEventLogger(EventLogger<M, ?> logger) {
+	public void setEventLogger(SearchEventLogger<M> logger) {
 		this.logger = logger;
 	}
 	
@@ -39,7 +39,7 @@ public class IterativeDeepeningSearch<M> {
 		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
 		searchHistory.add(bestMoves);
-		logger.logSearch(currentParams.getDepth(), ai.getStatistics(), bestMoves);
+		logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), bestMoves);
 		final long maxTime = deepeningPolicy.getMaxTime();
 		final long remaining = maxTime-(deepeningPolicy.getSpent());
 		if ((bestMoves.getList().size()==1 && !deepeningPolicy.isDeepenOnForced()) || remaining<=0) {
@@ -66,7 +66,7 @@ public class IterativeDeepeningSearch<M> {
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
 				searchHistory.add(deeper);
-				logger.logSearch(currentParams.getDepth(), ai.getStatistics(), deeper);
+				logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
 				} else {

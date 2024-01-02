@@ -20,13 +20,17 @@ import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.util.exec.MultiThreadsContext;
 import com.fathzer.games.util.exec.SingleThreadContext;
 
+/** An engine that iteratively deepens the search. 
+ * @param <M> The class that represents a move
+ * @param <B> The class that represents the move generator 
+ */
 public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
-	/** A class that logs events during search.
+	/** A class that logs events during search at a specific level.
+	 * <br>By default, a logger does nothing.
 	 * @param <M> The class that represents a move
-	 * @param <B> The class that represents the move generator 
 	 */
-	public interface EventLogger<M, B extends MoveGenerator<M>> {
-		default void logSearch(int depth, SearchStatistics stats, SearchResult<M> results) {
+	public interface SearchEventLogger<M> {
+		default void logSearchAtDepth(int depth, SearchStatistics stats, SearchResult<M> results) {
 			// Does nothing by default
 		}
 		
@@ -37,12 +41,27 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		default void logEndedByPolicy(int depth) {
 			// Does nothing by default
 		}
-		
+	}
+	
+	/** A class that logs events during the search.
+	 * <br>By default, a logger does nothing.
+	 * @param <M> The class that represents a move
+	 * @param <B> The class that represents the move generator 
+	 */
+	public interface EngineEventLogger<M, B extends MoveGenerator<M>> extends SearchEventLogger<M> {
 		default void logLibraryMove(B board, M move) {
 			// Does nothing by default
 		}
 
+		default void logSearchStart(B board, IterativeDeepeningEngine<M, B> engine) {
+			// Does nothing by default
+		}
+
 		default void logMoveChosen(B board, EvaluatedMove<M> evaluatedMove) {
+			// Does nothing by default
+		}
+
+		default void logSearchEnd(B board, IterativeDeepeningSearch<M> result) {
 			// Does nothing by default
 		}
 	}
@@ -51,25 +70,34 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	 * @param <M> The class that represents a move
 	 * @param <B> The class that represents the move generator 
 	 */
-	public static final class Mute<M, B extends MoveGenerator<M>> implements EventLogger<M, B> {}
+	public static final class Mute<M, B extends MoveGenerator<M>> implements EngineEventLogger<M, B> {}
 	
 	private Function<B, M> movesLibrary;
 	private Supplier<Evaluator<M, B>> evaluatorSupplier;
 	private DeepeningPolicy deepeningPolicy;
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
-	private EventLogger<M, B> logger;
+	private EngineEventLogger<M, B> logger;
 	private Function<B, MoveSelector<M,IterativeDeepeningSearch<M>>> moveSelectorBuilder;
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
-	protected IterativeDeepeningEngine(int maxDepth, TranspositionTable<M> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
+	/** Constructor
+	 * <br>By default, the parallelism of the search is 1, the event logger logs nothing and the engine select randomly a move in the best move list.
+	 * @param deepeningPolicy The policy to decide what move to deepen, how to merge results at different depth, etc...
+	 * @param tt A transposition table used across different depth 
+	 * @param evaluatorSupplier An evaluation function supplier
+	 * @see #setMoveSelectorBuilder(Function)
+	 * @see #setParallelism(int)
+	 * @see #setLogger(EngineEventLogger)
+	 */
+	public IterativeDeepeningEngine(DeepeningPolicy deepeningPolicy, TranspositionTable<M> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
 		this.parallelism = 1;
 		this.transpositionTable = tt;
 		this.evaluatorSupplier = evaluatorSupplier;
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
-		this.deepeningPolicy = new DeepeningPolicy(maxDepth);
+		this.deepeningPolicy = deepeningPolicy;
 		this.moveSelectorBuilder = b -> new RandomMoveSelector<>();
 	}
 	
@@ -83,6 +111,10 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		return parallelism;
 	}
 
+	/** Sets how many threads are used to perform the searches.
+	 * <br>Calling this method while performing a search may have unpredictable results
+	 * @param parallelism The number of threads used to perform the search (default is 1)
+	 */
 	public void setParallelism(int parallelism) {
 		this.parallelism = parallelism;
 	}
@@ -99,15 +131,23 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		this.evaluatorSupplier = evaluatorSupplier;
 	}
 
+	/** Sets the move selector builder.
+	 * <br>When {@link #apply(MoveGenerator)} is called, the move selector choose the move in the search results.
+	 * <br>By default, it choose randomly a move in the best moves. 
+	 * @param moveSelectorBuilder The new move selector builder.
+	 */
 	public void setMoveSelectorBuilder(Function<B, MoveSelector<M,IterativeDeepeningSearch<M>>> moveSelectorBuilder) {
 		this.moveSelectorBuilder = moveSelectorBuilder;
 	}
 
-	public EventLogger<M, B> getLogger() {
+	public EngineEventLogger<M, B> getLogger() {
 		return logger;
 	}
 
-	public void setLogger(EventLogger<M, B> logger) {
+	/** Sets the logger.
+	 * @param logger The new logger (The default one does nothing)
+	 */
+	public void setLogger(EngineEventLogger<M, B> logger) {
 		this.logger = logger;
 	}
 
@@ -144,8 +184,9 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	public List<EvaluatedMove<M>> getBestMoves(B board) {
 		return search(board).getBestMoves();
 	}
-	
+
 	protected IterativeDeepeningSearch<M> search(B board) {
+		logger.logSearchStart(board, this);
 		// TODO Test if it is really a new position?
 		if (transpositionTable!=null) {
 			transpositionTable.newPosition();
@@ -163,6 +204,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
 				}
+				logger.logSearchEnd(board, rs);
 				return rs;
 			} finally {
 				running.set(false);
