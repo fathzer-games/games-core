@@ -1,12 +1,10 @@
 package com.fathzer.games.chess;
 
-import static com.fathzer.games.Color.*;
-
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-import com.fathzer.games.Color;
+import com.fathzer.games.ai.evaluation.AbstractEvaluator;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
@@ -14,9 +12,8 @@ import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
-public class BasicEvaluator implements Evaluator<Move, ChessLibMoveGenerator> {
+public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerator> {
 	public static final Map<PieceType, Integer> PIECE_VALUE;
-	private Color viewPoint;
 	
 	static {
 		Map<PieceType, Integer> map = new EnumMap<>(PieceType.class);
@@ -30,17 +27,8 @@ public class BasicEvaluator implements Evaluator<Move, ChessLibMoveGenerator> {
 	}
 	
 	@Override
-	public void setViewPoint(Color viewPoint) {
-		this.viewPoint = viewPoint;
-	}
-
-	@Override
-	public int evaluate(ChessLibMoveGenerator mg) {
-		int points = 100*getPoints(mg.getBoard());
-		if (BLACK==viewPoint || (viewPoint==null && Side.BLACK==mg.getBoard().getSideToMove())) {
-			points = -points;
-		}
-		return points;
+	protected int evaluateAsWhite(ChessLibMoveGenerator board) {
+		return 100*getPoints(board.getBoard());
 	}
 
 	public int getPoints(Board board) {
@@ -61,7 +49,7 @@ public class BasicEvaluator implements Evaluator<Move, ChessLibMoveGenerator> {
 	@Override
 	public Evaluator<Move, ChessLibMoveGenerator> fork() {
 		final BasicEvaluator evaluator = new BasicEvaluator();
-		evaluator.setViewPoint(viewPoint);
+		evaluator.viewPoint = viewPoint;
 		return evaluator;
 	}
 }
