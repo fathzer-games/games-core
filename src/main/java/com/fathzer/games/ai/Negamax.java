@@ -5,6 +5,7 @@ import java.util.List;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
+import com.fathzer.games.Color;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
@@ -26,6 +27,13 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		super(exec);
 	}
 	
+	@Override
+	protected void setEvaluatorViewPoint() {
+		final SearchContext<M, B> context = getContext();
+		context.getEvaluator().setViewPoint(context.getGamePosition().isWhiteToMove() ? Color.WHITE : Color.BLACK);
+		super.setEvaluatorViewPoint();
+	}
+
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);

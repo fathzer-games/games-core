@@ -56,7 +56,6 @@ public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<Se
 		final B b = (B) board.fork();
 		final Evaluator<M, B> evaluator = evaluatorBuilder.get();
 		evaluator.init(board);
-		evaluator.setViewPoint(b.isWhiteToMove()?Color.WHITE : Color.BLACK);
 		return new SearchContext<>(b, evaluator);
 	}
 }

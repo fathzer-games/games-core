@@ -10,12 +10,13 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.transposition.SizeUnit;
+import com.fathzer.games.ai.transposition.TT;
 import com.fathzer.games.chess.BasicEvaluator;
 import com.fathzer.games.chess.BasicMoveComparator;
 import com.fathzer.games.chess.ChessLibMoveGenerator;
@@ -23,7 +24,6 @@ import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.util.exec.MultiThreadsContext;
 import com.github.bhlangonijr.chesslib.Board;
-import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
@@ -41,12 +41,18 @@ class MinimaxTest {
 			return search(ai, new SearchParameters(depth, Integer.MAX_VALUE, 0));
 		}
 
-		List<EvaluatedMove<Move>> search(AiType ai, SearchParameters params) {
-			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==ai?x->null:BasicMoveComparator::new);
+		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params) {
+			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==aiType?x->null:BasicMoveComparator::new);
 			Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
-			ev.setViewPoint(board.getSideToMove()==Side.WHITE ? Color.WHITE : Color.BLACK);
 			SearchContext<Move, ChessLibMoveGenerator> ctx = new SearchContext<>(mg, ev);
-			return MinimaxTest.search(ctx, ai.getAiBuilder(), params);
+			Function<ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder = aiType.getAiBuilder();
+			if (aiType==Negamax || aiType==Negamax3) {
+				aiBuilder = aiBuilder.andThen(ai -> {
+					((Negamax<Move, ChessLibMoveGenerator>)ai).setTranspositonTable(new TT(16, SizeUnit.MB));
+					return ai;
+				});
+			}
+			return MinimaxTest.search(ctx, aiBuilder, params);
 		}
 		
 		int getWinScore(int nbHalfMoves) {
@@ -123,11 +129,40 @@ class MinimaxTest {
 		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());
 	}
 
+	@Test
+	void noMatSituations() {
+		ChessLibTest t = new ChessLibTest("4k3/r1q2bpr/2n1np2/8/8/P4B1N/3R1QPP/RN2K3 w Q - 0 1", 2);
+		EvaluatedMove<Move> best = new EvaluatedMove<>(new Move(F3,C6), Evaluation.score(100));
+		EvaluatedMove<Move> second = new EvaluatedMove<>(new Move(H3,G1), Evaluation.score(0));
+		noMatAssert(best, second, t.search(Minimax));
+		noMatAssert(best, second, t.search(AlphaBeta));
+		noMatAssert(best, second, t.search(Negamax3));
+		noMatAssert(best, second, t.search(Negamax));
 
+		t = new ChessLibTest("4k3/r1q2bpr/2n1np2/8/8/P4B1N/3R1QPP/RN2K3 b Q - 0 1", 2);
+		best = new EvaluatedMove<>(new Move(C7,E5), Evaluation.score(-100));
+		second = new EvaluatedMove<>(new Move(H7,H3), Evaluation.score(-300));
+		noMatAssert(best, second, t.search(Minimax));
+		noMatAssert(best, second, t.search(AlphaBeta));
+		noMatAssert(best, second, t.search(Negamax3));
+		noMatAssert(best, second, t.search(Negamax));
+	}
+	
+	<M> void noMatAssert(EvaluatedMove<M> expectedBest, EvaluatedMove<M> expectedSecond, List<EvaluatedMove<M>> moves) {
+		assertEquals(expectedBest, moves.get(0));
+		assertEquals(expectedSecond, moves.get(1));
+	}
+	
 	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
 		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
-			AbstractAI<M, B> ai = aiBuilder.apply(context);
-			return ai.getBestMoves(params).getList();
+			final AbstractAI<M, B> ai = aiBuilder.apply(context);
+			final List<EvaluatedMove<M>> list = ai.getBestMoves(params).getList();
+			if (ai instanceof Negamax) {
+				for (EvaluatedMove<M> ev:list) {
+					ev.setPvBuilder(m -> ((Negamax<M, B>)ai).getTranspositionTable().collectPV(ctx.getGamePosition(), m, params.getDepth()));
+				}
+			}
+			return list;
 		}
 	}
 }

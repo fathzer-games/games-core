@@ -30,7 +30,6 @@ class NegamaxWithTTTest {
 		board.loadFromFen("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, BasicMoveComparator::new);
 		final Evaluator<Move, ChessLibMoveGenerator> basicEvaluator = new BasicEvaluator();
-		basicEvaluator.setViewPoint(Color.WHITE);
 		final SearchContext<Move, ChessLibMoveGenerator> sc = new SearchContext<>(mg, basicEvaluator);
 		try (ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>> exec = new SingleThreadContext<>(sc)) {
 			Negamax<Move, ChessLibMoveGenerator> ai = new Negamax<>(exec);

@@ -42,6 +42,10 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
     public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
 		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(),lowestInterestingScore));
     }
+	
+	protected void setEvaluatorViewPoint() {
+		getContext().getEvaluator().setViewPoint(null);
+	}
 
 	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
     	if (lowestInterestingScore==Integer.MIN_VALUE) {

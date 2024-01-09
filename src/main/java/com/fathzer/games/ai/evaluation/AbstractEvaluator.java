@@ -5,7 +5,9 @@ import static com.fathzer.games.Color.WHITE;
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 
-/** An abstract evaluator that is extended by other evaluators of this library.
+/** An abstract evaluator that helps implementing <a href="https://en.wikipedia.org/wiki/Zero-sum_game">zero-sum game</a> evaluation functions.
+ * <br>It deals with the point of view property. The subclasses should implement the evaluator from the white player perspective,
+ * and this class automatically negate the evaluation if required.
  * @param <M> The type of moves
  * @param <B> The type of the chess move generator
  */
