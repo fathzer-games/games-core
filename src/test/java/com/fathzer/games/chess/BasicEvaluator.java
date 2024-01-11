@@ -5,14 +5,14 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import com.fathzer.games.ai.evaluation.AbstractEvaluator;
-import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.StaticEvaluator;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
-public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerator> {
+public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerator> implements StaticEvaluator<Move, ChessLibMoveGenerator>{
 	public static final Map<PieceType, Integer> PIECE_VALUE;
 	
 	static {
@@ -44,12 +44,5 @@ public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerato
 			}
 		}
 		return points;
-	}
-
-	@Override
-	public Evaluator<Move, ChessLibMoveGenerator> fork() {
-		final BasicEvaluator evaluator = new BasicEvaluator();
-		evaluator.viewPoint = viewPoint;
-		return evaluator;
 	}
 }

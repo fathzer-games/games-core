@@ -11,7 +11,7 @@ import com.fathzer.games.MoveGenerator;
  * @param <M> The type of moves
  * @param <B> The type of the chess move generator
  */
-public abstract class AbstractEvaluator<M, B extends MoveGenerator<M>> implements Evaluator<M, B> {
+public abstract class AbstractEvaluator<M, B extends MoveGenerator<M>> implements ColorSensitiveEvaluator<B> {
 	/** The evaluator point of view (1 for white, -1 for black, 0 for current player.
 	 */
 	protected int viewPoint;

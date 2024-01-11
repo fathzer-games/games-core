@@ -1,47 +1,36 @@
 package com.fathzer.games.ai.evaluation;
 
-import com.fathzer.games.Color;
 import com.fathzer.games.util.exec.Forkable;
 
 /** A class that can evaluate a game position.
  * <br>This class supports <a href="https://www.chessprogramming.org/Incremental_Updates">incremental evaluator</a>.
  * Nevertheless, implementing incremental evaluation can be a complex (but very useful) task. If you prefer not to implement incremental evaluation,
- * you can ignore {@link #fork()}, {@link #init(Object)} {@link #prepareMove(Object, Object)}, {@link #commitMove()} and {@link #unmakeMove()} methods that does nothing by default.
+ * you can implement the simpler {@link StaticEvaluator} interface. It provides default working implementation for incremental related methods.
  * @param <B> The type of the game position
  * @param <M> The type of a move
  */
-public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
-	/** Sets the point of view from which the evaluation should be made. 
-	 * @param color The color from which the evaluation is made, null to evaluate the position from the point of view of the current player.
-	 */
-	void setViewPoint(Color color);
-	
+public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>>, ColorSensitiveEvaluator<B> {
 	/** Initializes the evaluator with a board.
 	 * <br>The default implementation does nothing. It is the right thing to do for an evaluator that is not incremental.
 	 * @param board The board. 
 	 */
-	default void init(B board) {
-		// By default, the evaluator is not incremental
-	}
+	void init(B board);
 	
-	default void prepareMove(B board, M move) {
-		// By default, the evaluator is not incremental
-	}
-	default void commitMove() {
-		// By default, the evaluator is not incremental
-	}
-	default void unmakeMove() {
-		// By default, the evaluator is not incremental
-	}
-	default Evaluator<M, B> fork() {
-		return this;
-	}
-	
-	/** Evaluates a board's position.
-	 * @return An integer
+	/** Prepares the evaluation update before a move is done.
+	 * @param board The board in its state before the move.
+	 * @param move the move that will be played.
+	 * @see #commitMove()
 	 */
-	int evaluate(B board);
-
+	void prepareMove(B board, M move);
+	
+	/** Commits the evaluation update previously prepared by {@link #prepareMove(Object, Object)}
+	 */
+	void commitMove();
+	
+	/** Reverts the evaluation to the state it had before the last not unmade move was committed. 
+	 */
+	void unmakeMove();
+	
     /** Gets the score obtained for a win after a number of half moves.
      * <br>The default value is Short.MAX_VALUE - nbHalfMoves
      * @param nbHalfMoves The number of half moves needed to win.
