@@ -28,10 +28,8 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	}
 	
 	@Override
-	protected void setEvaluatorViewPoint() {
-		final SearchContext<M, B> context = getContext();
-		context.getEvaluator().setViewPoint(context.getGamePosition().isWhiteToMove() ? Color.WHITE : Color.BLACK);
-		super.setEvaluatorViewPoint();
+	protected Color getEvaluationViewPoint() {
+		return getContext().getGamePosition().isWhiteToMove() ? Color.WHITE : Color.BLACK;
 	}
 
 	@Override

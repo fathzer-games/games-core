@@ -2,7 +2,6 @@ package com.fathzer.games.ai;
 
 import java.util.function.Supplier;
 
-import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.exec.Forkable;
