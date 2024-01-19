@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -152,7 +153,33 @@ class MinimaxTest {
 		assertEquals(expectedBest, moves.get(0));
 		assertEquals(expectedSecond, moves.get(1));
 	}
+
+	@Test
+	void bug20240127() {
+		ChessLibTest t = new ChessLibTest("3n1rk1/1pp2p1p/2r2bq1/2P1p1p1/3pP3/PQ1P2PP/1B3PB1/R4RK1 b - - 2 26", 1);
+		EvaluatedMove<Move> expected = new EvaluatedMove<>(new Move(G6,E4), Evaluation.score(100));
+		assertContains(expected, t.search(Minimax));
+		assertContains(expected, t.search(AlphaBeta));
+		assertContains(expected, t.search(Negamax));
+		assertContains(expected, t.search(Negamax3));
+		
+		t = new ChessLibTest("3n1rk1/1pp2p1p/2r2bq1/2P1p1p1/3pP3/PQ1P2PP/1B3PB1/R4RK1 w - - 2 26", 1);
+		expected = new EvaluatedMove<>(new Move(B3,F7), Evaluation.score(100));
+		assertContains(expected, t.search(Minimax));
+		assertContains(expected, t.search(AlphaBeta));
+		assertContains(expected, t.search(Negamax));
+		assertContains(expected, t.search(Negamax3));
+	}
 	
+	<M> void assertContains(EvaluatedMove<M> expected, List<EvaluatedMove<M>> moves) {
+		Optional<EvaluatedMove<M>> result = moves.stream().filter(em -> em.getContent().equals(expected.getContent())).findAny();
+		if (result.isEmpty()) {
+			fail("Unable to find "+expected+" in results");
+		} else {
+			assertEquals(expected.getScore(), result.get().getScore());
+		}
+	}
+
 	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
 		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
 			final AbstractAI<M, B> ai = aiBuilder.apply(context);

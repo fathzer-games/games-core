@@ -65,7 +65,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	}
 	
 	@Override
-    protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
+    protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
 		throw new IllegalStateException("Should not be called anymore");
 	}
 	
@@ -76,7 +76,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			final Evaluator<M, B> evaluator = searchStack.context.getEvaluator();
 			if (searchState.depth == 0 || isInterrupted()) {
 				getStatistics().evaluationDone();
-				searchState.value = searchState.who * evaluator.evaluate(searchStack.context.getGamePosition());
+				searchState.value = evaluator.evaluate(searchStack.context.getGamePosition());
 				spy.exit(searchStack, EVAL);
 				return searchState.value;
 			}

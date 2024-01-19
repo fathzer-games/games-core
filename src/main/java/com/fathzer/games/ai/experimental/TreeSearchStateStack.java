@@ -18,10 +18,8 @@ public class TreeSearchStateStack<M, B extends MoveGenerator<M>> {
 		this.context = context;
 		this.maxDepth = maxDepth;
 		states = new ArrayList<>(maxDepth+1);
-		int who = maxDepth%2==0 ? 1 : -1;
 		for (int i = 0 ; i<=maxDepth; i++) {
-			states.add(new TreeSearchState<>(i, 0, 0, who));
-			who = -who;
+			states.add(new TreeSearchState<>(i, 0, 0));
 		}
 		currentDepth = maxDepth; 
 	}

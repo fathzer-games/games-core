@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
@@ -41,15 +40,8 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 
 	@Override
     public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
-		getContext().getEvaluator().setViewPoint(getEvaluationViewPoint());
 		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(),lowestInterestingScore));
     }
-	
-	//TODO Should probably be deleted in the future (evaluator should always evaluate the board from the player to play view point)
-	protected Color getEvaluationViewPoint() { 
-		return null;
-	}
-	//TODO End of todo
 	
 	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
     	if (lowestInterestingScore==Integer.MIN_VALUE) {

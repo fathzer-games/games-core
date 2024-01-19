@@ -5,7 +5,6 @@ import java.util.List;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
-import com.fathzer.games.Color;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
@@ -26,11 +25,6 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
 	}
-	
-	@Override
-	protected Color getEvaluationViewPoint() {
-		return getContext().getGamePosition().isWhiteToMove() ? Color.WHITE : Color.BLACK;
-	}
 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
@@ -45,7 +39,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     }
 
 	protected int getRootScore(final int depth, int lowestInterestingScore) {
-		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore, -1);
+		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore);
 	}
 	
 	/** Called when a cut occurs.
@@ -59,13 +53,13 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 //		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+value+" (alpha is "+alpha+")");
 	}
 	
-    protected int negamax(final int depth, int maxDepth, int alpha, int beta, final int who) {
+    protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
     	final SearchContext<M, B> context = getContext();
 		final B position = context.getGamePosition();
      	final Evaluator<M, B> evaluator = context.getEvaluator();
      	if (depth == 0 || isInterrupted()) {
     		getStatistics().evaluationDone();
-			return who * evaluator.evaluate(position);
+			return evaluator.evaluate(position);
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
     	if (fastAnalysisStatus!=Status.PLAYING) {
@@ -99,7 +93,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     		// Try move from TT
         	noValidMove = false;
             getStatistics().moveFromTTPlayed();
-            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
+            final int score = -negamax(depth-1, maxDepth, -beta, -alpha);
             getContext().unmakeMove();
             if (score > value) {
                 value = score;
@@ -120,7 +114,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	            if (!move.equals(moveFromTT) && getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
 	            	noValidMove = false;
 		            getStatistics().movePlayed();
-		            final int score = -negamax(depth-1, maxDepth, -beta, -alpha, -who);
+		            final int score = -negamax(depth-1, maxDepth, -beta, -alpha);
 		            getContext().unmakeMove();
 		            if (score > value) {
 		                value = score;
