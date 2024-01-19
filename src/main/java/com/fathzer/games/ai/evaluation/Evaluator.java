@@ -9,7 +9,7 @@ import com.fathzer.games.util.exec.Forkable;
  * @param <B> The type of the game position
  * @param <M> The type of a move
  */
-public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>>, ColorSensitiveEvaluator<B> {
+public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
 	/** Initializes the evaluator with a board.
 	 * <br>The default implementation does nothing. It is the right thing to do for an evaluator that is not incremental.
 	 * @param board The board. 
@@ -30,6 +30,11 @@ public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>>, ColorSensiti
 	/** Reverts the evaluation to the state it had before the last not unmade move was committed. 
 	 */
 	void unmakeMove();
+	
+	/** Evaluates a board's position from the point of view of the player who should make the next move.
+	 * @return An integer
+	 */
+	int evaluate(B board);
 	
     /** Gets the score obtained for a win after a number of half moves.
      * <br>The default value is Short.MAX_VALUE - nbHalfMoves

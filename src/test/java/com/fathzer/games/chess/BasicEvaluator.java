@@ -4,15 +4,15 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-import com.fathzer.games.ai.evaluation.AbstractEvaluator;
 import com.fathzer.games.ai.evaluation.StaticEvaluator;
+import com.fathzer.games.ai.evaluation.ZeroSumEvaluator;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
-public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerator> implements StaticEvaluator<Move, ChessLibMoveGenerator>{
+public class BasicEvaluator implements ZeroSumEvaluator<Move, ChessLibMoveGenerator>, StaticEvaluator<Move, ChessLibMoveGenerator>{
 	public static final Map<PieceType, Integer> PIECE_VALUE;
 	
 	static {
@@ -27,7 +27,7 @@ public class BasicEvaluator extends AbstractEvaluator<Move, ChessLibMoveGenerato
 	}
 	
 	@Override
-	protected int evaluateAsWhite(ChessLibMoveGenerator board) {
+	public int evaluateAsWhite(ChessLibMoveGenerator board) {
 		return 100*getPoints(board.getBoard());
 	}
 
