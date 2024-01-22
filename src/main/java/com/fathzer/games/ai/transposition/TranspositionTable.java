@@ -108,6 +108,11 @@ public interface TranspositionTable<M> {
 	 * @return an integer
 	 */
 	int getSize();
+	
+	/** Gets the table table's memory size expressed in MBytes.
+	 * @return an integer
+	 */
+	int getMemorySizeMB();
 
 	/** Gets an iterator on all the table entry.
 	 * <br>This method is optional, the default implementation throws an UnsupportedOperationException

@@ -82,4 +82,10 @@ class OneLongEntryTranspositionTableTest {
 		}
 		return count;
 	}
+	
+	@Test
+	void memorySizeTest() {
+		OneLongEntryTranspositionTable<Integer> table = new TT(32, SizeUnit.MB);
+		assertEquals(32, table.getMemorySizeMB());
+	}
 }

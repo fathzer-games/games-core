@@ -38,19 +38,16 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return result;
     }
 
+	@Override
 	protected int getRootScore(final int depth, int lowestInterestingScore) {
 		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore);
 	}
 	
-	/** Called when a cut occurs.
-	 * @param move The move that triggers the cut
-	 * @param alpha The alpha value when cut occurred
-	 * @param beta The beta value when cut occurred
-	 * @param value The value when cut occurred
-	 * @param depth The depth at which the cut occurred
-	 */
-	protected void cut(M move, int alpha, int beta, int value, int depth) {
-//		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+value+" (alpha is "+alpha+")");
+	private int quiesce() {
+		//TODO
+    	final SearchContext<M, B> context = getContext();
+		getStatistics().evaluationDone();
+		return context.getEvaluator().evaluate(context.getGamePosition());
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
@@ -58,8 +55,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		final B position = context.getGamePosition();
      	final Evaluator<M, B> evaluator = context.getEvaluator();
      	if (depth == 0 || isInterrupted()) {
-    		getStatistics().evaluationDone();
-			return evaluator.evaluate(position);
+			return quiesce();
         }
     	final Status fastAnalysisStatus = position.getContextualStatus();
     	if (fastAnalysisStatus!=Status.PLAYING) {
@@ -102,7 +98,6 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
                 	alpha = score;
                     if (score >= beta) {
                     	moveFromTTBreaks = true;
-                    	cut(moveFromTT, alpha, beta, score, depth);
                     }
                 }
             }   		
@@ -122,7 +117,6 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		                if (score > alpha) {
 		                	alpha = score;
 		                    if (score >= beta) {
-		                    	cut(move, alpha, beta, score, depth);
 		                    	break;
 		                    }
 		                }

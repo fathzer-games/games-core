@@ -94,6 +94,11 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 	
 	@Override
+	public final int getMemorySizeMB() {
+		return (int)(((long)this.size * 8 * SLOTS) / SizeUnit.MB.getSize());
+	}
+
+	@Override
 	public Iterator<TranspositionTableEntry<M>> getEntries() {
 		return new TTIterator();
 	}
