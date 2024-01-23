@@ -43,20 +43,39 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore);
 	}
 	
-	private int quiesce() {
-		//TODO
+	private int quiesce(int alpha, int beta) {
     	final SearchContext<M, B> context = getContext();
 		getStatistics().evaluationDone();
-		return context.getEvaluator().evaluate(context.getGamePosition());
+		int standPat = context.getEvaluator().evaluate(context.getGamePosition());
+		if (standPat>=beta) {
+			return beta;
+		}
+		if (alpha < standPat) {
+			alpha = standPat;
+		}
+		final B position = context.getGamePosition();
+		final List<M> moves = position.getMoves(true);
+    	getStatistics().movesGenerated(moves.size());
+        for (M move : moves) {
+            if (context.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+	            getStatistics().movePlayed();
+	            final int score = -quiesce(-beta, -alpha);
+	            context.unmakeMove();
+	            if (score >= beta) {
+	                return beta;
+	            }
+	            if (score > alpha) {
+	            	alpha = score;
+	            }
+            }
+        }
+		return alpha;
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
     	final SearchContext<M, B> context = getContext();
 		final B position = context.getGamePosition();
      	final Evaluator<M, B> evaluator = context.getEvaluator();
-     	if (depth == 0 || isInterrupted()) {
-			return quiesce();
-        }
     	final Status fastAnalysisStatus = position.getContextualStatus();
     	if (fastAnalysisStatus!=Status.PLAYING) {
     		return getScore(evaluator, fastAnalysisStatus, depth, maxDepth);
@@ -79,6 +98,9 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 			key = 0;
 			state = null;
 		}
+     	if (depth == 0 || isInterrupted()) {
+			return quiesce(alpha, beta);
+        }
 
         int value = Integer.MIN_VALUE;
         M bestMove = null;
