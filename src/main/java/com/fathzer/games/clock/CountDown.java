@@ -31,8 +31,19 @@ public interface CountDown {
 	 */
 	long getRemainingTime();
 	
+	/** Gets the number of moves remaining before next phase (before clockSettings change).
+	 * @return 0 if there's no more phase, a positive number of moves if there is one.
+	 */
+	public int getRemainingMovesBeforeNext();
+	
 	/** Tests whether this count down is paused.
 	 * @return true if this count down is paused
 	 */
 	boolean isPaused();
+	
+	/** Gets the current settings of this countDown.
+	 * <br>Please note the returned settings may change during the game. If the original clock settings had a {@link ClockSettings#getNext()} settings,
+	 * this 'next' settings will be returned as soon as it will be activated.
+	 */
+	ClockSettings getCurrentSettings();
 }

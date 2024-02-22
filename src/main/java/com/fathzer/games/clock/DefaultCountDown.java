@@ -29,6 +29,7 @@ class DefaultCountDown implements CountDown {
 		return System.currentTimeMillis();
 	}
 	
+	@Override
 	public CountDown moveDone() {
 		if (isPaused()) {
 			throw new IllegalStateException("Can't move when count down is paused");
@@ -83,7 +84,17 @@ class DefaultCountDown implements CountDown {
 	}
 	
 	@Override
+	public int getRemainingMovesBeforeNext() {
+		return settings.getNext()==null ? 0 : settings.getMovesNumberBeforeNext()-movesSinceSettingsChange.intValue();
+	}
+
+	@Override
 	public boolean isPaused() {
 		return countingSince.get()<0;
+	}
+
+	@Override
+	public ClockSettings getCurrentSettings() {
+		return this.settings;
 	}
 }

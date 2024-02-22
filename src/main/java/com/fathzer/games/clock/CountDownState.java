@@ -11,6 +11,9 @@ public class CountDownState {
 	
 	public CountDownState(long remainingMs, long incrementMs, int movesToGo) {
 		super();
+		if (movesToGo<0) {
+			throw new IllegalArgumentException();
+		}
 		this.remainingMs = remainingMs;
 		this.incrementMs = incrementMs;
 		this.movesToGo = movesToGo;

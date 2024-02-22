@@ -96,13 +96,19 @@ class DefaultCountDownTest {
 	@Test
 	void testNextPhase() {
 		CountDown cd = new FakeTimedCountDown(new ClockSettings(3).withNext(2, Integer.MAX_VALUE, new ClockSettings(4).withIncrement(1, 1, true)));
+		assertEquals(2, cd.getRemainingMovesBeforeNext());
+		assertEquals(3, cd.getCurrentSettings().getInitialTime());
 		cd.start();
 		CLOCK.add(500);
 		cd = cd.moveDone();
 		assertEquals(2500, cd.getRemainingTime());
+		assertEquals(1, cd.getRemainingMovesBeforeNext());
+		assertEquals(3, cd.getCurrentSettings().getInitialTime());
 		cd.start();
 		CLOCK.add(1500);
 		cd = cd.moveDone();
+		assertEquals(4, cd.getCurrentSettings().getInitialTime());
+		assertEquals(0, cd.getRemainingMovesBeforeNext());
 		assertEquals(5000, cd.getRemainingTime());
 		cd.start();
 		CLOCK.add(500);

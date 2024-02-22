@@ -132,7 +132,7 @@ public class ClockSettings {
 	/** Builds a countdown that supports this setting.
 	 * @return a new ClockState
 	 */
-	public CountDown buildCountDown() {
+	protected CountDown buildCountDown() {
 		return new DefaultCountDown(this);
 	}
 }

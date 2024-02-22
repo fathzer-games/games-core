@@ -163,6 +163,14 @@ public class Clock {
 		return getPlayerCountdown(color).getRemainingTime();
 	}
 	
+	/** Gets the number of moves remaining before next phase (before clockSettings change).
+	 * @param color The player's color
+	 * @return 0 if there's no more phase, a positive number of moves if there is one.
+	 */
+	public synchronized int getRemainingMovesBeforeNext(Color color) {
+		return getPlayerCountdown(color).getRemainingMovesBeforeNext();
+	}
+	
 	/** Gets this clock scheduler.
 	 * <br>It could be used to schedule some clock related tasks (for instance, to update clock GUI in GUI).
 	 * Please note that tasks scheduled must be short to keep clock accuracy safe.
@@ -187,5 +195,9 @@ public class Clock {
 		if (old!=next || old==COUNTING) {
 			this.clockListeners.forEach(l -> l.accept(new ClockEvent(this, old, next)));
 		}
+	}
+	
+	public ClockSettings getCurrentSettings(Color player) {
+		return getPlayerCountdown(player).getCurrentSettings();
 	}
 }
