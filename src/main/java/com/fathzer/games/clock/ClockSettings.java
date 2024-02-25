@@ -18,10 +18,8 @@ public class ClockSettings {
 	 * <br>No increment is defined nor next settings.
 	 */
 	public ClockSettings(int initialTime) {
-		if (initialTime<0) {
-			throw new IllegalArgumentException("Initial time must be strictly positive");
-		}
-		this.initialTime = initialTime;
+		super();
+		withInitialTime(initialTime);
 	}
 
 	/** Sets the initial time allowed to players.
@@ -31,7 +29,7 @@ public class ClockSettings {
 	 */
 	public ClockSettings withInitialTime(int initialTime) {
 		if (initialTime<0) {
-			throw new IllegalArgumentException("Initial time must be strictly positive");
+			throw new IllegalArgumentException("Initial time must be >= 0");
 		}
 		this.initialTime = initialTime;
 		return this;

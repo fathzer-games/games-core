@@ -46,7 +46,7 @@ class MinimaxTest {
 			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==aiType?x->null:BasicMoveComparator::new);
 			mg.setNoQuiesce(noQuiece);
 			final Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
-			final SearchContext<Move, ChessLibMoveGenerator> ctx = new SearchContext<>(mg, ev);
+			final SearchContext<Move, ChessLibMoveGenerator> ctx = SearchContext.get(mg, () -> ev);
 			Function<ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder = aiType.getAiBuilder();
 			if (aiType==Negamax || aiType==Negamax3) {
 				aiBuilder = aiBuilder.andThen(ai -> {

@@ -13,17 +13,15 @@ import com.fathzer.games.util.exec.ExecutionContext;
 public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M> {
 	private final ExecutionContext<SearchContext<M,B>> context;
 	private boolean interrupted;
-	private SearchStatistics statistics;
 	
 	protected AbstractAI(ExecutionContext<SearchContext<M,B>> context) {
 		this.context = context;
 		this.interrupted = false;
-		this.statistics = new SearchStatistics();
 	}
 	
 	@Override
     public SearchStatistics getStatistics() {
-		return statistics;
+		return context.getContext().getStatistics();
 	}
 
 	protected SearchContext<M, B> getContext() {
@@ -32,7 +30,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
-		statistics.clear();
+		getContext().getStatistics().clear();
 		List<M> moves = getContext().getGamePosition().getMoves(false);
 		getStatistics().movesGenerated(moves.size());
 		return this.getBestMoves(moves, params);

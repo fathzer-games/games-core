@@ -12,12 +12,14 @@ import com.fathzer.games.util.exec.Forkable;
  * @param <B> The type of the evaluator
  */
 public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<SearchContext<M, B>> {
-	private B gamePosition;
-	private Evaluator<M, B> evaluator;
+	private final B gamePosition;
+	private final Evaluator<M, B> evaluator;
+	private SearchStatistics statistics;
 	
-	public SearchContext(B gamePosition, Evaluator<M, B> evaluator) {
+	private SearchContext(B gamePosition, Evaluator<M, B> evaluator, SearchStatistics statistics) {
 		this.gamePosition = gamePosition;
 		this.evaluator = evaluator;
+		this.statistics = statistics;
 	}
 
 	public B getGamePosition() {
@@ -28,6 +30,10 @@ public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<Se
 		return evaluator;
 	}
 	
+	public SearchStatistics getStatistics() {
+		return statistics;
+	}
+
 	public boolean makeMove(M move, MoveGenerator.MoveConfidence confidence) {
 		evaluator.prepareMove(gamePosition, move);
 		if (gamePosition.makeMove(move, confidence)) {
@@ -47,7 +53,7 @@ public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<Se
 	public SearchContext<M, B> fork() {
 		final B mg = (B)gamePosition.fork();
 		final Evaluator<M, B> ev = evaluator.fork();
-		return new SearchContext<>(mg, ev);
+		return new SearchContext<>(mg, ev, statistics);
 	}
 	
 	public static <M, B extends MoveGenerator<M>> SearchContext<M, B> get(B board, Supplier<Evaluator<M, B>> evaluatorBuilder) {
@@ -55,6 +61,6 @@ public class SearchContext<M, B extends MoveGenerator<M>> implements Forkable<Se
 		final B b = (B) board.fork();
 		final Evaluator<M, B> evaluator = evaluatorBuilder.get();
 		evaluator.init(board);
-		return new SearchContext<>(b, evaluator);
+		return new SearchContext<>(b, evaluator, new SearchStatistics());
 	}
 }

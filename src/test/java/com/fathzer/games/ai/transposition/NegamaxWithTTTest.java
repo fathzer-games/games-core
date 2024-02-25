@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.Color;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchParameters;
@@ -30,7 +29,7 @@ class NegamaxWithTTTest {
 		board.loadFromFen("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, BasicMoveComparator::new);
 		final Evaluator<Move, ChessLibMoveGenerator> basicEvaluator = new BasicEvaluator();
-		final SearchContext<Move, ChessLibMoveGenerator> sc = new SearchContext<>(mg, basicEvaluator);
+		final SearchContext<Move, ChessLibMoveGenerator> sc = SearchContext.get(mg, () -> basicEvaluator);
 		try (ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>> exec = new SingleThreadContext<>(sc)) {
 			Negamax<Move, ChessLibMoveGenerator> ai = new Negamax<>(exec);
 			final TT tt = new TT(16, SizeUnit.MB);

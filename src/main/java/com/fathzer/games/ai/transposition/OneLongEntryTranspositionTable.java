@@ -80,6 +80,10 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	protected abstract int toInt(M move);
 	protected abstract M toMove(int value);
 	
+	/**
+	 * {@inheritDoc}
+	 * In this implementation, the whole table is cleared.
+	 */
 	@Override
 	public void newPosition() {
 		// Clears the table
