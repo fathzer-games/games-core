@@ -21,11 +21,11 @@ import com.fathzer.games.util.exec.ExecutionContext;
  */
 public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
     private TranspositionTable<M> transpositionTable;
-    private QuiescePolicy quiescePolicy;
+    private QuiescePolicy<M,B> quiescePolicy;
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
-		quiescePolicy = (alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
+		quiescePolicy = (ctx, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	 * @see #setQuiescePolicy(QuiescePolicy)
 	 */
 	protected int quiesce(int alpha, int beta) {
-		return quiescePolicy.quiesce(alpha, beta);
+		return quiescePolicy.quiesce(getContext(), alpha, beta);
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
@@ -159,7 +159,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	this.transpositionTable = table;
     }
 
-	public QuiescePolicy getQuiescePolicy() {
+	public QuiescePolicy<M,B> getQuiescePolicy() {
 		return quiescePolicy;
 	}
 
@@ -169,7 +169,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
 	 * @return the position's evaluation
 	*/
-	public void setQuiescePolicy(QuiescePolicy quiescePolicy) {
+	public void setQuiescePolicy(QuiescePolicy<M,B> quiescePolicy) {
 		this.quiescePolicy = quiescePolicy;
 	}
 }

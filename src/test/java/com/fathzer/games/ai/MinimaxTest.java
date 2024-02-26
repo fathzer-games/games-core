@@ -32,16 +32,15 @@ class MinimaxTest {
 	static class SimpleQuiesce extends AbstractBasicQuiesceSearch<Move, ChessLibMoveGenerator> {
 		private boolean noQuiesce;
 		
-		private SimpleQuiesce(SearchContext<Move, ChessLibMoveGenerator> context) {
-			super(context);
+		private SimpleQuiesce() {
+			super();
 		}
 
 		@Override
-		protected List<Move> getMoves(int quiesceDepth) {
-			return noQuiesce ? Collections.emptyList() : getContext().getGamePosition().getQuiesceMoves();
+		protected List<Move> getMoves(SearchContext<Move, ChessLibMoveGenerator> context, int quiesceDepth) {
+			return noQuiesce ? Collections.emptyList() : context.getGamePosition().getQuiesceMoves();
 		}
 	}
-	
 	
 	static class ChessLibTest {
 		private final Board board;
@@ -66,7 +65,7 @@ class MinimaxTest {
 				aiBuilder = aiBuilder.andThen(ai -> {
 					((Negamax<Move, ChessLibMoveGenerator>)ai).setTranspositonTable(new TT(16, SizeUnit.MB));
 					if (!noQuiece) {
-						((Negamax<Move, ChessLibMoveGenerator>)ai).setQuiescePolicy(new SimpleQuiesce(ai.getContext()));
+						((Negamax<Move, ChessLibMoveGenerator>)ai).setQuiescePolicy(new SimpleQuiesce());
 					}
 					return ai;
 				});
@@ -83,6 +82,9 @@ class MinimaxTest {
 	void testQuiesce() {
 		ChessLibTest t = new ChessLibTest("3n1rk1/1pp2p1p/2r2bq1/2P1p1p1/3pP3/PQ1P2PP/1R3PB1/2B2RK1 w - - 2 26", 1);
 		List<EvaluatedMove<Move>> search = t.search(Negamax, false);
+		assertEquals(-800, getScore(search, new Move(B3, F7)));
+		assertEquals(-600, getScore(search, new Move(B3, B7)));
+		search = t.search(Negamax3, false);
 		assertEquals(-800, getScore(search, new Move(B3, F7)));
 		assertEquals(-600, getScore(search, new Move(B3, B7)));
 	}

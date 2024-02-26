@@ -74,18 +74,12 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			spy.enter(searchStack);
 			final TreeSearchState<M> searchState = searchStack.getCurrent();
 			final Evaluator<M, B> evaluator = searchStack.context.getEvaluator();
-			if (searchState.depth == 0 || isInterrupted()) {
-				getStatistics().evaluationDone();
-				searchState.value = evaluator.evaluate(searchStack.context.getGamePosition());
-				spy.exit(searchStack, EVAL);
-				return searchState.value;
-			}
 	    	final Status fastAnalysisStatus = searchStack.context.getGamePosition().getContextualStatus();
 	    	if (fastAnalysisStatus!=Status.PLAYING) {
 				spy.exit(searchStack, END_GAME);
 	    		return getScore(evaluator, fastAnalysisStatus, searchState.depth, searchStack.maxDepth);
 	    	}
-			
+	    	
 			final boolean keyProvider = (searchStack.context instanceof HashProvider) && getTranspositionTable()!=null;
 			final long key;
 			final AlphaBetaState<M> state;
@@ -105,6 +99,13 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			} else {
 				key = 0;
 				state = null;
+			}
+			
+			if (searchState.depth == 0 || isInterrupted()) {
+				getStatistics().evaluationDone();
+				searchState.value = quiesce(searchState.alpha, searchState.beta);
+				spy.exit(searchStack, EVAL);
+				return searchState.value;
 			}
 	
 	        boolean noValidMove = true;

@@ -7,18 +7,17 @@ import com.fathzer.games.MoveGenerator.MoveConfidence;
 
 /** A basic quiesce search.
  */
-public abstract class AbstractBasicQuiesceSearch<M, B extends MoveGenerator<M>> implements QuiescePolicy {
-	private final SearchContext<M, B> context;
-
-	protected AbstractBasicQuiesceSearch(SearchContext<M, B> context) {
-		this.context = context;
+public abstract class AbstractBasicQuiesceSearch<M, B extends MoveGenerator<M>> implements QuiescePolicy<M,B> {
+	protected AbstractBasicQuiesceSearch() {
+		super();
 	}
 
-	public int quiesce(int alpha, int beta) {
-		return quiesce(alpha, beta, 0);
+	@Override
+	public int quiesce(SearchContext<M, B> context, int alpha, int beta) {
+		return quiesce(context, alpha, beta, 0);
 	}
 
-	protected int quiesce(int alpha, int beta, int quiesceDepth) {
+	protected int quiesce(SearchContext<M, B> context, int alpha, int beta, int quiesceDepth) {
 		final SearchStatistics statistics = context.getStatistics();
 		final int standPat = context.getEvaluator().evaluate(context.getGamePosition());
 		statistics.evaluationDone();
@@ -28,12 +27,12 @@ public abstract class AbstractBasicQuiesceSearch<M, B extends MoveGenerator<M>> 
 		if (alpha < standPat) {
 			alpha = standPat;
 		}
-		final List<M> moves = getMoves(quiesceDepth);
+		final List<M> moves = getMoves(context, quiesceDepth);
     	statistics.movesGenerated(moves.size());
         for (M move : moves) {
-            if (makeMove(move)) {
+            if (makeMove(context, move)) {
                 statistics.movePlayed();
-	            final int score = -quiesce(-beta, -alpha, quiesceDepth+1);
+	            final int score = -quiesce(context, -beta, -alpha, quiesceDepth+1);
 	            context.unmakeMove();
 	            if (score >= beta) {
 	                return beta;
@@ -46,13 +45,9 @@ public abstract class AbstractBasicQuiesceSearch<M, B extends MoveGenerator<M>> 
 		return alpha;
 	}
 	
-	protected abstract List<M> getMoves(int quiesceDepth);
+	protected abstract List<M> getMoves(SearchContext<M, B> context, int quiesceDepth);
 	
-	protected boolean makeMove(M move) {
+	protected boolean makeMove(SearchContext<M, B> context, M move) {
 		return context.makeMove(move, MoveConfidence.PSEUDO_LEGAL);
-	}
-	
-	protected SearchContext<M,B> getContext() {
-		return context;
 	}
 }
