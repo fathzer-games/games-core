@@ -165,9 +165,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 
 	/** Sets the quiesce policy used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
 	 * <br>The default implementation simply returns the current position evaluation without performing any quiescence search.
-	 * @param alpha Alpha value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
-	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
-	 * @return the position's evaluation
+	 * @param quiescePolicy The new quiesce policy.
 	*/
 	public void setQuiescePolicy(QuiescePolicy<M,B> quiescePolicy) {
 		this.quiescePolicy = quiescePolicy;

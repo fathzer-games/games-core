@@ -17,7 +17,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 	enum MoveConfidence {
 		/** The move is guaranteed to be legal (returned by getLegalMoves or checked by an external validator).*/
 		LEGAL,
-		/** The move is pseudo legal (returned by {@link MoveGenerator#getMoves(boolean)}).*/
+		/** The move is pseudo legal (returned by {@link #getMoves()}).*/
 		PSEUDO_LEGAL,
 		/** The move has not been checked.
 		 * <br>typically, such a move is retrieved from a <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
@@ -59,9 +59,9 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 	
 	/**
 	 * Lists every legal moves of the current player.
-	 * <br>The default implementation uses {@link #getMoves(boolean)}, {@link #makeMove(Object, MoveConfidence)} and {@link #unmakeMove()}
+	 * <br>The default implementation uses {@link #getMoves()}, {@link #makeMove(Object, MoveConfidence)} and {@link #unmakeMove()}
 	 * check if moves are valid. The implementor is free to override this method to implement an optimized computation.
-	 * @return A move list. Please note that, unlike in {@link #getMoves(boolean)} the order of the moves doesn't matter.
+	 * @return A move list. Please note that, unlike in {@link #getMoves()} the order of the moves doesn't matter.
 	 */
 	default List<M> getLegalMoves() {
 		return getMoves().stream().filter(m -> {
@@ -85,7 +85,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 		return Status.PLAYING;
 	}
 	
-	/** This method is called when no valid move were returned by {@link #getMoves(boolean)}, which means the game is ended.
+	/** This method is called when no valid move were returned by {@link #getMoves()}, which means the game is ended.
 	 * @return The game status that should not be Status.PLAYING because game is ended.
 	 */
 	Status getEndGameStatus();
