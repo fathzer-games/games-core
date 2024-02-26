@@ -21,9 +21,11 @@ import com.fathzer.games.util.exec.ExecutionContext;
  */
 public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
     private TranspositionTable<M> transpositionTable;
+    private QuiescePolicy quiescePolicy;
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
+		quiescePolicy = (alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
 	}
 
 	@Override
@@ -43,33 +45,15 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return -negamax(depth-1, depth, -Integer.MAX_VALUE, -lowestInterestingScore);
 	}
 	
-	private int quiesce(int alpha, int beta) {
-    	final SearchContext<M, B> context = getContext();
-		getStatistics().evaluationDone();
-		int standPat = context.getEvaluator().evaluate(context.getGamePosition());
-		if (standPat>=beta) {
-			return beta;
-		}
-		if (alpha < standPat) {
-			alpha = standPat;
-		}
-		final B position = context.getGamePosition();
-		final List<M> moves = position.getMoves(true);
-    	getStatistics().movesGenerated(moves.size());
-        for (M move : moves) {
-            if (context.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
-	            getStatistics().movePlayed();
-	            final int score = -quiesce(-beta, -alpha);
-	            context.unmakeMove();
-	            if (score >= beta) {
-	                return beta;
-	            }
-	            if (score > alpha) {
-	            	alpha = score;
-	            }
-            }
-        }
-		return alpha;
+	/** Gets the evaluation of the position after <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>.
+	 * <br>The default implementation returns the quiesce policy result.
+	 * @param alpha Alpha value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
+	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
+	 * @return the node evaluation
+	 * @see #setQuiescePolicy(QuiescePolicy)
+	 */
+	protected int quiesce(int alpha, int beta) {
+		return quiescePolicy.quiesce(alpha, beta);
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
@@ -125,7 +109,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
             }   		
     	}
     	if (!moveFromTTBreaks) {
-    		final List<M> moves = position.getMoves(false);
+    		final List<M> moves = position.getMoves();
         	getStatistics().movesGenerated(moves.size());
 	        for (M move : moves) {
 	            if (!move.equals(moveFromTT) && getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
@@ -165,14 +149,27 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
         return value;
     }
     
-    /** Gets the transposition table used by this instance.
-     * @return a transposition table.
-     */
+    @Override
     public final TranspositionTable<M> getTranspositionTable() {
     	return transpositionTable;
     }
     
+    @Override
     public void setTranspositonTable(TranspositionTable<M> table) {
     	this.transpositionTable = table;
     }
+
+	public QuiescePolicy getQuiescePolicy() {
+		return quiescePolicy;
+	}
+
+	/** Sets the quiesce policy used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
+	 * <br>The default implementation simply returns the current position evaluation without performing any quiescence search.
+	 * @param alpha Alpha value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
+	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
+	 * @return the position's evaluation
+	*/
+	public void setQuiescePolicy(QuiescePolicy quiescePolicy) {
+		this.quiescePolicy = quiescePolicy;
+	}
 }

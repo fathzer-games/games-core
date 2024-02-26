@@ -121,7 +121,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	    	}
 	    	if (!moveFromTTBreaks) {
 	    		// Try other moves
-				final List<M> moves = searchStack.context.getGamePosition().getMoves(false);
+				final List<M> moves = searchStack.context.getGamePosition().getMoves();
 	        	spy.movesComputed(searchStack, moves);
 				getStatistics().movesGenerated(moves.size());
 				for (M move : moves) {

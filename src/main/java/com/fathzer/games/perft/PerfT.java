@@ -83,7 +83,7 @@ public class PerfT<M> {
 	}
 	
 	private List<M> getMoves(MoveGenerator<M> moveGenerator) {
-		return LEGAL==moveType ? moveGenerator.getLegalMoves() : moveGenerator.getMoves(false);
+		return LEGAL==moveType ? moveGenerator.getLegalMoves() : moveGenerator.getMoves();
 	}
 
 	private Divide<M> getPrfT(M move, int depth, PerfTResult<M> result) {

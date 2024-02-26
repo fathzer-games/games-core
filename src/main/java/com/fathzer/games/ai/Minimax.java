@@ -39,7 +39,7 @@ public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
         	return getScore(evaluator, position.getEndGameStatus(), depth, maxDepth)*who;
     	}
 		
-		List<M> moves = position.getMoves(false);
+		List<M> moves = position.getMoves();
 		getStatistics().movesGenerated(moves.size());
     	int bestScore;
     	boolean hasValidMoves = false;

@@ -45,8 +45,6 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 	
     /**
      * Lists every possible moves of the current player.
-     * @param quiesce true if we want only moves that changes a lot the game state. These are the moves used in <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiesce search</a>.
-     * If you don't want to implement quiesce for a game, return an empty list when the argument is true.
      * @return a list of moves.
      * <br>Please note this list can:<ul>
      * <li>Be not empty in some end game situations (for example when a chess game ends because of insufficient material).</li>
@@ -57,7 +55,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
      * Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted with the (a priori) best moves first. So implementors should be wise to return sorted lists.
      * @see <a href="https://www.chessprogramming.org/Move_Ordering">Move Ordering on Chess Programming Wiki</a>
      */
-	List<M> getMoves(boolean quiesce);
+	List<M> getMoves();
 	
 	/**
 	 * Lists every legal moves of the current player.
@@ -66,7 +64,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 	 * @return A move list. Please note that, unlike in {@link #getMoves(boolean)} the order of the moves doesn't matter.
 	 */
 	default List<M> getLegalMoves() {
-		return getMoves(false).stream().filter(m -> {
+		return getMoves().stream().filter(m -> {
 			final boolean ok = makeMove(m, MoveConfidence.PSEUDO_LEGAL);
 			if (ok) {
 				unmakeMove();

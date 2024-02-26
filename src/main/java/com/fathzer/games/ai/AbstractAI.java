@@ -24,14 +24,14 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 		return context.getContext().getStatistics();
 	}
 
-	protected SearchContext<M, B> getContext() {
+	public SearchContext<M, B> getContext() {
 		return context.getContext();
 	}
 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		getContext().getStatistics().clear();
-		List<M> moves = getContext().getGamePosition().getMoves(false);
+		List<M> moves = getContext().getGamePosition().getMoves();
 		getStatistics().movesGenerated(moves.size());
 		return this.getBestMoves(moves, params);
     }

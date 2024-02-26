@@ -5,6 +5,7 @@ import static com.github.bhlangonijr.chesslib.Square.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,6 +29,20 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
+	static class SimpleQuiesce extends AbstractBasicQuiesceSearch<Move, ChessLibMoveGenerator> {
+		private boolean noQuiesce;
+		
+		private SimpleQuiesce(SearchContext<Move, ChessLibMoveGenerator> context) {
+			super(context);
+		}
+
+		@Override
+		protected List<Move> getMoves(int quiesceDepth) {
+			return noQuiesce ? Collections.emptyList() : getContext().getGamePosition().getQuiesceMoves();
+		}
+	}
+	
+	
 	static class ChessLibTest {
 		private final Board board;
 		private final int depth;
@@ -44,13 +59,15 @@ class MinimaxTest {
 
 		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params, boolean noQuiece) {
 			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==aiType?x->null:BasicMoveComparator::new);
-			mg.setNoQuiesce(noQuiece);
 			final Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
 			final SearchContext<Move, ChessLibMoveGenerator> ctx = SearchContext.get(mg, () -> ev);
 			Function<ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder = aiType.getAiBuilder();
 			if (aiType==Negamax || aiType==Negamax3) {
 				aiBuilder = aiBuilder.andThen(ai -> {
 					((Negamax<Move, ChessLibMoveGenerator>)ai).setTranspositonTable(new TT(16, SizeUnit.MB));
+					if (!noQuiece) {
+						((Negamax<Move, ChessLibMoveGenerator>)ai).setQuiescePolicy(new SimpleQuiesce(ai.getContext()));
+					}
 					return ai;
 				});
 			}
