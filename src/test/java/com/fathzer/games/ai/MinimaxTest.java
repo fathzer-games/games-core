@@ -13,10 +13,12 @@ import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.QuiesceEvaluator;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TT;
 import com.fathzer.games.chess.BasicEvaluator;
@@ -29,15 +31,43 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
-	static class SimpleQuiesce extends AbstractBasicQuiesceSearch<Move, ChessLibMoveGenerator> {
+	static class SimpleQuiesce implements QuiesceEvaluator<Move, ChessLibMoveGenerator> {
 		private boolean noQuiesce;
 		
 		private SimpleQuiesce() {
 			super();
 		}
-
+		
 		@Override
-		protected List<Move> getMoves(SearchContext<Move, ChessLibMoveGenerator> context, int quiesceDepth) {
+		public int evaluate(SearchContext<Move, ChessLibMoveGenerator> context, int alpha, int beta) {
+			final SearchStatistics statistics = context.getStatistics();
+			final int standPat = context.getEvaluator().evaluate(context.getGamePosition());
+			statistics.evaluationDone();
+			if (standPat>=beta) {
+				return beta;
+			}
+			if (alpha < standPat) {
+				alpha = standPat;
+			}
+			final List<Move> moves = getMoves(context);
+	    	statistics.movesGenerated(moves.size());
+	        for (Move move : moves) {
+	            if (context.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
+	                statistics.movePlayed();
+		            final int score = -evaluate(context, -beta, -alpha);
+		            context.unmakeMove();
+		            if (score >= beta) {
+		                return beta;
+		            }
+		            if (score > alpha) {
+		            	alpha = score;
+		            }
+	            }
+	        }
+			return alpha;
+		}
+
+		private List<Move> getMoves(SearchContext<Move, ChessLibMoveGenerator> context) {
 			return noQuiesce ? Collections.emptyList() : context.getGamePosition().getQuiesceMoves();
 		}
 	}
@@ -65,7 +95,7 @@ class MinimaxTest {
 				aiBuilder = aiBuilder.andThen(ai -> {
 					((Negamax<Move, ChessLibMoveGenerator>)ai).setTranspositonTable(new TT(16, SizeUnit.MB));
 					if (!noQuiece) {
-						((Negamax<Move, ChessLibMoveGenerator>)ai).setQuiescePolicy(new SimpleQuiesce());
+						((Negamax<Move, ChessLibMoveGenerator>)ai).setQuiesceEvaluator(new SimpleQuiesce());
 					}
 					return ai;
 				});

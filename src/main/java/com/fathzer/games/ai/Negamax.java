@@ -8,6 +8,7 @@ import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.QuiesceEvaluator;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -21,11 +22,11 @@ import com.fathzer.games.util.exec.ExecutionContext;
  */
 public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
     private TranspositionTable<M> transpositionTable;
-    private QuiescePolicy<M,B> quiescePolicy;
+    private QuiesceEvaluator<M,B> quiesceEvaluator;
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
-		quiescePolicy = (ctx, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
+		quiesceEvaluator = (ctx, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
 	}
 
 	@Override
@@ -50,10 +51,10 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	 * @param alpha Alpha value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
 	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
 	 * @return the node evaluation
-	 * @see #setQuiescePolicy(QuiescePolicy)
+	 * @see #setQuiesceEvaluator(QuiesceEvaluator)
 	 */
 	protected int quiesce(int alpha, int beta) {
-		return quiescePolicy.quiesce(getContext(), alpha, beta);
+		return quiesceEvaluator.evaluate(getContext(), alpha, beta);
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
@@ -159,15 +160,15 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	this.transpositionTable = table;
     }
 
-	public QuiescePolicy<M,B> getQuiescePolicy() {
-		return quiescePolicy;
+	public QuiesceEvaluator<M,B> getQuiescePolicy() {
+		return quiesceEvaluator;
 	}
 
-	/** Sets the quiesce policy used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
+	/** Sets the quiesce evaluator used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
 	 * <br>The default implementation simply returns the current position evaluation without performing any quiescence search.
-	 * @param quiescePolicy The new quiesce policy.
+	 * @param quiesceEvaluator The new quiesce evaluator.
 	*/
-	public void setQuiescePolicy(QuiescePolicy<M,B> quiescePolicy) {
-		this.quiescePolicy = quiescePolicy;
+	public void setQuiesceEvaluator(QuiesceEvaluator<M,B> quiesceEvaluator) {
+		this.quiesceEvaluator = quiesceEvaluator;
 	}
 }
