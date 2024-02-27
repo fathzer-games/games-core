@@ -160,7 +160,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	this.transpositionTable = table;
     }
 
-	public QuiesceEvaluator<M,B> getQuiescePolicy() {
+	public QuiesceEvaluator<M,B> getQuiesceEvaluator() {
 		return quiesceEvaluator;
 	}
 
