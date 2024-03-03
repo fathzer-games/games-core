@@ -249,7 +249,7 @@ public final class PhysicalCores {
     }
 
     private static boolean isMacOsX(String osName) {
-        return osName.startsWith("Max OS X");
+        return osName.startsWith("Mac OS X");
     }
 
     private static boolean isFreeBsd(String osName) {
