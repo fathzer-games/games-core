@@ -35,7 +35,6 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	private MoveLibrary<M, MoveGenerator<M>> other;
 	
 	/** A function that randomly selects an element of a list with a probability proportional to its relative weight.
-	 * @param <T> The list element type
 	 * @return A function.
 	 * @see #getWeight(Object)
 	 */

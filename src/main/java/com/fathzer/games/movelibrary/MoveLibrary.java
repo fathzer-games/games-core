@@ -6,7 +6,7 @@ import java.util.function.Function;
 import com.fathzer.games.MoveGenerator;
 
 /** A class that can choose a move from a database, without any tree search.
- * <br>The typical usage is for <a href="https://en.wikipedia.org/wiki/Chess_opening_book_(computers)">Opening books<> or <a href="https://en.wikipedia.org/wiki/Endgame_tablebase">End game tablebases</a>
+ * <br>The typical usage is for <a href="https://en.wikipedia.org/wiki/Chess_opening_book_(computers)">Opening books</a> or <a href="https://en.wikipedia.org/wiki/Endgame_tablebase">End game tablebases</a>
  * @param <M> The type of moves
  * @param <B> The type of game board
  */
@@ -14,7 +14,7 @@ public interface MoveLibrary<M, B extends MoveGenerator<M>> extends Function<B, 
 	
 	/**
 	 * Gets the move to play for a position.
-	 * @param a position
+	 * @param board a position
 	 * @return an empty Optional if it can't find a move for the position, or the proposed move if one was found.
 	 */
 	@Override
