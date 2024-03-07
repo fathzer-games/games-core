@@ -9,7 +9,7 @@
 		<version>1.0.8</version>
 	</parent>
 	<artifactId>games-core</artifactId>
-	<version>0.0.8-SNAPSHOT</version>
+	<version>0.0.9-SNAPSHOT</version>
 
 	<name>games-core</name>
 	<description>A core library to help implement two players games.</description>
@@ -23,8 +23,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<sonar.organization>fathzer-games</sonar.organization>
-		<check-dependencies-java-version>11</check-dependencies-java-version>
-	    <maven.compiler.release>11</maven.compiler.release>
+		<check-dependencies-java-version>17</check-dependencies-java-version>
+	    <maven.compiler.release>17</maven.compiler.release>
 	</properties>
 
 	<repositories>

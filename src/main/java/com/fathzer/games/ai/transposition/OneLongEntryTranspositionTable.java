@@ -85,11 +85,20 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 * In this implementation, the whole table is cleared.
 	 */
 	@Override
-	public void newPosition() {
+	public void newGame() {
 		// Clears the table
 		for (int i=0; i<table.length();i++) {
 			table.set(i, 0);
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * In this implementation, the whole table is cleared.
+	 */
+	@Override
+	public void newPosition() {
+		newGame();
 	}
 	
 	@Override

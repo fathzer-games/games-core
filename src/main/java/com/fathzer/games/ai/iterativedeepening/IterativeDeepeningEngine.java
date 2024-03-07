@@ -15,6 +15,7 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 import com.fathzer.games.ai.moveselector.RandomMoveSelector;
 import com.fathzer.games.ai.transposition.TranspositionTable;
+import com.fathzer.games.movelibrary.MoveLibrary;
 import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.util.exec.MultiThreadsContext;
@@ -72,7 +73,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	 */
 	public static final class Mute<M, B extends MoveGenerator<M>> implements EngineEventLogger<M, B> {}
 	
-	private Function<B, M> movesLibrary;
+	private MoveLibrary<M, B> movesLibrary;
 	private Supplier<Evaluator<M, B>> evaluatorSupplier;
 	private DeepeningPolicy deepeningPolicy;
 	private TranspositionTable<M> transpositionTable;
@@ -123,7 +124,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	 * @param library The opening library or null, the default value, to play without such library.
 	 * <br>An openings library is a function that should return null if the library does not known what to play here.
 	 */
-	public void setOpenings(Function<B, M> library) {
+	public void setOpenings(MoveLibrary<M, B> library) {
 		this.movesLibrary = library;
 	}
 
@@ -166,10 +167,22 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	public void setDeepeningPolicy(DeepeningPolicy policy) {
 		this.deepeningPolicy = policy;
 	}
+	
+	/** Should be called when a new game is started.
+	 * <br>The default implementation call the {@link MoveLibrary#newGame} and {@link TranspositionTable#newGame} methods 
+	 */
+	public void newGame() {
+		if (movesLibrary!=null) {
+			movesLibrary.newGame();
+		}
+		if (transpositionTable!=null) {
+			transpositionTable.newGame();
+		}
+	}
 
 	@Override
 	public M apply(B board) {
-		M move = movesLibrary==null ? null : movesLibrary.apply(board);
+		M move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move==null) {
 			final IterativeDeepeningSearch<M> search = search(board);
 			final EvaluatedMove<M> evaluatedMove = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves()).get(0);

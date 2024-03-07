@@ -38,6 +38,8 @@ public interface TranspositionTable<M> {
 	 */
 	void newPosition(); //TODO Change comment when generation will be used in TableEntry
 	
+	void newGame(); //TODO Should call transpositionTablePolicy
+	
 	/** Gets the transposition table's policy.
 	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
 	 * @return
