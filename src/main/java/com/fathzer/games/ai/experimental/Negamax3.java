@@ -103,7 +103,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 			
 			if (searchState.depth == 0 || isInterrupted()) {
 				getStatistics().evaluationDone();
-				searchState.value = quiesce(searchState.alpha, searchState.beta);
+				searchState.value = quiesce(searchStack.maxDepth, searchState.alpha, searchState.beta);
 				spy.exit(searchStack, EVAL);
 				return searchState.value;
 			}

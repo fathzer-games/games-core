@@ -20,7 +20,7 @@ public class DeepeningPolicy extends SearchParameters {
 		super(maxDepth);
 		this.maxTime = Long.MAX_VALUE;
 		this.start = -1;
-		this.deepenOnForced = true;
+		this.deepenOnForced = false;
 	}
 	
 	public void start() {

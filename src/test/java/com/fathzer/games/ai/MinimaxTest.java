@@ -39,7 +39,7 @@ class MinimaxTest {
 		}
 		
 		@Override
-		public int evaluate(SearchContext<Move, ChessLibMoveGenerator> context, int alpha, int beta) {
+		public int evaluate(SearchContext<Move, ChessLibMoveGenerator> context, int depth, int alpha, int beta) {
 			final SearchStatistics statistics = context.getStatistics();
 			final int standPat = context.getEvaluator().evaluate(context.getGamePosition());
 			statistics.evaluationDone();
@@ -54,7 +54,7 @@ class MinimaxTest {
 	        for (Move move : moves) {
 	            if (context.makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
 	                statistics.movePlayed();
-		            final int score = -evaluate(context, -beta, -alpha);
+		            final int score = -evaluate(context, depth, -beta, -alpha);
 		            context.unmakeMove();
 		            if (score >= beta) {
 		                return beta;

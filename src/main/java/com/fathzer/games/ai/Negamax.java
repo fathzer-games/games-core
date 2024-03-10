@@ -26,17 +26,17 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
-		quiesceEvaluator = (ctx, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
+		quiesceEvaluator = (ctx, depth, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
 	}
 
 	@Override
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
 		final B gamePosition = getContext().getGamePosition();
-		if ((gamePosition instanceof HashProvider) && transpositionTable!=null && !isInterrupted()) {
+		if ((gamePosition instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			transpositionTable.store(((HashProvider)gamePosition).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
 		}
 		return result;
     }
@@ -48,13 +48,14 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	
 	/** Gets the evaluation of the position after <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>.
 	 * <br>The default implementation returns the quiesce policy result.
+	 * @param depth The depth (number of half moves) at which the method is called (it is useful to return correct mate scores)
 	 * @param alpha Alpha value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
 	 * @param beta Beta value after <i>normal</i> search performed by {@link #negamax(int, int, int, int)} method.
 	 * @return the node evaluation
 	 * @see #setQuiesceEvaluator(QuiesceEvaluator)
 	 */
-	protected int quiesce(int alpha, int beta) {
-		return quiesceEvaluator.evaluate(getContext(), alpha, beta);
+	protected int quiesce(int depth, int alpha, int beta) {
+		return quiesceEvaluator.evaluate(getContext(), depth, alpha, beta);
 	}
 	
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
@@ -84,7 +85,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 			state = null;
 		}
      	if (depth == 0 || isInterrupted()) {
-			return quiesce(alpha, beta);
+			return quiesce(maxDepth, alpha, beta);
         }
 
         int value = Integer.MIN_VALUE;
