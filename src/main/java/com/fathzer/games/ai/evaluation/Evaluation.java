@@ -68,6 +68,6 @@ public class Evaluation implements Comparable<Evaluation>  {
 
 	@Override
 	public String toString() {
-		return type==Type.EVAL ? Integer.toString(score) : type+"+"+getCountToEnd();
+		return type==Type.EVAL ? Integer.toString(score) : type+"+"+getCountToEnd()+"->"+score;
 	}
 }

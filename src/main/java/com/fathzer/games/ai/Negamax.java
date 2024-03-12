@@ -26,7 +26,11 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
-		quiesceEvaluator = (ctx, depth, alpha, beta) -> getContext().getEvaluator().evaluate(getContext().getGamePosition());
+		quiesceEvaluator = (ctx, depth, alpha, beta) -> {
+			final SearchContext<M, B> context = getContext();
+			context.getStatistics().evaluationDone();
+			return context.getEvaluator().evaluate(context.getGamePosition());
+		};
 	}
 
 	@Override

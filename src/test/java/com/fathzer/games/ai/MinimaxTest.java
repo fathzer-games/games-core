@@ -187,6 +187,19 @@ class MinimaxTest {
 		matIn3forWhitesAssert(expected, t.search(AlphaBeta, params, true));
 	}
 	
+	@Test
+	void matIn3ForWhitesWasTTPolicyBug() {
+		ChessLibTest t = new ChessLibTest("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46", 7);
+		final List<EvaluatedMove<Move>> search = t.search(Negamax, true);
+		assertEquals(4, search.size());
+		final Evaluation loose3 = Evaluation.loose(3, -t.getWinScore(6));
+		assertEquals(loose3, search.get(0).getEvaluation());
+		assertEquals(loose3, search.get(1).getEvaluation());
+		final Evaluation loose1 = Evaluation.loose(1, -t.getWinScore(2));
+		assertEquals(loose1, search.get(2).getEvaluation());
+		assertEquals(loose1, search.get(3).getEvaluation());
+	}
+	
 	<M> void matIn3forWhitesAssert(EvaluatedMove<M> expectedBest, List<EvaluatedMove<M>> moves) {
 		assertEquals(expectedBest, moves.get(0));
 		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());

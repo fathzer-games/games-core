@@ -7,7 +7,8 @@ import java.util.function.IntUnaryOperator;
 import com.fathzer.games.ai.AlphaBetaState;
 
 /** A basic transposition table policy that records exact, lower or upper score and best/cut.
- * <br>It restores all best moves and exact values recorded at a higher depth (closer to the root of evaluation).
+ * <br>It restores all best moves, exact, lower and upper values records recorded at a higher depth (closer to the root of evaluation)
+ * (see <a href="https://en.wikipedia.org/wiki/Negamax#Negamax_with_alpha_beta_pruning">here</a>).
  * <br>Here are the overwrite rules:<ul>
  * <li>Never replace exact entries by inexact ones</li>
  * <li>Always replace inexact entries by exact ones</li>
@@ -24,8 +25,8 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 				final int value = fromTTScoreConverter.applyAsInt(entry.getValue());
     			if (EXACT==entry.getEntryType()) {
 					state.setValue(value);
-//    			} else {
-//    				acceptNonExactRecord(entry, alpha, beta, value, state);
+    			} else {
+    				acceptNonExactRecord(entry, alpha, beta, value, state);
     			}
     		}
     		state.setBestMove(entry.getMove());
