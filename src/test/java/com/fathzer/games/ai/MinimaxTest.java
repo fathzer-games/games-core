@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,6 @@ import com.fathzer.games.chess.ChessLibMoveGenerator;
 import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.util.exec.MultiThreadsContext;
-import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
@@ -73,12 +73,11 @@ class MinimaxTest {
 	}
 	
 	static class ChessLibTest {
-		private final Board board;
+		private final String fen;
 		private final int depth;
 		
 		ChessLibTest(String fen, int depth) {
-			board = new Board();
-			board.loadFromFen(fen);
+			this.fen = fen;
 			this.depth = depth;
 		}
 
@@ -87,7 +86,11 @@ class MinimaxTest {
 		}
 
 		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params, boolean noQuiece) {
-			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, Minimax==aiType?x->null:BasicMoveComparator::new);
+			return search(aiType, params, noQuiece, null);
+		}
+		
+		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params, boolean noQuiece, List<Move> searchedMoves) {
+			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(fen, Minimax==aiType?x->null:BasicMoveComparator::new);
 			final Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
 			final SearchContext<Move, ChessLibMoveGenerator> ctx = SearchContext.get(mg, () -> ev);
 			Function<ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder = aiType.getAiBuilder();
@@ -100,12 +103,35 @@ class MinimaxTest {
 					return ai;
 				});
 			}
-			return MinimaxTest.search(ctx, aiBuilder, params);
+			return MinimaxTest.search(ctx, aiBuilder, params, searchedMoves);
 		}
-		
+
 		int getWinScore(int nbHalfMoves) {
 			return new DummyEvaluator().getWinScore(nbHalfMoves);
 		}
+	}
+	
+	@Test
+	void testIllegalSearchedMoves() {
+		ChessLibTest t = new ChessLibTest("r1bq1rk1/3n1ppp/p3p3/2bpP3/Np1B1P1P/7R/PPPQ2P1/2KR1B2 b - - 1 14", 1);
+		final Move illegalMove = new Move(D3, D4);
+		final Move legalMove = new Move(A6, A5);
+		Predicate<AiType> f = ai -> {
+			final List<EvaluatedMove<Move>> search = t.search(ai, new SearchParameters(2, Integer.MAX_VALUE, 0), false, Collections.singletonList(illegalMove));
+			return getEvaluation(search, illegalMove).isEmpty();
+		};
+		assertTrue(f.test(Negamax));
+		assertTrue(f.test(Negamax3));
+		assertTrue(f.test(AlphaBeta));
+		assertTrue(f.test(Minimax));
+		f = ai -> {
+			final List<EvaluatedMove<Move>> search = t.search(ai, new SearchParameters(2, Integer.MAX_VALUE, 0), false, Arrays.asList(illegalMove, legalMove));
+			return getEvaluation(search, legalMove).isPresent() && getEvaluation(search, illegalMove).isEmpty();
+		};
+		assertTrue(f.test(Negamax));
+		assertTrue(f.test(Negamax3));
+		assertTrue(f.test(AlphaBeta));
+		assertTrue(f.test(Minimax));
 	}
 	
 	@Test
@@ -120,7 +146,11 @@ class MinimaxTest {
 	}
 
 	private int getScore(List<EvaluatedMove<Move>> search, Move move) {
-		return search.stream().filter(em -> move.equals(em.getContent())).findAny().get().getScore();
+		return getEvaluation(search, move).get().getScore();
+	}
+
+	private Optional<EvaluatedMove<Move>> getEvaluation(List<EvaluatedMove<Move>> search, Move move) {
+		return search.stream().filter(em -> move.equals(em.getContent())).findAny();
 	}
 
 	@Test
@@ -187,6 +217,11 @@ class MinimaxTest {
 		matIn3forWhitesAssert(expected, t.search(AlphaBeta, params, true));
 	}
 	
+	<M> void matIn3forWhitesAssert(EvaluatedMove<M> expectedBest, List<EvaluatedMove<M>> moves) {
+		assertEquals(expectedBest, moves.get(0));
+		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());
+	}
+
 	@Test
 	void matIn3ForWhitesWasTTPolicyBug() {
 		ChessLibTest t = new ChessLibTest("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46", 7);
@@ -200,11 +235,6 @@ class MinimaxTest {
 		assertEquals(loose1, search.get(3).getEvaluation());
 	}
 	
-	<M> void matIn3forWhitesAssert(EvaluatedMove<M> expectedBest, List<EvaluatedMove<M>> moves) {
-		assertEquals(expectedBest, moves.get(0));
-		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());
-	}
-
 	@Test
 	void noMatSituations() {
 		ChessLibTest t = new ChessLibTest("4k3/r1q2bpr/2n1np2/8/8/P4B1N/3R1QPP/RN2K3 w Q - 0 1", 2);
@@ -255,10 +285,10 @@ class MinimaxTest {
 		}
 	}
 
-	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params) {
+	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params, List<M> moves) {
 		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
 			final AbstractAI<M, B> ai = aiBuilder.apply(context);
-			final List<EvaluatedMove<M>> list = ai.getBestMoves(params).getList();
+			final List<EvaluatedMove<M>> list = (moves == null? ai.getBestMoves(params) : ai.getBestMoves(moves, params)).getList();
 			if (ai instanceof Negamax) {
 				for (EvaluatedMove<M> ev:list) {
 					ev.setPvBuilder(m -> ((Negamax<M, B>)ai).getTranspositionTable().collectPV(ctx.getGamePosition(), m, params.getDepth()));

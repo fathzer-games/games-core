@@ -79,7 +79,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 * for instance, to decide that result is stable enough to stop deepening before max depth is reached.
 	 */
 	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
-		if (evaluations.get(0).isEnd() || !isEnoughTimeToDeepen(depth)) {
+		if (evaluations.isEmpty() || evaluations.get(0).isEnd() || !isEnoughTimeToDeepen(depth)) {
 			// if best move is a win/loose, or we have not enough time to complete analysis, continuing analysis is useless.
 			return Collections.emptyList();
 		}

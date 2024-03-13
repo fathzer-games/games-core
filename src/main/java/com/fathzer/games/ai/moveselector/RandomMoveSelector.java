@@ -11,6 +11,6 @@ public class RandomMoveSelector<M,D> extends MoveSelector<M,D> {
 	
 	@Override
 	public List<EvaluatedMove<M>> select(D data, List<EvaluatedMove<M>> bestMoves) {
-		return Collections.singletonList(bestMoves.get(RND.nextInt(bestMoves.size())));
+		return bestMoves.isEmpty() ? Collections.emptyList() : Collections.singletonList(bestMoves.get(RND.nextInt(bestMoves.size())));
 	}
 }

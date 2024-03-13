@@ -37,7 +37,8 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     public SearchResult<M> getBestMoves(SearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
 		final B gamePosition = getContext().getGamePosition();
-		if ((gamePosition instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted()) {
+		// Warning, result can be empty if searching position with no possible moves
+		if ((gamePosition instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted() && !result.getList().isEmpty()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
 			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);

@@ -18,16 +18,13 @@ import com.fathzer.games.chess.BasicMoveComparator;
 import com.fathzer.games.chess.ChessLibMoveGenerator;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.games.util.exec.SingleThreadContext;
-import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class NegamaxWithTTTest {
 	@Test
 	void test2MatsIn4() {
-		final Board board = new Board();
-		board.loadFromFen("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
-		final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(board, BasicMoveComparator::new);
+		final ChessLibMoveGenerator mg = new ChessLibMoveGenerator("8/4k3/8/R7/8/8/8/4K2R w K - 0 1", BasicMoveComparator::new);
 		final Evaluator<Move, ChessLibMoveGenerator> basicEvaluator = new BasicEvaluator();
 		final SearchContext<Move, ChessLibMoveGenerator> sc = SearchContext.get(mg, () -> basicEvaluator);
 		try (ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>> exec = new SingleThreadContext<>(sc)) {

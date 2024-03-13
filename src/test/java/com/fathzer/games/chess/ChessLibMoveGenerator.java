@@ -20,8 +20,18 @@ public class ChessLibMoveGenerator implements MoveGenerator<Move>, HashProvider 
 	public ChessLibMoveGenerator fork() {
 		return new ChessLibMoveGenerator(board.clone(), moveComparatorBuilder);
 	}
+
+	public ChessLibMoveGenerator(String fen, Function<Board,Comparator<Move>> moveComparatorBuilder) {
+		this(fromFEN(fen), moveComparatorBuilder);
+	}
 	
-	public ChessLibMoveGenerator(Board board, Function<Board,Comparator<Move>> moveComparatorBuilder) {
+	private static Board fromFEN(String fen) {
+		final Board board = new Board();
+		board.loadFromFen(fen);
+		return board;
+	}
+
+	private ChessLibMoveGenerator(Board board, Function<Board,Comparator<Move>> moveComparatorBuilder) {
 		this.board = board;
 		this.comparator = moveComparatorBuilder.apply(board);
 		this.moveComparatorBuilder = moveComparatorBuilder;

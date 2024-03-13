@@ -17,6 +17,7 @@ public class IterativeDeepeningSearch<M> {
 	private final AI<M> ai;
 	private List<EvaluatedMove<M>> orderedMoves;
 	private List<SearchResult<M>> searchHistory;
+	private List<M> searchedMoves;
 	private SearchEventLogger<M> logger;
 	
 	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
@@ -25,6 +26,10 @@ public class IterativeDeepeningSearch<M> {
 		this.deepeningPolicy = deepeningPolicy;
 	}
 	
+	public void setSearchedMoves(List<M> searchedMoves) {
+		this.searchedMoves = searchedMoves;
+	}
+
 	public void interrupt() {
 		this.ai.interrupt();
 	}
@@ -37,7 +42,7 @@ public class IterativeDeepeningSearch<M> {
 		deepeningPolicy.start();
 		this.searchHistory = new ArrayList<>();
 		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
-		SearchResult<M> bestMoves = ai.getBestMoves(currentParams);
+		SearchResult<M> bestMoves = searchedMoves==null ? ai.getBestMoves(currentParams) : ai.getBestMoves(searchedMoves, currentParams);
 		searchHistory.add(bestMoves);
 		logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), bestMoves);
 		final long maxTime = deepeningPolicy.getMaxTime();

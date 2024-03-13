@@ -182,12 +182,24 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 
 	@Override
 	public M apply(B board) {
+		return getBestMove(board, null);
+	}
+	
+	public M getBestMove(B board, List<M> searchedMoves) {
+		//TODO Filter library with candidates
 		M move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move==null) {
-			final IterativeDeepeningSearch<M> search = search(board);
-			final EvaluatedMove<M> evaluatedMove = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves()).get(0);
-			move = evaluatedMove.getContent();
-			logger.logMoveChosen(board, evaluatedMove);
+			final IterativeDeepeningSearch<M> search = search(board, searchedMoves);
+			final List<EvaluatedMove<M>> moves = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves());
+			if (moves.isEmpty()) {
+				// No possible move
+				logger.logMoveChosen(board, null);
+				return null;
+			} else {
+				final EvaluatedMove<M> evaluatedMove = moves.get(0);
+				move = evaluatedMove.getContent();
+				logger.logMoveChosen(board, evaluatedMove);
+			}
 		} else {
 			logger.logLibraryMove(board, move);
 		}
@@ -195,10 +207,14 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	}
 
 	public List<EvaluatedMove<M>> getBestMoves(B board) {
-		return search(board).getBestMoves();
+		return getBestMoves(board, null);
+	}
+	
+	public List<EvaluatedMove<M>> getBestMoves(B board, List<M> searchedMoves) {
+		return search(board, searchedMoves).getBestMoves();
 	}
 
-	protected IterativeDeepeningSearch<M> search(B board) {
+	protected IterativeDeepeningSearch<M> search(B board, List<M> searchedMoves) {
 		logger.logSearchStart(board, this);
 		// TODO Test if it is really a new position?
 		if (transpositionTable!=null) {
@@ -213,6 +229,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 			try {
 				rs = new IterativeDeepeningSearch<>(internal, deepeningPolicy);
 				rs.setEventLogger(logger);
+				rs.setSearchedMoves(searchedMoves);
 				final List<EvaluatedMove<M>> result = rs.getBestMoves();
 				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));

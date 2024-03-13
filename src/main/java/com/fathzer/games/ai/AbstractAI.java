@@ -2,7 +2,6 @@ package com.fathzer.games.ai;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
@@ -47,7 +46,6 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
     		// So using it as alpha value makes negamax fail 
     		lowestInterestingScore += 1;
     	}
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         if (context.getContext().makeMove(move, MoveConfidence.UNSAFE)) {
 	        getStatistics().movePlayed();
 	        final int score = getRootScore(depth, lowestInterestingScore);
@@ -62,20 +60,19 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 
 	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
         final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
-		final List<Runnable> tasks = moves.stream().map(m -> new Runnable() {
-			@Override
-			public void run() {
-            	final int low = search.getLow();
-				final Integer score = rootEvaluator.apply(m, low);
+		context.execute(moves.stream().map(m -> getRootEvaluationTask(params, rootEvaluator, search, m)).toList());
+        return search;
+    }
+
+	private Runnable getRootEvaluationTask(SearchParameters params, BiFunction<M, Integer, Integer> rootEvaluator, final SearchResult<M> search, M m) {
+		return () -> {
+				final Integer score = rootEvaluator.apply(m, search.getLow());
 				if (!isInterrupted() && score!=null) {
 					// Do not return interrupted evaluations, they are false
             		search.add(m, getContext().getEvaluator().toEvaluation(score, params.getDepth()));
 				}
-			}
-		}).collect(Collectors.toList());
-		context.execute(tasks);
-        return search;
-    }
+		};
+	}
 	
 	@Override
 	public boolean isInterrupted() {
