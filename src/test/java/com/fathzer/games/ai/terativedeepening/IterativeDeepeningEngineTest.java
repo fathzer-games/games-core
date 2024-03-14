@@ -1,19 +1,15 @@
 package com.fathzer.games.ai.terativedeepening;
 
-import static com.github.bhlangonijr.chesslib.Square.A5;
-import static com.github.bhlangonijr.chesslib.Square.A6;
-import static com.github.bhlangonijr.chesslib.Square.D3;
-import static com.github.bhlangonijr.chesslib.Square.D4;
+import static com.github.bhlangonijr.chesslib.Square.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
-import com.fathzer.games.ai.iterativedeepening.FirstBestMoveSelector;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
-import com.fathzer.games.ai.moveselector.RandomMoveSelector;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TT;
 import com.fathzer.games.chess.BasicEvaluator;
@@ -24,17 +20,15 @@ import com.github.bhlangonijr.chesslib.move.Move;
 class IterativeDeepeningEngineTest {
 
 	@Test
-	void test() { //TODO
+	void test() {
 		final DeepeningPolicy deepeningPolicy = new DeepeningPolicy(4);
-		deepeningPolicy.setSize(Integer.MAX_VALUE);
 		IterativeDeepeningEngine<Move, ChessLibMoveGenerator> engine = new IterativeDeepeningEngine<>(deepeningPolicy, new TT(16, SizeUnit.MB), BasicEvaluator::new);
-//		engine.setMoveSelectorBuilder(b -> new FirstBestMoveSelector<Move>().setNext(new RandomMoveSelector<>()));
 		ChessLibMoveGenerator mg = new ChessLibMoveGenerator("r1bq1rk1/3n1ppp/p3p3/2bpP3/Np1B1P1P/7R/PPPQ2P1/2KR1B2 b - - 1 14", BasicMoveComparator::new);
-		System.out.println(engine.apply(mg));
-		System.out.println(engine.getBestMoves(mg));
+		assertEquals(new Move(C5, D4),engine.apply(mg));
 		final Move illegalMove = new Move(D3, D4);
+		assertNull(engine.getBestMove(mg, Collections.singletonList(illegalMove)));
 		final Move legalMove = new Move(A6, A5);
-		System.out.println(engine.getBestMove(mg, Collections.singletonList(illegalMove)));
+		assertEquals(legalMove, engine.getBestMove(mg, Arrays.asList(illegalMove, legalMove)));
 	}
 	
 	@Test

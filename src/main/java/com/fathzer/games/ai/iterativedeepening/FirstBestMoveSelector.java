@@ -1,7 +1,6 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -16,7 +15,7 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, IterativeDeepening
 
 	protected List<EvaluatedMove<M>> filter(List<SearchResult<M>> history, List<EvaluatedMove<M>> bestMoves) {
 		for (int i=history.size()-1;i>=0;i--) {
-			final List<M> cut = history.get(i).getCut().stream().map(EvaluatedMove::getContent).collect(Collectors.toList());
+			final List<M> cut = history.get(i).getCut().stream().map(EvaluatedMove::getContent).toList();
 			bestMoves = getCandidates(bestMoves, cut);
 			log(i, cut, bestMoves);
 		}
@@ -28,7 +27,7 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, IterativeDeepening
 	}
 	
 	private List<EvaluatedMove<M>> getCandidates(List<EvaluatedMove<M>> bestMoves, List<M> moves) {
-		final List<EvaluatedMove<M>> alreadyBest = bestMoves.stream().filter(em -> moves.contains(em.getContent())).collect(Collectors.toList());
+		final List<EvaluatedMove<M>> alreadyBest = bestMoves.stream().filter(em -> moves.contains(em.getContent())).toList();
 		return alreadyBest.isEmpty() ? bestMoves : alreadyBest;
 	}
 }
