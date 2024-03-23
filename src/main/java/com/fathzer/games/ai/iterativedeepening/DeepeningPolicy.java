@@ -109,7 +109,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 * <br>The classical case is bestMoves contains [(move x,50),(move y, 45),(move z, 44)] and partialList [(move x, 40), (move y, 42)].
 	 * Returning [(move z, 44),(move y, 42),(move x,40)] would be a very, very bad idea. In fact, the z score is probably just the result of an alpha/beta cut and may be very, very far
 	 * from the exact move's score, making a bad move to seem better than than best moves.
-	 * <br>In this case the default implementation will return [(move y,42),(move x, 40),(move z, ?<40)]
+	 * <br>In this case the default implementation will return [(move y,42),(move x, 40),(move z, ?&lt;40)]
 	 * <br>More precisely, if all the moves contained in bestMoves.cut() are in partialList, the results are merged and 
 	 * this method ensures the score of moves absent from partialList will remain out of bestMoves.getCut().
 	 * @param <M> The class of moves
