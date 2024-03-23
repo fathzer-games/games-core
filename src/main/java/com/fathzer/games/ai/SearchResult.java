@@ -14,14 +14,19 @@ public final class SearchResult<M> {
 	private final LinkedList<EvaluatedMove<M>> result;
 	private final int count;
 	private final int delta;
-		
-	SearchResult(int count, int delta) {
-		this.count = count;
-		this.delta = delta;
+
+	/**
+	 * Constructor
+	 * @param size How many best moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
+	 * @param accuracy the evaluation gap under which two moves are considered as equivalent.
+	 */
+	public SearchResult(int size, int accuracy) {
+		this.count = size;
+		this.delta = accuracy;
 		this.result = new LinkedList<>();
 	}
 	
-	synchronized int getLow() {
+	public synchronized int getLow() {
 		return result.size()>=count ? result.get(count-1).getScore() - delta -1 : Integer.MIN_VALUE;
 	}
 	

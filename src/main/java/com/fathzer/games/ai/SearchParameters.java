@@ -5,8 +5,8 @@ package com.fathzer.games.ai;
  */
 public class SearchParameters {
 	private static final String SIZE_SHOULD_BE_STRICTLY_POSITIVE = "Size should be strictly positive";
-
 	private static final String DEPTH_SHOULD_BE_STRICTLY_POSITIVE = "Depth should be strictly positive";
+	private static final String ACCURACY_SHOULD_BE_POSITIVE = "Accuracy should be positive";
 
 	private int depth;
 	private int size;
@@ -37,7 +37,7 @@ public class SearchParameters {
 			throw new IllegalArgumentException(SIZE_SHOULD_BE_STRICTLY_POSITIVE);
 		}
 		if (accuracy<0) {
-			
+			throw new IllegalArgumentException(ACCURACY_SHOULD_BE_POSITIVE);
 		}
 		this.depth = depth;
 		this.size = size;

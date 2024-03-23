@@ -91,7 +91,7 @@ public class Clock {
 		return this;
 	}
 	
-	/** Starts the countDown if it was paused or change the player whose countdown.
+	/** Starts the countDown if it was paused or change the player whose countdown is running.
 	 * @return true if the countdown is started. False if it can't be started because a player already ran out of time.
 	 */
 	public synchronized boolean tap() {
