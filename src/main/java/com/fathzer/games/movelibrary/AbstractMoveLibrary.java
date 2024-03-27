@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.function.Function;
 
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 /** An abstract move library based on searching records in a local or remote database
  * @param <R> The type of the database records. Those records contain the information about a move
@@ -64,9 +65,9 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	/** Converts a database record that describes a move to a move instance.
 	 * @param board The position
 	 * @param move The move database record
-	 * @return A M instance
+	 * @return An evaluated M instance
 	 */
-	protected abstract M toMove(B board, R move);
+	protected abstract EvaluatedMove<M> toEvaluatedMove(B board, R move);
 	
 	/** Sets the move selector (the function that selects a move in the list of move records returned by {@link #getRecord(MoveGenerator)}
 	 * <br>By default, the move is randomly chosen in the list.
@@ -88,14 +89,14 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	 * its apply method's result is returned.
 	 */
 	@Override
-	public Optional<M> apply(B board) {
+	public Optional<EvaluatedMove<M>> apply(B board) {
 		final Optional<List<R>> theRecordO = getRecord(board);
 		if (theRecordO.isEmpty()) {
 			return other==null ? Optional.empty() : other.apply(board);
 		}
 		final List<R> moves = theRecordO.get();
 		final R selectedRecord = moveSelector.apply(moves);
-		return Optional.of(toMove(board, selectedRecord));
+		return Optional.of(toEvaluatedMove(board, selectedRecord));
 	}
 	
 	/** Gets the weight of a move.

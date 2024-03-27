@@ -1,6 +1,7 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -50,7 +51,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	 * @param <B> The class that represents the move generator 
 	 */
 	public interface EngineEventLogger<M, B extends MoveGenerator<M>> extends SearchEventLogger<M> {
-		default void logLibraryMove(B board, M move) {
+		default void logLibraryMove(B board, EvaluatedMove<M> move) {
 			// Does nothing by default
 		}
 
@@ -182,28 +183,31 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 
 	@Override
 	public M apply(B board) {
-		return getBestMove(board, null);
+		final Optional<BestMove<M>> bestMove = getBestMove(board, null);
+		return bestMove.isPresent() ? bestMove.get().move().getContent() : null;
 	}
 	
-	public M getBestMove(B board, List<M> searchedMoves) {
-		//TODO Filter library with candidates
-		M move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
-		if (move==null) {
-			final IterativeDeepeningSearch<M> search = search(board, searchedMoves);
-			final List<EvaluatedMove<M>> moves = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves());
-			if (moves.isEmpty()) {
-				// No possible move
-				logger.logMoveChosen(board, null);
-				return null;
-			} else {
-				final EvaluatedMove<M> evaluatedMove = moves.get(0);
-				move = evaluatedMove.getContent();
-				logger.logMoveChosen(board, evaluatedMove);
-			}
-		} else {
+	
+	public static record BestMove<M> (int depth, EvaluatedMove<M> move) {}
+	
+	public Optional<BestMove<M>> getBestMove(B board, List<M> searchedMoves) {
+		//TODO Filter library with candidates + return more than one move if search params requires more than one move
+		EvaluatedMove<M> move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
+		if (move!=null) {
 			logger.logLibraryMove(board, move);
+			return Optional.of(new BestMove<>(0, move));
 		}
-		return move;
+		final IterativeDeepeningSearch<M> search = search(board, searchedMoves);
+		final List<EvaluatedMove<M>> moves = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves());
+		if (moves.isEmpty()) {
+			// No possible move
+			logger.logMoveChosen(board, null);
+			return Optional.empty();
+		} else {
+			move = moves.get(0);
+			logger.logMoveChosen(board, move);
+			return Optional.of(new BestMove<M>(search.getDepth(), move));
+		}
 	}
 
 	public List<EvaluatedMove<M>> getBestMoves(B board) {

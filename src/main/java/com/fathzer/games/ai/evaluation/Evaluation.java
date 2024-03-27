@@ -3,7 +3,7 @@ package com.fathzer.games.ai.evaluation;
 import java.util.Comparator;
 
 public class Evaluation implements Comparable<Evaluation>  {
-	public enum Type {LOOSE, EVAL, WIN}
+	public enum Type {LOOSE, EVAL, WIN, UNKNOWN}
 	
 	public static final Comparator<Evaluation> REVERSE = Comparator.comparingInt(Evaluation::getScore).reversed();
 	
@@ -11,12 +11,13 @@ public class Evaluation implements Comparable<Evaluation>  {
 	private final int score;
 	private final int countToEnd;
 	
-	protected Evaluation(Type type, int score, int nbMovesToEnd) {
+	private Evaluation(Type type, int score, int nbMovesToEnd) {
 		this.type = type;
 		this.score = score;
 		this.countToEnd = nbMovesToEnd;
 	}
 	
+	public static final Evaluation UNKNOWN = new Evaluation(Type.UNKNOWN, 0, 0);
 	public static Evaluation win(int nbMoves, int score) {
 		return new Evaluation(Type.WIN, score, nbMoves);
 	}

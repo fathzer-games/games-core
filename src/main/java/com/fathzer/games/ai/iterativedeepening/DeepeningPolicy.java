@@ -117,25 +117,25 @@ public class DeepeningPolicy extends SearchParameters {
 	 * @param bestMovesDepth The depth at which the bestMoves where obtained
 	 * @param partialList The best moves obtained by interrupted search, sorted best first.
 	 * @param interruptionDepth The depth at which interruption occurred.
+	 * @return true if the merge was done
 	 */
-	public <M> void mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
-		if (partialList.isEmpty()) {
-			return;
+	public <M> boolean mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
+		if (partialList.isEmpty() || !areMergeable(bestMoves, partialList)) {
+			return false;
 		}
-		if (areMergeable(bestMoves, partialList)) {
-			final int previousLow = bestMoves.getLow();
-			final boolean trap = partialList.get(partialList.size()-1).getScore()<=previousLow;
-			if (trap) {
-				// Warning, some approximatively scored moves have a better value than some of partialList
-				// => Replace all scores with a score lower than the lower score in partialList
-			    final int unkownScore = partialList.get(partialList.size()-1).getEvaluation().getScore()-1;
-				bestMoves.getList().stream().map(EvaluatedMove::getContent).collect(Collectors.toCollection(ArrayDeque::new)).
-				descendingIterator().forEachRemaining(m->bestMoves.update(m, Evaluation.score(unkownScore)));
-			}
-			for (EvaluatedMove<M> ev : partialList) {
-				bestMoves.update(ev.getContent(), ev.getEvaluation());
-			}
+		final int previousLow = bestMoves.getLow();
+		final boolean trap = partialList.get(partialList.size()-1).getScore()<=previousLow;
+		if (trap) {
+			// Warning, some approximatively scored moves have a better value than some of partialList
+			// => Replace all scores with a score lower than the lower score in partialList
+		    final int unkownScore = partialList.get(partialList.size()-1).getEvaluation().getScore()-1;
+			bestMoves.getList().stream().map(EvaluatedMove::getContent).collect(Collectors.toCollection(ArrayDeque::new)).
+			descendingIterator().forEachRemaining(m->bestMoves.update(m, Evaluation.score(unkownScore)));
 		}
+		for (EvaluatedMove<M> ev : partialList) {
+			bestMoves.update(ev.getContent(), ev.getEvaluation());
+		}
+		return true;
 	}
 	
 	private <M> boolean areMergeable(SearchResult<M> bestMoves, List<EvaluatedMove<M>> partialList) {

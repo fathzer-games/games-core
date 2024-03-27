@@ -1,6 +1,7 @@
 package com.fathzer.games.ai.transposition;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -93,6 +94,9 @@ public interface TranspositionTable<M> {
 	 * @return The moves
 	 */
 	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
+		if (maxDepth==0) {
+			return Collections.singletonList(move);
+		}
 		if (board.makeMove(move, MoveConfidence.UNSAFE)) {
 			try {
 				final List<M> result = collectPV(board, maxDepth-1);

@@ -19,6 +19,7 @@ public class IterativeDeepeningSearch<M> {
 	private List<SearchResult<M>> searchHistory;
 	private List<M> searchedMoves;
 	private SearchEventLogger<M> logger;
+	private int depth;
 	
 	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
@@ -71,11 +72,14 @@ public class IterativeDeepeningSearch<M> {
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
 				searchHistory.add(deeper);
+				depth = currentParams.getDepth();
 				logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), deeper);
 				if (!ai.isInterrupted()) {
 					bestMoves = deeper;
 				} else {
-					deepeningPolicy.mergeInterrupted(bestMoves, previousDepth, deeper.getList(), currentParams.getDepth());
+					if (!deepeningPolicy.mergeInterrupted(bestMoves, previousDepth, deeper.getList(), currentParams.getDepth())) {
+						depth = previousDepth;
+					}
 				}
 			}
 			if (ai.isInterrupted() || moves.isEmpty()) {
@@ -103,6 +107,16 @@ public class IterativeDeepeningSearch<M> {
 			orderedMoves = buildBestMoves();
 		}
 		return this.searchHistory;
+	}
+
+	/** Gets the actual depth reached by the search.
+	 * @return a positive integer
+	 */
+	public int getDepth() {
+		if (orderedMoves==null) {
+			orderedMoves = buildBestMoves();
+		}
+		return this.depth;
 	}
 
 	public int getMaxDepth() {
