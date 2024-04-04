@@ -9,7 +9,7 @@
 		<version>1.0.8</version>
 	</parent>
 	<artifactId>games-core</artifactId>
-	<version>0.0.10-SNAPSHOT</version>
+	<version>0.0.11-SNAPSHOT</version>
 
 	<name>games-core</name>
 	<description>A core library to help implement two players games.</description>

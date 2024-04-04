@@ -19,7 +19,8 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	private static final int SLOTS = 2; // The number of long per record
 	private final AtomicLongArray table; // Used for transposition table
 	private final ReadWriteLock lock;
-	private final int size; // The number of slots either table will have
+	private final int size; // The number of slots the table will have
+	private int entryCount; // The number of currently occupied slots.
 	private TranspositionTablePolicy<M> policy;
 
 	/** Constructor.
@@ -58,6 +59,9 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 			entry.set(table.get(index), table.get(index+1));
 			final boolean written = validator.test(entry);
 			if (written) {
+				if (!entry.isValid()) {
+					entryCount++;
+				}
 				table.set(index, key);
 				table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
 			}
@@ -90,6 +94,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		for (int i=0; i<table.length();i++) {
 			table.set(i, 0);
 		}
+		this.entryCount = 0;
 	}
 
 	/**
@@ -106,6 +111,11 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		return size;
 	}
 	
+	@Override
+	public int getEntryCount() {
+		return entryCount;
+	}
+
 	@Override
 	public final int getMemorySizeMB() {
 		return (int)(((long)this.size * 8 * SLOTS) / SizeUnit.MB.getSize());
