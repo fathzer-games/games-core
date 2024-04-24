@@ -26,9 +26,9 @@ class IterativeDeepeningEngineTest {
 		ChessLibMoveGenerator mg = new ChessLibMoveGenerator("r1bq1rk1/3n1ppp/p3p3/2bpP3/Np1B1P1P/7R/PPPQ2P1/2KR1B2 b - - 1 14", BasicMoveComparator::new);
 		assertEquals(new Move(C5, D4),engine.apply(mg));
 		final Move illegalMove = new Move(D3, D4);
-		assertTrue(engine.getBestMove(mg, Collections.singletonList(illegalMove)).isEmpty());
+		assertTrue(engine.getBestMoves(mg, Collections.singletonList(illegalMove)).isEmpty());
 		final Move legalMove = new Move(A6, A5);
-		assertEquals(legalMove, engine.getBestMove(mg, Arrays.asList(illegalMove, legalMove)).get().move().getContent());
+		assertEquals(legalMove, engine.getBestMoves(mg, Arrays.asList(illegalMove, legalMove)).getBest());
 	}
 	
 	@Test

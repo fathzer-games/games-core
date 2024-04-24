@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
-/** A move selector.
+/** A best move selector.
  * <br>An AI search can return more than one "<i>best</i>" move.
- * Move selectors are use to narrow the <i>best</i> moves list using their own algorithm.
- * <br>The most obvious one is {@link RandomMoveSelector} that randomly selects a move.  
+ * Move selectors sort the <i>best</i> moves list using their own algorithm, not only based of the raw evaluation value.
+ * <br>The most obvious one is {@link RandomMoveSelector} that randomly sorts moves with same evaluation.  
  * <br>Move selectors can be chained (using their {@link #setNext(MoveSelector)} method) in order to incrementally reduce the list.
  * @param <M> The type of moves
  * @param <D> The type of data passed by the engine to the MoveSelector

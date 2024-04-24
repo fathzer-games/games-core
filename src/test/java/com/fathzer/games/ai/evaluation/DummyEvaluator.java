@@ -1,10 +1,8 @@
 package com.fathzer.games.ai.evaluation;
 
-import com.github.bhlangonijr.chesslib.move.Move;
-
-public class DummyEvaluator implements StaticEvaluator<Move, Object> {
+public class DummyEvaluator<M,B> implements StaticEvaluator<M, B> {
 	@Override
-	public int evaluate(Object board) {
+	public int evaluate(B board) {
 		return 0;
 	}
 }

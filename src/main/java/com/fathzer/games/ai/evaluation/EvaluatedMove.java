@@ -33,6 +33,9 @@ public class EvaluatedMove<M> implements Comparable<EvaluatedMove<M>> {
 		return value.getScore();
 	}
 	
+	/** Tests whether this move's evaluation is a game end (a win/loose score) or an evaluation
+	 * @return true if this move's evaluation is a game end
+	 */
 	public boolean isEnd() {
 		return value.getType()!=Type.EVAL;
 	}

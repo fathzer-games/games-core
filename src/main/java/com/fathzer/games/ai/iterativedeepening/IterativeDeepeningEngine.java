@@ -1,7 +1,7 @@
 package com.fathzer.games.ai.iterativedeepening;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -13,8 +13,6 @@ import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.ai.moveselector.MoveSelector;
-import com.fathzer.games.ai.moveselector.RandomMoveSelector;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.movelibrary.MoveLibrary;
 import com.fathzer.games.util.exec.ContextualizedExecutor;
@@ -80,7 +78,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	private TranspositionTable<M> transpositionTable;
 	private int parallelism;
 	private EngineEventLogger<M, B> logger;
-	private Function<B, MoveSelector<M,IterativeDeepeningSearch<M>>> moveSelectorBuilder;
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
 	
@@ -89,7 +86,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 	 * @param deepeningPolicy The policy to decide what move to deepen, how to merge results at different depth, etc...
 	 * @param tt A transposition table used across different depth 
 	 * @param evaluatorSupplier An evaluation function supplier
-	 * @see #setMoveSelectorBuilder(Function)
 	 * @see #setParallelism(int)
 	 * @see #setLogger(EngineEventLogger)
 	 */
@@ -100,7 +96,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		this.running = new AtomicBoolean();
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;
-		this.moveSelectorBuilder = b -> new RandomMoveSelector<>();
 	}
 	
 	public void interrupt() {
@@ -129,17 +124,12 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		this.movesLibrary = library;
 	}
 
-	public void setEvaluatorSupplier(Supplier<Evaluator<M, B>> evaluatorSupplier) {
-		this.evaluatorSupplier = evaluatorSupplier;
+	public Supplier<Evaluator<M, B>> getEvaluationSupplier() {
+		return this.evaluatorSupplier;
 	}
 
-	/** Sets the move selector builder.
-	 * <br>When {@link #apply(MoveGenerator)} is called, the move selector choose the move in the search results.
-	 * <br>By default, it choose randomly a move in the best moves. 
-	 * @param moveSelectorBuilder The new move selector builder.
-	 */
-	public void setMoveSelectorBuilder(Function<B, MoveSelector<M,IterativeDeepeningSearch<M>>> moveSelectorBuilder) {
-		this.moveSelectorBuilder = moveSelectorBuilder;
+	public void setEvaluatorSupplier(Supplier<Evaluator<M, B>> evaluatorSupplier) {
+		this.evaluatorSupplier = evaluatorSupplier;
 	}
 
 	public EngineEventLogger<M, B> getLogger() {
@@ -183,42 +173,35 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 
 	@Override
 	public M apply(B board) {
-		final Optional<BestMove<M>> bestMove = getBestMove(board, null);
-		return bestMove.isPresent() ? bestMove.get().move().getContent() : null;
+		return getBestMoves(board, null).getBest();
 	}
 	
-	
-	public static record BestMove<M> (int depth, EvaluatedMove<M> move) {}
-	
-	public Optional<BestMove<M>> getBestMove(B board, List<M> searchedMoves) {
+	public SearchHistory<M> getBestMoves(B board, List<M> searchedMoves) {
+		final SearchHistory<M> result = new SearchHistory<M>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		//TODO Filter library with candidates + return more than one move if search params requires more than one move
 		EvaluatedMove<M> move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move!=null) {
 			logger.logLibraryMove(board, move);
-			return Optional.of(new BestMove<>(0, move));
+			result.add(Collections.singletonList(move), 0);
+			return result;
 		}
-		final IterativeDeepeningSearch<M> search = search(board, searchedMoves);
-		final List<EvaluatedMove<M>> moves = this.moveSelectorBuilder.apply(board).select(search, search.getBestMoves());
+		final IterativeDeepeningSearch<M> search = doSearch(board, searchedMoves);
+		final List<EvaluatedMove<M>> moves = search.getBestMoves();
 		if (moves.isEmpty()) {
 			// No possible move
 			logger.logMoveChosen(board, null);
-			return Optional.empty();
+			return result;
 		} else {
-			move = moves.get(0);
-			logger.logMoveChosen(board, move);
-			return Optional.of(new BestMove<M>(search.getDepth(), move));
+			logger.logMoveChosen(board, moves.get(0));
+			return search.getSearchHistory();
 		}
 	}
 
-	public List<EvaluatedMove<M>> getBestMoves(B board) {
+	public SearchHistory<M> getBestMoves(B board) {
 		return getBestMoves(board, null);
 	}
 	
-	public List<EvaluatedMove<M>> getBestMoves(B board, List<M> searchedMoves) {
-		return search(board, searchedMoves).getBestMoves();
-	}
-
-	protected IterativeDeepeningSearch<M> search(B board, List<M> searchedMoves) {
+	protected IterativeDeepeningSearch<M> doSearch(B board, List<M> searchedMoves) {
 		logger.logSearchStart(board, this);
 		// TODO Test if it is really a new position?
 		if (transpositionTable!=null) {
