@@ -3,7 +3,6 @@ package com.fathzer.games.ai.iterativedeepening;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
@@ -24,7 +23,7 @@ import com.fathzer.games.util.exec.SingleThreadContext;
  * @param <M> The class that represents a move
  * @param <B> The class that represents the move generator 
  */
-public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements Function<B, M> {
+public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	/** A class that logs events during search at a specific level.
 	 * <br>By default, a logger does nothing.
 	 * @param <M> The class that represents a move
@@ -171,11 +170,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 		}
 	}
 
-	@Override
-	public M apply(B board) {
-		return getBestMoves(board, null).getBest();
-	}
-	
 	public SearchHistory<M> getBestMoves(B board, List<M> searchedMoves) {
 		final SearchHistory<M> result = new SearchHistory<M>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		//TODO Filter library with candidates + return more than one move if search params requires more than one move
