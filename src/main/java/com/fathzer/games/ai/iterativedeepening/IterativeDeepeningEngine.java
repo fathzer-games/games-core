@@ -61,7 +61,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 			// Does nothing by default
 		}
 
-		default void logSearchEnd(B board, IterativeDeepeningSearch<M> result) {
+		default void logSearchEnd(B board, SearchHistory<M> result) {
 			// Does nothing by default
 		}
 	}
@@ -221,7 +221,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> implements 
 				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
 				}
-				logger.logSearchEnd(board, rs);
+				logger.logSearchEnd(board, rs.getSearchHistory());
 				return rs;
 			} finally {
 				running.set(false);
