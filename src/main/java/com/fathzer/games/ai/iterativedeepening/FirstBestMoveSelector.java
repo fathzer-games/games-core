@@ -13,7 +13,7 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> 
 	}
 
 	protected List<EvaluatedMove<M>> filter(SearchHistory<M> history, List<EvaluatedMove<M>> bestMoves) {
-		for (int i=history.getLength()-1;i>=0;i--) {
+		for (int i=history.length()-1;i>=0;i--) {
 			final List<M> cut = history.getBestMoves(i).stream().map(EvaluatedMove::getContent).toList();
 			bestMoves = getCandidates(bestMoves, cut);
 			log(i, cut, bestMoves);

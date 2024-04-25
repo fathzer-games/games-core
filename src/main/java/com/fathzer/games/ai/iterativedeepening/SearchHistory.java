@@ -49,7 +49,7 @@ public class SearchHistory<M> {
 		return isEmpty() ? null : getBestMoves().get(0).getContent();
 	}
 	
-	public int getLength() {
+	public int length() {
 		return results.size();
 	}
 	

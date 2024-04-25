@@ -80,6 +80,7 @@ public class IterativeDeepeningSearch<M> {
 			} else {
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
+				evaluatedMoves = deeper.getList();
 				depth = currentParams.getDepth();
 				logger.logSearchAtDepth(depth, ai.getStatistics(), deeper);
 				final Optional<SearchResult<M>> stepResult = ai.isInterrupted() ? deepeningPolicy.mergeInterrupted(searchHistory, deeper, depth) : Optional.of(deeper);
