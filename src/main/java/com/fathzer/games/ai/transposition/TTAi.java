@@ -26,7 +26,7 @@ public interface TTAi<M> {
 	 * @return The score to store in the transposition table
 	 */
 	default int scoreToTT(int score, int depth, int maxDepth, Evaluator<?, ?> evaluator) {
-		if (evaluator.isWinLooseScore(score, maxDepth)) {
+		if (evaluator.isWinLooseScore(score)) {
 			final int nbHalfMoves = maxDepth - depth;
 			return score>0 ? score + nbHalfMoves : score - nbHalfMoves;
 		} else {
@@ -44,7 +44,7 @@ public interface TTAi<M> {
 	 * @return The score to use in the search algorithm
 	 */
 	default int ttToScore(int encodedValue, int depth, int maxDepth, Evaluator<?, ?> evaluator) {
-		if (evaluator.isWinLooseScore(encodedValue, maxDepth)) {
+		if (evaluator.isWinLooseScore(encodedValue)) {
 			final int nbHalfMoves = maxDepth - depth;
 			return encodedValue>0 ? encodedValue - nbHalfMoves : encodedValue + nbHalfMoves;
 		} else {

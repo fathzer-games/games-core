@@ -69,7 +69,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 				final Integer score = rootEvaluator.apply(m, search.getLow());
 				if (!isInterrupted() && score!=null) {
 					// Do not return interrupted evaluations, they are false
-            		search.add(m, getContext().getEvaluator().toEvaluation(score, params.getDepth()));
+            		search.add(m, getContext().getEvaluator().toEvaluation(score));
 				}
 		};
 	}

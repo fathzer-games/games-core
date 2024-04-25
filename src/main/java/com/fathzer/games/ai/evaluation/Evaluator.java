@@ -53,12 +53,17 @@ public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
 		return Short.MAX_VALUE-Math.abs(winScore);
 	}
 	
-	default boolean isWinLooseScore(int score, int maxDepth) {
-		return getNbHalfMovesToWin(Math.abs(score)) <= maxDepth;
+	/** Checks whether the score is a win or loose.
+	 * @param score a score
+	 * @return true if the score is a win or a loose, false if it is an evaluation.
+	 * <br>The default implementation returns true if score's absolute value is &gt; Short.MAX_VALUE-256
+	 */
+	default boolean isWinLooseScore(int score) {
+		return Math.abs(score) > Short.MAX_VALUE-256;
 	}
 	
-	default Evaluation toEvaluation(int score, int maxDepth) {
-		if (isWinLooseScore(score, maxDepth)) {
+	default Evaluation toEvaluation(int score) {
+		if (isWinLooseScore(score)) {
 			final int endCount = (getNbHalfMovesToWin(Math.abs(score))+1)/2;
 			return score>0 ? Evaluation.win(endCount,score) : Evaluation.loose(endCount,score); 
 		} else {

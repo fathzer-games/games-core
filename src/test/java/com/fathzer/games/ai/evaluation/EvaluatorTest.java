@@ -9,7 +9,7 @@ import com.github.bhlangonijr.chesslib.move.Move;
 class EvaluatorTest {
 	@Test
 	void test() {
-		Evaluator<Move, ?> ev = new DummyEvaluator();
+		Evaluator<Move, ?> ev = new DummyEvaluator<>();
 		assertEquals(Short.MAX_VALUE, ev.getWinScore(0));
 		assertEquals(Short.MAX_VALUE-1, ev.getWinScore(1));
 		assertEquals(Short.MAX_VALUE-10, ev.getWinScore(10));
@@ -20,9 +20,8 @@ class EvaluatorTest {
 		assertEquals(1, ev.getNbHalfMovesToWin(-Short.MAX_VALUE+1));
 		assertEquals(10, ev.getNbHalfMovesToWin(-Short.MAX_VALUE+10));
 		
-		assertTrue(ev.isWinLooseScore(Short.MAX_VALUE, 6));
-		assertTrue(ev.isWinLooseScore(Short.MAX_VALUE-4, 6));
-		assertFalse(ev.isWinLooseScore(Short.MAX_VALUE-10, 6));
+		assertTrue(ev.isWinLooseScore(Short.MAX_VALUE));
+		assertTrue(ev.isWinLooseScore(Short.MAX_VALUE-255));
+		assertFalse(ev.isWinLooseScore(Short.MAX_VALUE-256));
 	}
-
 }

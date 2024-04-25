@@ -41,7 +41,6 @@ class SearchResultTest {
 		
 		// Add other ex aequos that reduce the cut list
 		fns.add(6, score(6));
-		System.out.println(fns.getList());
 		final List<Integer> cut2 = fns.getCut().stream().map(e -> e.getContent()).collect(Collectors.toList());
 		assertEquals(3, cut2.size());
 		assertEquals(new HashSet<>(Arrays.asList(4,6)), new HashSet<>(cut2.subList(0, 2)));
