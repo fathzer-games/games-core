@@ -34,7 +34,7 @@ import com.fathzer.games.util.exec.ExecutionContext;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class IterativeDeepeningEngineTest {
-	public static Function<String, List<EvaluatedMove<String>>> encodedEvMovetoList = s -> Arrays.stream(s.split(",")).map(IterativeDeepeningEngineTest::parseMove).map(Optional::get).toList();
+	public static Function<String, List<EvaluatedMove<String>>> encodedEvMovetoList = s -> Arrays.stream(s.split(",")).map(IterativeDeepeningEngineTest::parseMove).filter(Optional::isPresent).map(Optional::get).toList();
 
 	@Test
 	void test() {
@@ -57,6 +57,27 @@ class IterativeDeepeningEngineTest {
 	}
 	
 	@Test
+	void testInterrupted() {
+		final DeepeningPolicy policy = new DeepeningPolicy(4);
+		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
+			@Override
+			protected TTAi<String> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
+				return new FakeNegamax(context);
+			}
+		};
+		
+		FakeNegamax.setSearchData("2:1:As101,Bs100,Cs99,Ds98/3:1:As80,Bi0,Ci0,Di0");
+		SearchHistory<String> bestMoves = engine.getBestMoves(new FakeMoveGenerator());
+		assertEquals(2, bestMoves.length());
+		assertEquals(encodedEvMovetoList.apply("As80"), bestMoves.getBestMoves());
+
+		FakeNegamax.setSearchData("2:1:As101,Bs100,Cs99,Ds98/3:1:As80,Bs90,Ci0,Di0");
+		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
+		assertEquals(2, bestMoves.length());
+		assertEquals(encodedEvMovetoList.apply("As90"), bestMoves.getBestMoves());
+	}
+	
+	@Test
 	void multiPVTest() {
 		final DeepeningPolicy policy = new DeepeningPolicy(6);
 		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
@@ -65,7 +86,7 @@ class IterativeDeepeningEngineTest {
 				return new FakeNegamax(context);
 			}
 		};
-		FakeNegamax.setMoveListMap("2:1:Aw1,Bs100,Cs-100,Ds-150");
+		FakeNegamax.setSearchData("2:1:Aw1,Bs100,Cs-100,Ds-150");
 		SearchHistory<String> bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		// Test it stops after first evaluation (because there's one win move)
 		assertEquals(1, bestMoves.length());
@@ -73,7 +94,7 @@ class IterativeDeepeningEngineTest {
 		
 		// Now look for 2 bestmoves
 		policy.setSize(2);
-		FakeNegamax.setMoveListMap("2:2:Aw1,Bs100,Cs-105,Ds-106/"
+		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cs-105,Ds-106/"
 								 + "3:1:Bl4,Cs104,Ds105/"
 								 + "4:1:Dl6,Cs80");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
@@ -86,14 +107,14 @@ class IterativeDeepeningEngineTest {
 		
 		// Look for 2 best moves and have two wins at first depth and 1 at second
 		policy.setSize(2);
-		FakeNegamax.setMoveListMap("2:2:Aw1,Bw1,Cs-105,Ds-106");
+		FakeNegamax.setSearchData("2:2:Aw1,Bw1,Cs-105,Ds-106");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(1,bestMoves.length());
 		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1"), bestMoves.getBestMoves());
 
 		// Look for 3 best moves and have two wins at first depth and 1 at second
 		policy.setSize(3);
-		FakeNegamax.setMoveListMap("2:3:Aw1,Bw1,Cs-105,Ds-106/"
+		FakeNegamax.setSearchData("2:3:Aw1,Bw1,Cs-105,Ds-106/"
 				 				 + "3:1:Cs104,Dw3/");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
@@ -102,7 +123,7 @@ class IterativeDeepeningEngineTest {
 		// Look for 2 best moves and do no deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
 		policy.setDeepenOnForced(false);
-		FakeNegamax.setMoveListMap("2:2:Aw1,Bs100,Cl2,Dl2");
+		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(1,bestMoves.length());
 		assertEquals(encodedEvMovetoList.apply("Aw1,Bs100"), bestMoves.getBestMoves());
@@ -110,7 +131,7 @@ class IterativeDeepeningEngineTest {
 		// Look for 2 best moves and do forced deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
 		policy.setDeepenOnForced(true);
-		FakeNegamax.setMoveListMap("2:2:Aw1,Bs100,Cl2,Dl2/3:1:Bw5");
+		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2/3:1:Bw5");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
 		assertEquals(encodedEvMovetoList.apply("Aw1,Bw5"), bestMoves.getBestMoves());
@@ -129,13 +150,15 @@ class IterativeDeepeningEngineTest {
 			score = ev.getWinScore(value);
 		} else if (type=='L') {
 			score = -ev.getWinScore(value);
+		} else if (type=='I') {
+			return Optional.empty();
 		} else {
 			throw new IllegalArgumentException();
 		}
 		return Optional.of(new EvaluatedMove<>(mv, ev.toEvaluation(score)));
 	}
 	
-	private record SearchData(int expectedSearchSize, List<EvaluatedMove<String>> moves, boolean isInterrupted) {};
+	private record SearchData(int expectedSearchSize, List<String> requestedMoves, List<EvaluatedMove<String>> returnedMoves, boolean isInterrupted) {};
 	
 	private static class FakeNegamax extends Negamax<String, FakeMoveGenerator> {
 		private static Map<Integer, SearchData> expectedMoveListMap;
@@ -151,7 +174,7 @@ class IterativeDeepeningEngineTest {
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize());
 			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.moves.forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			data.returnedMoves.forEach(em -> r.add(em.getContent(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 		}
@@ -161,9 +184,9 @@ class IterativeDeepeningEngineTest {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize(),"At depth "+params.getDepth()+" search size is wrong");
-			assertEquals(data.moves().stream().map(EvaluatedMove::getContent).toList(), moves,"At depth "+params.getDepth());
+			assertEquals(data.requestedMoves(), moves,"At depth "+params.getDepth());
 			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.moves().forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			data.returnedMoves().forEach(em -> r.add(em.getContent(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 	    }
@@ -173,9 +196,11 @@ class IterativeDeepeningEngineTest {
 			return isInterrupted;
 		}
 
-		public static void setMoveListMap(String encoded) {
+		public static void setSearchData(String encoded) {
 			expectedMoveListMap = Arrays.stream(encoded.split("/")).map(l -> l.split(":")).collect(Collectors.toMap(r -> Integer.parseInt(r[0]), r -> {
-				return new SearchData(Integer.parseInt(r[1]), encodedEvMovetoList.apply(r[2]), false);
+				final List<String> expected = Arrays.stream(r[2].split(",")).map(s -> s.substring(0, 1)).toList();
+				final List<EvaluatedMove<String>> returned = encodedEvMovetoList.apply(r[2]);
+				return new SearchData(Integer.parseInt(r[1]), expected, returned, expected.size()!=returned.size());
 			}));
 		}
 	}
