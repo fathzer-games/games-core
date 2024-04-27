@@ -2,8 +2,13 @@ package com.fathzer.games.ai.transposition;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.SearchResult;
+import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.github.bhlangonijr.chesslib.move.Move;
@@ -18,11 +23,36 @@ class TTAiTest {
 		public TranspositionTable<Move> getTranspositionTable() {
 			return null;
 		}
+
+		@Override
+		public SearchResult<Move> getBestMoves(SearchParameters parameters) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public SearchResult<Move> getBestMoves(List<Move> possibleMoves, SearchParameters parameters) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void interrupt() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isInterrupted() {
+			return false;
+		}
+
+		@Override
+		public SearchStatistics getStatistics() {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Test
 	void test() {
-		Evaluator<Move, ?> ev = new DummyEvaluator();
+		Evaluator<Move, ?> ev = new DummyEvaluator<>();
 		final TTAi<Move> wse = new DummyTTAi();
 		// A mat in 0 found at depth 3 on 8
 		int encoded = wse.scoreToTT(-32762, 3, 8, ev);

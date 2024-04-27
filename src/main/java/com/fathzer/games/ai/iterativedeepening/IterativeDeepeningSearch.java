@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
@@ -14,6 +15,7 @@ import com.fathzer.games.util.OrderedUtils;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
 public class IterativeDeepeningSearch<M> {
 	private final DeepeningPolicy deepeningPolicy;
@@ -69,15 +71,14 @@ public class IterativeDeepeningSearch<M> {
 		List<EvaluatedMove<M>> evaluatedMoves = bestMoves.getList();
 		final List<EvaluatedMove<M>> ended = new ArrayList<>(evaluatedMoves.size());
 		while (currentParams.getDepth()<deepeningPolicy.getDepth()) {
-			// Re-use best moves order to speedup next search
-			final List<M> moves = deepeningPolicy.isEnoughTimeToDeepen(depth) ? deepeningPolicy.getMovesToDeepen(currentParams.getDepth(), evaluatedMoves, searchHistory) : Collections.emptyList();
-			if (moves.size()!=evaluatedMoves.size()) {
-				// Some moves does not need deepening => Add them to ended
-				evaluatedMoves.stream().filter(em->!moves.contains(em.getContent())).forEach(ended::add);
-			}
+			final List<M> moves = deepeningPolicy.isEnoughTimeToDeepen(depth) ? deepeningPolicy.getMovesToDeepen(currentParams.getDepth(), removeMovesThatEndedGame(evaluatedMoves, currentParams), searchHistory) : Collections.emptyList();
 			if (moves.isEmpty()) {
 				logger.logEndedByPolicy(currentParams.getDepth());
 			} else {
+				if (moves.size()!=evaluatedMoves.size()) {
+					// Some moves does not need deepening => Add them to ended
+					evaluatedMoves.stream().filter(em-> !moves.contains(em.getContent())).forEach(ended::add);
+				}
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
 				evaluatedMoves = deeper.getList();
@@ -92,6 +93,23 @@ public class IterativeDeepeningSearch<M> {
 		}
 		timer.cancel();
 		return searchHistory.getBestMoves();
+	}
+	
+	private List<EvaluatedMove<M>> removeMovesThatEndedGame(List<EvaluatedMove<M>> evaluatedMoves, SearchParameters currentParams) {
+		final AtomicInteger size = new AtomicInteger(currentParams.getSize()); 
+		final List<EvaluatedMove<M>> list = evaluatedMoves.stream().filter( em -> {
+			final Type type = em.getEvaluation().getType();
+			if (type==Type.WIN) {
+				size.decrementAndGet();
+			}
+			return type==Type.EVAL;
+		}).toList();
+		if (size.get()>0) {
+			currentParams.setSize(size.get());
+			return list;
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
 	private static <M> List<EvaluatedMove<M>> complete(SearchResult<M> result, List<EvaluatedMove<M>> ended) {

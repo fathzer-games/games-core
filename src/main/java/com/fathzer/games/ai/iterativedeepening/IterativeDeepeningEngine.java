@@ -12,6 +12,7 @@ import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.movelibrary.MoveLibrary;
 import com.fathzer.games.util.exec.ContextualizedExecutor;
@@ -171,7 +172,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	}
 
 	public SearchHistory<M> getBestMoves(B board, List<M> searchedMoves) {
-		final SearchHistory<M> result = new SearchHistory<M>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		final SearchHistory<M> result = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		//TODO Filter library with candidates + return more than one move if search params requires more than one move
 		EvaluatedMove<M> move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move!=null) {
@@ -202,7 +203,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 			transpositionTable.newPosition();
 		}
 		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
-			final Negamax<M,B> internal = buildNegaMax(context);
+			final TTAi<M> internal = buildAi(context);
 			internal.setTranspositonTable(transpositionTable);
 			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException();
@@ -233,7 +234,11 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		}
 	}
 	
-	protected Negamax<M,B> buildNegaMax(ExecutionContext<SearchContext<M,B>> context) {
+	/** Builds the AI used to search best moves at different depth. 
+	 * @param context An execution context that can be used by the AI.
+	 * @return An ai that supports transposition tables. THe default implementation returns a Negamax instance.
+	 */
+	protected TTAi<M> buildAi(ExecutionContext<SearchContext<M,B>> context) {
 		return new Negamax<>(context);
 	}
 }

@@ -1,7 +1,6 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +10,6 @@ import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
-import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
 /** A policy that manages how to deepen the search.
  * <br>Typically, it decides at which depth to start, what increment to add at each step, and if we should end prematurely. 
@@ -40,6 +38,7 @@ public class DeepeningPolicy extends SearchParameters {
 	}
 	
 	/** Sets the maximum time to spend in the search.
+	 * <br>The default value is Long.MAX_VALUE.
 	 * @param maxTime The number of milliseconds to spend in the search
 	 */
 	public void setMaxTime(long maxTime) {
@@ -57,6 +56,11 @@ public class DeepeningPolicy extends SearchParameters {
 		return deepenOnForced;
 	}
 
+	/** Sets if the search should be deepened when only one move remains to evaluate.
+	 * <br>Please note, that if this attribute to false (The default value), searching for two best moves (size=2), and
+	 * you having n possible moves and only one that isn't yet evaluate to win or loose, will stop the evaluation
+	 * @param deepenOnForced true to force the deepening until max depth or maxtime is reached.
+	 */
 	public void setDeepenOnForced(boolean deepenOnForced) {
 		this.deepenOnForced = deepenOnForced;
 	}
@@ -84,41 +88,21 @@ public class DeepeningPolicy extends SearchParameters {
 		return getSpent()<maxTime/2;
 	}
 
-	/** This method is called every time a search is made to determine which moves should be deepened.
-	 * <br>This method is not called when {@link #isEnoughTimeToDeepen(int)} returns false.
+	/** Determines which moves should be deepened.
+	 * <br>This method is called every time a search is made except when {@link #isEnoughTimeToDeepen(int)} returns false.
 	 * @param <M> The type of moves
 	 * @param depth The depth that just finished
-	 * @param evaluations The evaluations obtained at this depth
+	 * @param evaluations The evaluations obtained at this depth that are not move that ends the game (no need to deepen such moves)
 	 * @param history The search history, including the result at {@code depth}
 	 * @return A list of moves to deepen, an empty list to stop deepening.
-	 * <br>The default implementation returns an empty list if:<ul>
-	 * <li>The <i>deepenOnForced</i> attribute is true and it remains no moves that are not evaluated as win/loose in x moves</li>
-	 * <li>The <i>deepenOnForced</i> attribute is false and it remains only one move that is not evaluated as win/loose in x moves.<li>
-	 * </ul>
-	 * If not, all moves that are not ended are returned.
+	 * <br>The default implementation returns an empty list if attribute is false and it remains only one move in {@code evaluations}
+	 * If not, all moves are returned.
 	 * <br>By overriding this method, a custom policy can, for instance, decide that result is stable enough to stop deepening before max depth is reached,
 	 * or stop deepening some moves that appears too bad.
 	 */
 	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, SearchHistory<M> history) {
-		final List<EvaluatedMove<M>> sortedMoves = history.getList();
-		final List<M> toDeepen = new ArrayList<>(evaluations.size());
-		int wins = 0;
-		for (var mv : sortedMoves) {
-			final Type type = mv.getEvaluation().getType();
-			if (type==Type.WIN) {
-				wins++;
-				if (wins==getSize()) {
-					// If we have found getSize() moves, no need to deepen anything
-					return Collections.emptyList();
-				}
-			} else if (type==Type.EVAL) {
-				// If the move is not a win/loose, continue deepening
-				toDeepen.add(mv.getContent());
-			}
-		}
-		
 		// Stop deepening if not in deepenOnForced mode and there's only one move to deepen
-		return deepenOnForced || toDeepen.size()>1 ? toDeepen : Collections.emptyList();
+		return deepenOnForced || evaluations.size()>1 ? evaluations.stream().map(EvaluatedMove::getContent).toList() : Collections.emptyList();
 	}
 
 	/** This method is called when a search is interrupted by timeout.

@@ -1,11 +1,12 @@
 package com.fathzer.games.ai.transposition;
 
+import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.evaluation.Evaluator;
 
 /** An AI that uses a transposition table to speed up its search.
  *  <br>
  */
-public interface TTAi<M> {
+public interface TTAi<M> extends AI<M> {
 	/** Sets the transposition table.
 	 * @param table The new transposition table (null to not use any transposition table)
 	 */

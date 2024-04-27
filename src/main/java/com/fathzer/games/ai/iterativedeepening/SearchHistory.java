@@ -27,7 +27,7 @@ public class SearchHistory<M> {
 		depths.add(depth);
 	}
 	
-	public int getIndex(int index) {
+	public int getDepth(int index) {
 		return depths.get(index);
 	}
 
