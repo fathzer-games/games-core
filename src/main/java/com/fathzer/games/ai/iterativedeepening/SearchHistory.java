@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.moveselector.MoveSelector;
 
 public class SearchHistory<M> {
 	private final int size;
@@ -45,6 +46,15 @@ public class SearchHistory<M> {
 	public List<EvaluatedMove<M>> getBestMoves() {
 		return results.isEmpty() ? null : SearchResult.getBestMoves(results.get(results.size()-1), size, accuracy);
 	}
+	
+	public EvaluatedMove<M> getBestMove(MoveSelector<M, SearchHistory<M>> selector) {
+		return selector.select(this, getBestMoves()).get(0);
+	}
+
+	public EvaluatedMove<M> getBestMove() {
+		return getBestMoves().get(0);
+	}
+	
 	public M getBest() {
 		return isEmpty() ? null : getBestMoves().get(0).getContent();
 	}
