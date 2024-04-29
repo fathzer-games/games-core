@@ -95,8 +95,8 @@ class IterativeDeepeningEngineTest {
 		// Now look for 2 bestmoves
 		policy.setSize(2);
 		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cs-105,Ds-106/"
-								 + "3:1:Bl4,Cs104,Ds105/"
-								 + "4:1:Dl6,Cs80");
+								 + "3:1:Bl1,Cs104,Ds105/"
+								 + "4:1:Dl1,Cs80");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(3,bestMoves.length());
 		assertEquals(encodedEvMovetoList.apply("Aw1,Cs80"), bestMoves.getBestMoves());
@@ -115,10 +115,10 @@ class IterativeDeepeningEngineTest {
 		// Look for 3 best moves and have two wins at first depth and 1 at second
 		policy.setSize(3);
 		FakeNegamax.setSearchData("2:3:Aw1,Bw1,Cs-105,Ds-106/"
-				 				 + "3:1:Cs104,Dw3/");
+				 				 + "3:1:Cs104,Dw1/");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1,Dw3"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1,Dw1"), bestMoves.getBestMoves());
 		
 		// Look for 2 best moves and do no deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
@@ -131,10 +131,10 @@ class IterativeDeepeningEngineTest {
 		// Look for 2 best moves and do forced deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
 		policy.setDeepenOnForced(true);
-		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2/3:1:Bw5");
+		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2/3:1:Bw2");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bw5"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bw2"), bestMoves.getBestMoves());
 	}
 	
 	public static Optional<EvaluatedMove<String>> parseMove(String encoded) {

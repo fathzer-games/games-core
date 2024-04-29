@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
@@ -15,12 +14,10 @@ import com.fathzer.games.util.OrderedUtils;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
-import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
 public class IterativeDeepeningSearch<M> {
 	private final DeepeningPolicy deepeningPolicy;
 	private final AI<M> ai;
-	private List<EvaluatedMove<M>> orderedMoves;
 	private SearchHistory<M> searchHistory;
 	private List<M> searchedMoves;
 	private SearchEventLogger<M> logger;
@@ -44,7 +41,7 @@ public class IterativeDeepeningSearch<M> {
 		this.logger = logger;
 	}
 	
-	private List<EvaluatedMove<M>> buildBestMoves() {
+	private SearchHistory<M> buildBestMoves() {
 		deepeningPolicy.start();
 		this.searchHistory = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
@@ -55,7 +52,7 @@ public class IterativeDeepeningSearch<M> {
 		final long remaining = maxTime-(deepeningPolicy.getSpent());
 		if (!deepeningPolicy.isEnoughTimeToDeepen(currentParams.getDepth())) {
 			// If there is not enough time to deepen => do not deepen the search
-			return bestMoves.getCut();
+			return searchHistory;
 		}
 		final Timer timer = new Timer(true);
 		if (maxTime!=Long.MAX_VALUE) {
@@ -71,7 +68,7 @@ public class IterativeDeepeningSearch<M> {
 		List<EvaluatedMove<M>> evaluatedMoves = bestMoves.getList();
 		final List<EvaluatedMove<M>> ended = new ArrayList<>(evaluatedMoves.size());
 		while (currentParams.getDepth()<deepeningPolicy.getDepth()) {
-			final List<M> moves = deepeningPolicy.isEnoughTimeToDeepen(depth) ? deepeningPolicy.getMovesToDeepen(currentParams.getDepth(), removeMovesThatEndedGame(evaluatedMoves, currentParams), searchHistory) : Collections.emptyList();
+			final List<M> moves = deepeningPolicy.isEnoughTimeToDeepen(depth) ? deepeningPolicy.getMovesToDeepen(currentParams, searchHistory, evaluatedMoves) : Collections.emptyList();
 			if (moves.isEmpty()) {
 				logger.logEndedByPolicy(currentParams.getDepth());
 			} else {
@@ -92,26 +89,9 @@ public class IterativeDeepeningSearch<M> {
 			}
 		}
 		timer.cancel();
-		return searchHistory.getBestMoves();
+		return searchHistory;
 	}
 	
-	private List<EvaluatedMove<M>> removeMovesThatEndedGame(List<EvaluatedMove<M>> evaluatedMoves, SearchParameters currentParams) {
-		final AtomicInteger size = new AtomicInteger(currentParams.getSize()); 
-		final List<EvaluatedMove<M>> list = evaluatedMoves.stream().filter( em -> {
-			final Type type = em.getEvaluation().getType();
-			if (type==Type.WIN) {
-				size.decrementAndGet();
-			}
-			return type==Type.EVAL;
-		}).toList();
-		if (size.get()>0) {
-			currentParams.setSize(size.get());
-			return list;
-		} else {
-			return Collections.emptyList();
-		}
-	}
-
 	private static <M> List<EvaluatedMove<M>> complete(SearchResult<M> result, List<EvaluatedMove<M>> ended) {
 		if (ended.isEmpty()) {
 			return result.getList();
@@ -120,32 +100,11 @@ public class IterativeDeepeningSearch<M> {
 		ended.stream().forEach(em -> OrderedUtils.insert(moves, em));
 		return moves;
 	}
-
-	public List<EvaluatedMove<M>> getBestMoves() {
-		if (orderedMoves==null) {
-			orderedMoves = buildBestMoves();
-		}
-		return orderedMoves;
-	}
 	
 	public SearchHistory<M> getSearchHistory() {
-		if (orderedMoves==null) {
-			orderedMoves = buildBestMoves();
+		if (searchHistory==null) {
+			searchHistory = buildBestMoves();
 		}
 		return this.searchHistory;
-	}
-
-	/** Gets the actual depth reached by the search.
-	 * @return a positive integer
-	 */
-	public int getDepth() {
-		if (orderedMoves==null) {
-			orderedMoves = buildBestMoves();
-		}
-		return this.depth;
-	}
-
-	public int getMaxDepth() {
-		return deepeningPolicy.getDepth();
 	}
 }

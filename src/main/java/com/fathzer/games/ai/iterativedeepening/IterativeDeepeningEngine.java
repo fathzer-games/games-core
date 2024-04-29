@@ -181,7 +181,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 			return result;
 		}
 		final IterativeDeepeningSearch<M> search = doSearch(board, searchedMoves);
-		final List<EvaluatedMove<M>> moves = search.getBestMoves();
+		final List<EvaluatedMove<M>> moves = search.getSearchHistory().getBestMoves();
 		if (moves.isEmpty()) {
 			// No possible move
 			logger.logMoveChosen(board, null);
@@ -212,7 +212,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 				rs = new IterativeDeepeningSearch<>(internal, deepeningPolicy);
 				rs.setEventLogger(logger);
 				rs.setSearchedMoves(searchedMoves);
-				final List<EvaluatedMove<M>> result = rs.getBestMoves();
+				final List<EvaluatedMove<M>> result = rs.getSearchHistory().getBestMoves();
 				for (EvaluatedMove<M> ev:result) {
 					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
 				}

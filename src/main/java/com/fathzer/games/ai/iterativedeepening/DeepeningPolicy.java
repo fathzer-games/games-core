@@ -4,12 +4,14 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
 
 /** A policy that manages how to deepen the search.
  * <br>Typically, it decides at which depth to start, what increment to add at each step, and if we should end prematurely. 
@@ -91,19 +93,58 @@ public class DeepeningPolicy extends SearchParameters {
 	/** Determines which moves should be deepened.
 	 * <br>This method is called every time a search is made except when {@link #isEnoughTimeToDeepen(int)} returns false.
 	 * @param <M> The type of moves
-	 * @param depth The depth that just finished
-	 * @param evaluations The evaluations obtained at this depth that are not move that ends the game (no need to deepen such moves)
+	 * @param currentParams The current search parameters
 	 * @param history The search history, including the result at {@code depth}
+	 * @param evaluations The evaluations obtained at this depth that were not removed by {@link #filterWinLooseMoves(SearchParameters, SearchHistory, List)}.
 	 * @return A list of moves to deepen, an empty list to stop deepening.
-	 * <br>The default implementation returns an empty list if attribute is false and it remains only one move in {@code evaluations}
-	 * If not, all moves are returned.
+	 * <br><b>Please note</b> that {@code currentParams} could also be changed (typically to decrement its size when win moves are in {@code evaluations}
+	 * <br>The default implementation first calls filterWinLooseMoves, then it returns an empty list if attribute is false and it remains only one move
+	 * in {@code evaluations}
+	 * <br> If not, all moves are returned.
 	 * <br>By overriding this method, a custom policy can, for instance, decide that result is stable enough to stop deepening before max depth is reached,
 	 * or stop deepening some moves that appears too bad.
 	 */
-	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, SearchHistory<M> history) {
+	public <M> List<M> getMovesToDeepen(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluations) {
+		evaluations = filterWinLooseMoves(currentParams, history, evaluations);
 		// Stop deepening if not in deepenOnForced mode and there's only one move to deepen
 		return deepenOnForced || evaluations.size()>1 ? evaluations.stream().map(EvaluatedMove::getContent).toList() : Collections.emptyList();
 	}
+	
+	/** Removes the win/loose moves from the list of moves that should be evaluated (no need to deepen such moves).
+	 * <br>This method is called by {@link #getMovesToDeepen(SearchParameters, SearchHistory, List)}
+	 * <br><b>Warning<b>: Due to the use of transposition tables, this task is tricky; We can find win or loose moves at depth n with a overestimated
+	 * number of moves to reach end of game.<br>
+	 * For example M+6 at depth 7 moves when only 4 are required to force mate. The problem is removing these moves from the list of moves to deepen
+	 * can lead to wrong best moves list. For instance, if a M+4 move is first identified as M+7 at depth 7, then another move is identified at M+5.
+	 * The first move will seems worse that the second ... and it is not true.
+	 * <br>So, this default implementation will stop deepening win/loose move only if the depth matches the distance to mate. 
+	 * @param <M> The type of moves
+	 * @param currentParams The current search parameters
+	 * @param history The search history, including the result at {@code depth}
+	 * @param evaluations The evaluations obtained at {@code currentParams}'s depth
+	 * @return The list of evaluations without the win/loose moves that we do not need to deepen.
+	 */
+	protected <M> List<EvaluatedMove<M>> filterWinLooseMoves(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluatedMoves) {
+		final AtomicInteger size = new AtomicInteger(currentParams.getSize());
+		final List<EvaluatedMove<M>> list = evaluatedMoves.stream().filter( em -> {
+			Type type = em.getEvaluation().getType();
+			if (type!=Type.EVAL && currentParams.getDepth()/2<em.getEvaluation().getCountToEnd()) {
+				type = Type.EVAL;
+			}
+			if (type==Type.WIN) {
+				size.decrementAndGet();
+			}
+			return type==Type.EVAL;
+		}).toList();
+		if (size.get()>0) {
+			currentParams.setSize(size.get());
+			return list;
+		} else {
+			return Collections.emptyList();
+		}
+	}
+
+
 
 	/** This method is called when a search is interrupted by timeout.
 	 * <br>When a timeout occurs during a search at depth n, the results of the search is usually partial (some moves are missing).
