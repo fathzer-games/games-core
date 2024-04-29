@@ -112,7 +112,7 @@ public class DeepeningPolicy extends SearchParameters {
 	
 	/** Removes the win/loose moves from the list of moves that should be evaluated (no need to deepen such moves).
 	 * <br>This method is called by {@link #getMovesToDeepen(SearchParameters, SearchHistory, List)}
-	 * <br><b>Warning<b>: Due to the use of transposition tables, this task is tricky; We can find win or loose moves at depth n with a overestimated
+	 * <br><b>Warning</b>: Due to the use of transposition tables, this task is tricky; We can find win or loose moves at depth n with a overestimated
 	 * number of moves to reach end of game.<br>
 	 * For example M+6 at depth 7 moves when only 4 are required to force mate. The problem is removing these moves from the list of moves to deepen
 	 * can lead to wrong best moves list. For instance, if a M+4 move is first identified as M+7 at depth 7, then another move is identified at M+5.
@@ -121,7 +121,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 * @param <M> The type of moves
 	 * @param currentParams The current search parameters
 	 * @param history The search history, including the result at {@code depth}
-	 * @param evaluations The evaluations obtained at {@code currentParams}'s depth
+	 * @param evaluatedMoves The evaluations obtained at {@code currentParams}'s depth
 	 * @return The list of evaluations without the win/loose moves that we do not need to deepen.
 	 */
 	protected <M> List<EvaluatedMove<M>> filterWinLooseMoves(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluatedMoves) {
