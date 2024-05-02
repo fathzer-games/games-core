@@ -13,6 +13,7 @@ import java.util.function.Predicate;
  * <li>score should be a short (16 bits)</li>
  * <li>depth is limited to 127 (8 bits), of course, it should be &gt;= 0</li>
  * <li>move can be represented as a integer (32 bits)</li>
+ * <li>generation number is always &lt; 64 (after reaching 63, it returns to 0). 
  * </ul>
  */
 public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
@@ -22,6 +23,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	private final int size; // The number of slots the table will have
 	private int entryCount; // The number of currently occupied slots.
 	private TranspositionTablePolicy<M> policy;
+	private int generation;
 
 	/** Constructor.
 	 * @param size The table size
@@ -32,6 +34,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 		table = new AtomicLongArray(this.size * SLOTS);
 		this.lock = new ReentrantReadWriteLock();
 		policy = new BasicPolicy<>();
+		this.generation = 0;
 	}
 	
 	@Override
@@ -63,7 +66,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 					entryCount++;
 				}
 				table.set(index, key);
-				table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move)));
+				table.set(index+1, OneLongEntry.toLong(type, (byte)depth, (short) value, toInt(move), generation));
 			}
 			return written;
 		} finally {
@@ -95,6 +98,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 			table.set(i, 0);
 		}
 		this.entryCount = 0;
+		this.generation = 0;
 	}
 
 	/**
@@ -102,10 +106,18 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 * In this implementation, the whole table is cleared.
 	 */
 	@Override
-	public void newPosition() {
-		newGame();
+	public void newGeneration() {
+		generation++;
+		if (generation>63) {
+			generation=0;
+		}
 	}
 	
+	@Override
+	public int getGeneration() {
+		return generation;
+	}
+
 	@Override
 	public int getSize() {
 		return size;

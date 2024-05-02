@@ -17,7 +17,10 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 	private static final long DEPTH_MASK = 0xff000000000000L; // 8 bits
 	private static final int TYPE_SHIFT = 56;
 	private static final long TYPE_MASK = 0x300000000000000L; // 2 bits
-	// It remain 4 bits not used
+	private static final int GENERATION_SHIFT = 58;
+	private static final long GENERATION_MASK =0xFC00000000000000L; // 6 bits
+
+	// It remain 6 bits not used
 	
 	private final IntFunction<M> toMove;
 	private long key;
@@ -50,8 +53,9 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 		return EntryType.ALL.get((int) ((value & TYPE_MASK)>>TYPE_SHIFT));
 	}
 	
-	static long toLong(EntryType type, byte depth, short value, int move) {
+	static long toLong(EntryType type, byte depth, short value, int move, int generation) {
 		return type==EntryType.INVALID ? 0 :
+			((((long)generation) << GENERATION_SHIFT) & GENERATION_MASK) |
 			((((long)type.ordinal()) << TYPE_SHIFT) & TYPE_MASK) |
 			((((long)depth) << DEPTH_SHIFT) & DEPTH_MASK) |
 			((((long)value) << SCORE_SHIFT) & SCORE_MASK) |
@@ -71,6 +75,11 @@ class OneLongEntry<M> implements TranspositionTableEntry<M> {
 	@Override
 	public M getMove() {
 		return toMove.apply((int)(value & MOVE_MASK));
+	}
+	
+	@Override
+	public int getGeneration() {
+		return (int) ((value & GENERATION_MASK) >>> GENERATION_SHIFT);
 	}
 	
 	@Override
