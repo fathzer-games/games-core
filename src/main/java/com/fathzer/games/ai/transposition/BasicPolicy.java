@@ -67,12 +67,12 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
     		type = EXACT;
     	}
     	// Update the transposition table
-		return table.store(key, type, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), p-> shouldReplace(p, key, state.getDepth(), type));
+		return table.store(key, type, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), p-> shouldReplace(p, key, state.getDepth(), type, table.getGeneration()));
 	}
 
-	protected boolean shouldReplace(TranspositionTableEntry<M> entry, long newKey, int newDepth, EntryType newType) {
-		if (!entry.isValid()) {
-			// Always write if no entry is in the table
+	protected boolean shouldReplace(TranspositionTableEntry<M> entry, long newKey, int newDepth, EntryType newType, int newGeneration) {
+		if (!entry.isValid() || newGeneration!=entry.getGeneration()) {
+			// Always write if no entry is in the table or if entry is from a previous generation
 			return true;
 		}
 		if (entry.getEntryType()==EXACT && newType!=EXACT) {
