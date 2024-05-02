@@ -7,6 +7,7 @@ public class BasicEntry<M> implements TranspositionTableEntry<M> {
 	private int depth;
 	private int score;
 	private M move;
+	private int generation;
 	
 	public BasicEntry(boolean valid, long key) {
 		super();
@@ -60,6 +61,15 @@ public class BasicEntry<M> implements TranspositionTableEntry<M> {
 		return move;
 	}
 	
+	@Override
+	public int getGeneration() {
+		return generation;
+	}
+	
+	public void setGeneration(int generation) {
+		this.generation = generation;
+	}
+
 	public void setMove(M move) {
 		this.move = move;
 	}
