@@ -35,9 +35,16 @@ public interface TranspositionTable<M> {
 	boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
-	 * <br>On this event, the table can clean itself, or in a future release increment a generation counter in Entry generation.
+	 * <br>On this event, the table increments a generation counter that is saved in its entries.
+	 * @see #getGeneration()
 	 */
-	void newPosition(); //TODO Change comment when generation will be used in TableEntry
+	void newGeneration();
+	
+	/** Gets the current generation.
+	 * @return a int &gt;=0. Be aware that, depending on the transposition table, this generation number can be limited and can return to 0 after reaching its upper bound.
+	 */
+	int getGeneration();
+
 	
 	void newGame(); //TODO Should call transpositionTablePolicy
 	

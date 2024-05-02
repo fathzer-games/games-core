@@ -20,6 +20,23 @@ class OneLongEntryTranspositionTableTest {
 	}
 	
 	@Test
+	void testGenerationIncrementCycle() {
+		final OneLongEntryTranspositionTable<Integer> table = new TT(8, SizeUnit.KB);
+		assertEquals(0, table.getGeneration());
+		for (int g=1;g<=63;g++) {
+			table.newGeneration();
+			assertEquals(g, table.getGeneration());
+		}
+		table.newGeneration();
+		assertEquals(0, table.getGeneration());
+		
+		table.newGeneration();
+		assertEquals(1, table.getGeneration());
+		table.newGame();
+		assertEquals(0, table.getGeneration());
+	}
+	
+	@Test
 	void test() {
 		OneLongEntryTranspositionTable<Integer> table = new TT(512, SizeUnit.KB);
 		assertEquals(0,table.getEntryCount());
@@ -49,7 +66,7 @@ class OneLongEntryTranspositionTableTest {
 		assertEquals(1, table.getEntryCount());
 		
 		// Verify there's no problem with 0 values
-		table.newPosition();
+		table.newGeneration();
 		
 		table.store(key, EntryType.EXACT, 0, 0, 0, p->true);
 		entry = table.get(key);
