@@ -3,6 +3,7 @@ package com.fathzer.games.ai.iterativedeepening;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.fathzer.games.MoveGenerator;
@@ -80,6 +81,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	private EngineEventLogger<M, B> logger;
 	private IterativeDeepeningSearch<M> rs;
 	private AtomicBoolean running;
+	private Predicate<B> generationDetector = b->true;
 	
 	/** Constructor
 	 * <br>By default, the parallelism of the search is 1, the event logger logs nothing and the engine select randomly a move in the best move list.
@@ -159,6 +161,18 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		this.deepeningPolicy = policy;
 	}
 	
+	/** Sets the generation detector.
+	 * @param generationDetector A predicate that returns true if the generation number should be incremented (a irreversible move has occurred).
+	 * @see <a href="https://github.com/fathzer-games/games-core/wiki/AI-engines#generation-number">Generation number documentation</a>
+	 */
+	public void setGenerationDetector(Predicate<B> generationDetector) {
+		this.generationDetector = generationDetector;
+	}
+	
+	public Predicate<B> getGenerationDetector() {
+		return generationDetector;
+	}
+
 	/** Should be called when a new game is started.
 	 * <br>The default implementation call the {@link MoveLibrary#newGame} and {@link TranspositionTable#newGame} methods 
 	 */
@@ -198,9 +212,8 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	
 	protected IterativeDeepeningSearch<M> doSearch(B board, List<M> searchedMoves) {
 		logger.logSearchStart(board, this);
-		// TODO Test if it is really a new position?
-		if (transpositionTable!=null) {
-			transpositionTable.newPosition();
+		if (transpositionTable!=null && generationDetector.test(board)) {
+			transpositionTable.newGeneration();
 		}
 		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
 			final TTAi<M> internal = buildAi(context);

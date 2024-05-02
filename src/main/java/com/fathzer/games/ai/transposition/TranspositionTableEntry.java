@@ -36,4 +36,9 @@ public interface TranspositionTableEntry<M> {
 	 * @return a move
 	 */
 	M getMove();
+	
+	/** Get's the entry's generation
+	 * @return an integer
+	 */
+	int getGeneration();
 }
