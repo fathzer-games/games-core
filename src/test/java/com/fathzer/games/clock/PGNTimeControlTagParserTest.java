@@ -15,6 +15,7 @@ class PGNTimeControlTagParserTest {
 		assertThrows(IllegalArgumentException.class, () -> parser.toClockSettings("?"));
 		assertThrows(IllegalArgumentException.class, () -> parser.toClockSettings("300+5+4"));
 		assertThrows(IllegalArgumentException.class, () -> parser.toClockSettings("40/20/300"));
+		assertThrows(IllegalArgumentException.class, () -> parser.toClockSettings("300:30+30"));
 		
 		ClockSettings settings = parser.toClockSettings("300+5");
 		assertEquals(300, settings.getInitialTime());
