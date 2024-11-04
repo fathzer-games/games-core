@@ -21,12 +21,12 @@ public class PGNTimeControlTagParser {
 		ClockSettings result = null;
 		final String[] fields = pgnTag.split(":");
 		for (int i=fields.length-1; i>=0; i--) {
-			result = addField(result, fields[i].trim(), i==fields.length-1);
+			result = addField(result, fields[i].trim());
 		}
 		return result;
 	}
 
-	private ClockSettings addField(ClockSettings nextSettings, String field, boolean isLast) {
+	private ClockSettings addField(ClockSettings nextSettings, String field) {
 		if (field.startsWith("*")) {
 			throw new IllegalArgumentException("Sorry sand clock is not yet supported");
 		}
@@ -57,8 +57,8 @@ public class PGNTimeControlTagParser {
 			return new int[] {Integer.parseInt(field),0};
 		} else {
 			return new int[] {
-					Integer.parseInt(field.substring(index+1)),
-					Integer.parseInt(field.substring(0, index))
+				Integer.parseInt(field.substring(index+1)),
+				Integer.parseInt(field.substring(0, index))
 			};
 		}
 	}
