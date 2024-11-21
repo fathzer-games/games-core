@@ -15,7 +15,7 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 	public enum TerminationCause {
 		/** A player resigns */
 		ABANDONED,
-		/** */
+		/** Result determined by third-party adjudication */
 		ADJUDICATION,
 		/** A player died (hope he was a computer!)
 		DEATH,
@@ -59,7 +59,11 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 			throw new IllegalStateException();
 		}
 		this.moves.add(move);
-		return board.makeMove(move, MoveConfidence.UNSAFE);
+		final boolean result = board.makeMove(move, MoveConfidence.UNSAFE);
+		if (result && Status.PLAYING!=getStatus()) {
+			this.terminationCause = TerminationCause.NORMAL;
+		}
+		return result;
 	}
 
 	public B getStartBoard() {
@@ -83,8 +87,8 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 	 * @throws IllegalArgumentException if termination is null or if status is {@link Status#PLAYING} or null.
 	 */
 	public void earlyEnd(Status status, TerminationCause terminationCause) {
-		if (Status.PLAYING==status || status==null) {
-			throw new IllegalStateException();
+		if (Status.PLAYING==status || status==null || terminationCause==null || terminationCause==TerminationCause.UNTERMINATED) {
+			throw new IllegalArgumentException();
 		}
 		if (Status.PLAYING!=getStatus()) {
 			throw new IllegalStateException("Status is "+getStatus());
