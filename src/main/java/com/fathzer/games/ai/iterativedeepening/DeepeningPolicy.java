@@ -21,6 +21,10 @@ public class DeepeningPolicy extends SearchParameters {
 	private long start;
 	private boolean deepenOnForced;
 	
+	/** Constructor.
+	 * <br>By default there's no time limit to deepening and forced moves are not evaluated.
+	 * @param maxDepth The maximum search depth.
+	 */
 	public DeepeningPolicy(int maxDepth) {
 		super(maxDepth);
 		this.maxTime = Long.MAX_VALUE;
@@ -28,10 +32,17 @@ public class DeepeningPolicy extends SearchParameters {
 		this.deepenOnForced = false;
 	}
 	
+	/** Start counting time. 
+	 * <br>This method should be called when the search starts in order to have {@link #getSpent()} and {@link #isDeepenOnForced()} works
+	 */
 	public void start() {
 		this.start = System.currentTimeMillis();
 	}
 	
+	/** Gets the number of milliseconds elapsed since the call to {@link #start}
+	 * @return a positive long.
+	 * @throws IllegalStateException if {@link #start()} was not called
+	 */
 	public long getSpent() {
 		if (start<0) {
 			throw new IllegalStateException("Not yet started");
@@ -45,6 +56,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 */
 	public void setMaxTime(long maxTime) {
 		this.maxTime = maxTime;
+		this.start = -1;
 	}
 
 	/** Gets the maximum time to spend in the search.
@@ -54,13 +66,17 @@ public class DeepeningPolicy extends SearchParameters {
 		return maxTime;
 	}
 	
+	/** Check whether the search should be deepened on forced moves.
+	 * @return true it should be deepened.
+	 * @see #setDeepenOnForced(boolean)
+	 */
 	public boolean isDeepenOnForced() {
 		return deepenOnForced;
 	}
 
 	/** Sets if the search should be deepened when only one move remains to evaluate.
-	 * <br>Please note, that if this attribute to false (The default value), searching for two best moves (size=2), and
-	 * you having n possible moves and only one that isn't yet evaluate to win or loose, will stop the evaluation
+	 * <br>Please note, that if this attribute is false (The default value), searching for two best moves (size=2), and
+	 * having n possible moves but only one not yet evaluated to win or loose, will stop the evaluation
 	 * @param deepenOnForced true to force the deepening until max depth or maxtime is reached.
 	 */
 	public void setDeepenOnForced(boolean deepenOnForced) {

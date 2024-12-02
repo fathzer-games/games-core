@@ -1,11 +1,15 @@
 package com.fathzer.games.ai.terativedeepening;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +20,30 @@ import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 
 class DeepeningPolicyTest {
+	@Test
+	void test() {
+		final DeepeningPolicy policy = new DeepeningPolicy(10);
+		assertEquals(10, policy.getDepth());
+		assertEquals(2, policy.getStartDepth());
+		assertEquals(3, policy.getNextDepth(2));
+		assertEquals(4, policy.getNextDepth(3));
+		assertEquals(Long.MAX_VALUE, policy.getMaxTime());
+		assertThrows(IllegalStateException.class, () -> policy.getSpent());
+		policy.start();
+		policy.getSpent(); //Should not fail
+		
+		// Reset the policy
+		policy.setMaxTime(1);
+		assertThrows(IllegalStateException.class, () -> policy.getSpent());
+		policy.start();
+		await().atMost(110, TimeUnit.MILLISECONDS).until(() -> policy.getSpent()>10);
+		assertFalse(policy.isEnoughTimeToDeepen(4));
+		
+		policy.setMaxTime(1000);
+		policy.start();
+		await().atLeast(10, TimeUnit.MILLISECONDS);
+	}
+	
 	@Test
 	void testMergeInterrupted() {
 		final DeepeningPolicy policy = new DeepeningPolicy(4);
