@@ -17,7 +17,7 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 		ABANDONED,
 		/** Result determined by third-party adjudication */
 		ADJUDICATION,
-		/** A player died (hope he was a computer!)
+		/** A player died (hope he was a computer!) */
 		DEATH,
 		/** The game was ended because of an emergency (fire, etc...) */
 		EMERGENCY,
