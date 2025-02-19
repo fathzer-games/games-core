@@ -4,6 +4,7 @@ import static com.fathzer.games.ai.transposition.EntryType.*;
 
 import java.util.function.IntUnaryOperator;
 
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 
 /** A basic transposition table policy that records exact, lower or upper score and best/cut.
@@ -16,7 +17,7 @@ import com.fathzer.games.ai.AlphaBetaState;
  * </ul>
  * @param <M> The type of moves
  */
-public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
+public class BasicPolicy<M, B extends MoveGenerator<M>> implements TranspositionTablePolicy<M, B> {
 	@Override
 	public AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter) {
 		final AlphaBetaState<M> state = new AlphaBetaState<>(depth, alpha, beta);
@@ -57,7 +58,7 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	}
 	
 	@Override
-	public boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter) {
+	public boolean store(TranspositionTable<M, B> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter) {
     	final EntryType type;
     	if (state.getValue() <= state.getAlpha()) {
     		type = UPPER_BOUND;

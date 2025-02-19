@@ -2,11 +2,12 @@ package com.fathzer.games.ai.transposition;
 
 import java.util.function.IntUnaryOperator;
 
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 
 /** A class that decide if a transposition table entry should be replaced or not.
  */
-public interface TranspositionTablePolicy<M> {
+public interface TranspositionTablePolicy<M, B extends MoveGenerator<M>> {
     /** Process a transposition table entry.
      * <br>This method is called before iterating on possible moves to use entry data in order to speed up the Negamax algorithm.
      * <br>One can override it to customize how transposition table entries are used.
@@ -34,5 +35,5 @@ public interface TranspositionTablePolicy<M> {
 	 * @return true if state is stored, false if it is ignored
 	 * @see TranspositionTable#store(long, EntryType, int, int, Object, java.util.function.Predicate)
 	 */
-	boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter);
+	boolean store(TranspositionTable<M, B> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter);
 }

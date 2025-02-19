@@ -61,7 +61,7 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy policy = new DeepeningPolicy(4);
 		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
 			@Override
-			protected TTAi<String> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
+			protected TTAi<String, FakeMoveGenerator> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
 				return new FakeNegamax(context);
 			}
 		};
@@ -82,7 +82,7 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy policy = new DeepeningPolicy(6);
 		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
 			@Override
-			protected TTAi<String> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
+			protected TTAi<String, FakeMoveGenerator> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
 				return new FakeNegamax(context);
 			}
 		};

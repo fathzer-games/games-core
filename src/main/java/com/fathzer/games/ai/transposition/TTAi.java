@@ -1,21 +1,22 @@
 package com.fathzer.games.ai.transposition;
 
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.evaluation.Evaluator;
 
 /** An AI that uses a transposition table to speed up its search.
  *  <br>
  */
-public interface TTAi<M> extends AI<M> {
+public interface TTAi<M, B extends MoveGenerator<M>> extends AI<M> {
 	/** Sets the transposition table.
 	 * @param table The new transposition table (null to not use any transposition table)
 	 */
-	void setTranspositonTable(TranspositionTable<M> table);
+	void setTranspositonTable(TranspositionTable<M, B> table);
 	
 	/** Gets the transposition table.
 	 * @return a transposition table or null
 	 */
-    TranspositionTable<M> getTranspositionTable();
+    TranspositionTable<M, B> getTranspositionTable();
 
 	/** Converts the value used in the search algorithm to a value to be stored in the transposition table.
 	 * <br>Typically, it replaces mat in n from root score to mat in k from here score.

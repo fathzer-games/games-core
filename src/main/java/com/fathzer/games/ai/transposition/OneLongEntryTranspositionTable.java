@@ -7,6 +7,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
+import com.fathzer.games.MoveGenerator;
+
 /**
  * A transposition table that associates a key to an entry represented by a long.
  * <br>Here are its limitations:<ul>
@@ -15,13 +17,13 @@ import java.util.function.Predicate;
  * <li>move can be represented as a integer (32 bits)</li>
  * </ul>
  */
-public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
+public abstract class OneLongEntryTranspositionTable<M, B extends MoveGenerator<M>> implements TranspositionTable<M, B> {
 	private static final int SLOTS = 2; // The number of long per record
 	private final AtomicLongArray table; // Used for transposition table
 	private final ReadWriteLock lock;
 	private final int size; // The number of slots the table will have
 	private int entryCount; // The number of currently occupied slots.
-	private TranspositionTablePolicy<M> policy;
+	private TranspositionTablePolicy<M, B> policy;
 
 	/** Constructor.
 	 * @param size The table size
@@ -72,12 +74,12 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 	
 	@Override
-	public TranspositionTablePolicy<M> getPolicy() {
+	public TranspositionTablePolicy<M, B> getPolicy() {
 		return policy;
 	}
 	
 	@Override
-	public void setPolicy(TranspositionTablePolicy<M> policy) {
+	public void setPolicy(TranspositionTablePolicy<M, B> policy) {
 		this.policy = policy;
 	}
 
@@ -102,7 +104,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 * In this implementation, the whole table is cleared.
 	 */
 	@Override
-	public void newPosition() {
+	public void newPosition(B board) {
 		newGame();
 	}
 	

@@ -6,8 +6,10 @@ import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.games.MoveGenerator;
+
 class OneLongEntryTranspositionTableTest {
-	private static class TT extends OneLongEntryTranspositionTable<Integer> {
+	private static class TT<B extends MoveGenerator<Integer>> extends OneLongEntryTranspositionTable<Integer, B> {
 		public TT(int size, SizeUnit unit) {
 			super(size, unit);
 		}
@@ -21,7 +23,7 @@ class OneLongEntryTranspositionTableTest {
 	
 	@Test
 	void test() {
-		OneLongEntryTranspositionTable<Integer> table = new TT(512, SizeUnit.KB);
+		OneLongEntryTranspositionTable<Integer, ?> table = new TT<>(512, SizeUnit.KB);
 		assertEquals(0,table.getEntryCount());
 		assertEquals(512*1024/(2*8),table.getSize());
 		
@@ -49,7 +51,7 @@ class OneLongEntryTranspositionTableTest {
 		assertEquals(1, table.getEntryCount());
 		
 		// Verify there's no problem with 0 values
-		table.newPosition();
+		table.newPosition(null);
 		
 		table.store(key, EntryType.EXACT, 0, 0, 0, p->true);
 		entry = table.get(key);
@@ -62,7 +64,7 @@ class OneLongEntryTranspositionTableTest {
 	
 	@Test
 	void collisionTest() {
-		OneLongEntryTranspositionTable<Integer> table = new TT(32, SizeUnit.B);
+		OneLongEntryTranspositionTable<Integer,?> table = new TT<>(32, SizeUnit.B);
 		assertEquals(2, table.getSize());
 		assertEquals(0, count(table));
 		
@@ -78,7 +80,7 @@ class OneLongEntryTranspositionTableTest {
 		assertEquals(2, count(table));
 	}
 
-	private int count(TranspositionTable<?> table) {
+	private int count(TranspositionTable<?,?> table) {
 		int count = 0;
 		final Iterator<?> entries = table.getEntries();
 		while (entries.hasNext()) {
@@ -90,7 +92,7 @@ class OneLongEntryTranspositionTableTest {
 	
 	@Test
 	void memorySizeTest() {
-		OneLongEntryTranspositionTable<Integer> table = new TT(32, SizeUnit.MB);
+		OneLongEntryTranspositionTable<Integer, ?> table = new TT<>(32, SizeUnit.MB);
 		assertEquals(32, table.getMemorySizeMB());
 	}
 }

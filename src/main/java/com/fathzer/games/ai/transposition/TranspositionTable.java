@@ -12,8 +12,9 @@ import com.fathzer.games.HashProvider;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
  * <br>Implementations of this interface should be thread safe.
+ * @param <M> The type of the moves
  */
-public interface TranspositionTable<M> {
+public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	/** Get a table entry.
 	 * @param key The key
 	 * @return a table entry or null if this position should not be stored in transposition table.
@@ -35,9 +36,9 @@ public interface TranspositionTable<M> {
 	boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
-	 * <br>On this event, the table can clean itself, or in a future release increment a generation counter in Entry generation.
+	 * <br>On this event, the table can clean itself, or increment a generation counter in Entry generation.
 	 */
-	void newPosition(); //TODO Change comment when generation will be used in TableEntry
+	void newPosition(B board);
 	
 	void newGame(); //TODO Should call transpositionTablePolicy
 	
@@ -45,12 +46,12 @@ public interface TranspositionTable<M> {
 	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
 	 * @return
 	 */
-	TranspositionTablePolicy<M> getPolicy();
+	TranspositionTablePolicy<M, B> getPolicy();
 	
 	/** Sets the transposition table's policy.
 	 * @param policy The policy decides what should be stored in the table and how to use it in the search algorithm.
 	 */
-	void setPolicy(TranspositionTablePolicy<M> policy);
+	void setPolicy(TranspositionTablePolicy<M, B> policy);
 	
 	/**
 	 * Collects the principal variation starting from the position on the board

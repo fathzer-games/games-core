@@ -20,8 +20,8 @@ import com.fathzer.games.util.exec.ExecutionContext;
  * @param <M> The type of the moves
  * @param <B> The type of the {@link MoveGenerator} to use
  */
-public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
-    private TranspositionTable<M> transpositionTable;
+public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M, B> {
+    private TranspositionTable<M, B> transpositionTable;
     private QuiesceEvaluator<M,B> quiesceEvaluator;
     
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
@@ -156,12 +156,12 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     }
     
     @Override
-    public final TranspositionTable<M> getTranspositionTable() {
+    public final TranspositionTable<M, B> getTranspositionTable() {
     	return transpositionTable;
     }
     
     @Override
-    public void setTranspositonTable(TranspositionTable<M> table) {
+    public void setTranspositonTable(TranspositionTable<M, B> table) {
     	this.transpositionTable = table;
     }
 

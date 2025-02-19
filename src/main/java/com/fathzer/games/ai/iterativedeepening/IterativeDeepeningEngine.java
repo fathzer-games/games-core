@@ -75,7 +75,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	private MoveLibrary<M, B> movesLibrary;
 	private Supplier<Evaluator<M, B>> evaluatorSupplier;
 	private DeepeningPolicy deepeningPolicy;
-	private TranspositionTable<M> transpositionTable;
+	private TranspositionTable<M, B> transpositionTable;
 	private int parallelism;
 	private EngineEventLogger<M, B> logger;
 	private IterativeDeepeningSearch<M> rs;
@@ -89,7 +89,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @see #setParallelism(int)
 	 * @see #setLogger(EngineEventLogger)
 	 */
-	public IterativeDeepeningEngine(DeepeningPolicy deepeningPolicy, TranspositionTable<M> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
+	public IterativeDeepeningEngine(DeepeningPolicy deepeningPolicy, TranspositionTable<M, B> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
 		this.parallelism = 1;
 		this.transpositionTable = tt;
 		this.evaluatorSupplier = evaluatorSupplier;
@@ -143,11 +143,11 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		this.logger = logger;
 	}
 
-	public TranspositionTable<M> getTranspositionTable() {
+	public TranspositionTable<M, B> getTranspositionTable() {
 		return transpositionTable;
 	}
 	
-	public void setTranspositionTable(TranspositionTable<M> transpositionTable) {
+	public void setTranspositionTable(TranspositionTable<M, B> transpositionTable) {
 		this.transpositionTable = transpositionTable;
 	}
 
@@ -200,10 +200,10 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		logger.logSearchStart(board, this);
 		// TODO Test if it is really a new position?
 		if (transpositionTable!=null) {
-			transpositionTable.newPosition();
+			transpositionTable.newPosition(board);
 		}
 		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
-			final TTAi<M> internal = buildAi(context);
+			final TTAi<M, B> internal = buildAi(context);
 			internal.setTranspositonTable(transpositionTable);
 			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException();
@@ -238,7 +238,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @param context An execution context that can be used by the AI.
 	 * @return An ai that supports transposition tables. THe default implementation returns a Negamax instance.
 	 */
-	protected TTAi<M> buildAi(ExecutionContext<SearchContext<M,B>> context) {
+	protected TTAi<M, B> buildAi(ExecutionContext<SearchContext<M,B>> context) {
 		return new Negamax<>(context);
 	}
 }
