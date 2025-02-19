@@ -1,16 +1,16 @@
 package com.fathzer.games.clock;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
+import com.fathzer.games.util.exec.CustomThreadFactory;
+
 import static com.fathzer.games.clock.ClockState.*;
 
 /** A clock.
@@ -21,12 +21,7 @@ import static com.fathzer.games.clock.ClockState.*;
  * <br>This class is thread safe.
  */
 public class Clock {
-	private static final ThreadFactory FACTORY = r -> {
-	    Thread t = Executors.defaultThreadFactory().newThread(r);
-	    t.setDaemon(true);
-	    return t;
-    };
-	private static final ScheduledExecutorService TIMER = new ScheduledThreadPoolExecutor(1, FACTORY);
+	private static final ScheduledExecutorService TIMER = new ScheduledThreadPoolExecutor(1, new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Clock"), true));
 	
 	static {
 		((ScheduledThreadPoolExecutor)TIMER).setRemoveOnCancelPolicy(true);
