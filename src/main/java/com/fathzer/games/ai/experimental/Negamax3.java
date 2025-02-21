@@ -22,7 +22,8 @@ import com.fathzer.games.util.exec.ExecutionContext;
 /**
  * An experimental of a Negamax with alpha beta pruning implementation and transposition table.
  * <br>It has the same functionalities than {@link Negamax} except it allows easier search debugging at the price of a (little) performance loss.
- * @param <M> Implementation of the Move interface to use
+ * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
  */
 public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     private Spy<M,B> spy = new Spy<M,B>() {};

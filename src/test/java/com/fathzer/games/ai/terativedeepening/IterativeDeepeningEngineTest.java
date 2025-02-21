@@ -158,7 +158,7 @@ class IterativeDeepeningEngineTest {
 		return Optional.of(new EvaluatedMove<>(mv, ev.toEvaluation(score)));
 	}
 	
-	private record SearchData(int expectedSearchSize, List<String> requestedMoves, List<EvaluatedMove<String>> returnedMoves, boolean isInterrupted) {};
+	private record SearchData(int expectedSearchSize, List<String> requestedMoves, List<EvaluatedMove<String>> returnedMoves, boolean isInterrupted) {}
 	
 	private static class FakeNegamax extends Negamax<String, FakeMoveGenerator> {
 		private static Map<Integer, SearchData> expectedMoveListMap;
@@ -230,6 +230,7 @@ class IterativeDeepeningEngineTest {
 
 		@Override
 		public void unmakeMove() {
+			// Nothing to do
 		}
 
 		@Override

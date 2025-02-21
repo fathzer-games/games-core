@@ -18,6 +18,7 @@ class TTAiTest {
 	private static class DummyTTAi implements TTAi<Move, ChessLibMoveGenerator> {
 		@Override
 		public void setTranspositonTable(TranspositionTable<Move, ChessLibMoveGenerator> table) {
+			// Nothing to do, there is no table
 		}
 
 		@Override
