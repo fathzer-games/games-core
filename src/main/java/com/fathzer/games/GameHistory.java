@@ -37,6 +37,9 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 	private Status extraStatus;
 	private TerminationCause terminationCause;
 
+	/** Creates a new game history.
+	 * @param board The board of the game at its start
+	 */
 	@SuppressWarnings("unchecked")
 	public GameHistory(B board) {
 		this.startBoard = (B) board.fork();
@@ -66,14 +69,24 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 		return result;
 	}
 
+	/** Gets the start board.
+	 * @return a board instance.
+	 */
 	public B getStartBoard() {
 		return startBoard;
 	}
 	
+	/** Gets the current board.
+	 * @return board instance.
+	 */
 	public B getBoard() {
 		return board;
 	}
 
+	/** Gets the list of moves added to this history using the {@link #add(Move)} method.
+	 * @return a list of moves
+	 * @see #add(Move)
+	 */
 	public List<M> getMoves() {
 		return moves;
 	}
@@ -97,6 +110,9 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 		this.terminationCause = terminationCause;
 	}
 	
+	/** Gets the current game status.
+	 * @return A status. The one set with the {@link #earlyEnd(Status, TerminationCause)} method or the one returned by the {@link #getBoardStatus(B)} method. 
+	 */
 	public Status getStatus() {
 		if (extraStatus!=null) {
 			return extraStatus;
@@ -104,10 +120,20 @@ public class GameHistory<M,B extends MoveGenerator<M>> {
 		return getBoardStatus(board);
 	}
 	
+	/** Gets the current termination cause.
+	 * @return a non null termination cause
+	 * @see #earlyEnd(Status, TerminationCause)
+	 */
 	public TerminationCause getTerminationCause() {
 		return this.terminationCause;
 	}
 	
+	/** Gets the current game status, excluding status set by {@link #earlyEnd(Status, TerminationCause)} method.
+	 * <br>The default implementation returns the status returned by {@link MoveGenerator#getContextualStatus()} if it is not <code>PLAYING</code>.
+	 * If its is <code>PLAYING</code> but there are no legal moves, then the result of {@link MoveGenerator#getEndGameStatus()} is returned.
+	 * @param board The board.
+	 * @return A status.
+	 */
 	protected Status getBoardStatus(B board) {
 		Status status = board.getContextualStatus();
 		if (status==Status.PLAYING && board.getLegalMoves().isEmpty()) {
