@@ -28,13 +28,13 @@ class DeepeningPolicyTest {
 		assertEquals(3, policy.getNextDepth(2));
 		assertEquals(4, policy.getNextDepth(3));
 		assertEquals(Long.MAX_VALUE, policy.getMaxTime());
-		assertThrows(IllegalStateException.class, () -> policy.getSpent());
+		assertThrows(IllegalStateException.class, policy::getSpent);
 		policy.start();
 		policy.getSpent(); //Should not fail
 		
 		// Reset the policy
 		policy.setMaxTime(1);
-		assertThrows(IllegalStateException.class, () -> policy.getSpent());
+		assertThrows(IllegalStateException.class, policy::getSpent);
 		policy.start();
 		await().atMost(110, TimeUnit.MILLISECONDS).until(() -> policy.getSpent()>10);
 		assertFalse(policy.isEnoughTimeToDeepen(4));

@@ -2,7 +2,6 @@ package com.fathzer.games.ai.experimental;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.MoveGenerator;
@@ -66,6 +65,6 @@ public abstract class KeyBasedNegaMaxSpyFilter<M,B extends MoveGenerator<M>> {
 				final M mv = state.get(i).lastMove;
 				return mv==null ? "?"+i: toString.apply(mv);
 			})
-			.collect(Collectors.toList());
+			.toList();
 	}
 }

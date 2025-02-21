@@ -26,7 +26,7 @@ public class MultiThreadsContext<T extends Forkable<T>> implements ExecutionCont
 	
 	@Override
 	public void execute(Collection<Runnable> tasks) {
-		Collection<Callable<Void>> callables = tasks.stream().map(this::toCallable).collect(Collectors.toList());
+		Collection<Callable<Void>> callables = tasks.stream().map(this::toCallable).toList();
 		try {
 			final List<Future<Void>> futures = exec.invokeAll(callables, globalContext);
 			exec.checkExceptions(futures);

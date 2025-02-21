@@ -70,7 +70,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 				unmakeMove();
 			}
 			return ok;
-		}).collect(Collectors.toList());
+		}).toList();
 	}
 	
 	/** This method is called before evaluating a position or looking for a previous evaluation in a transposition table.

@@ -29,7 +29,7 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 		List<EvaluatedMove<M>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
 			final M mv = possibleMoves.get(i);
 			return new EvaluatedMove<>(mv, Evaluation.score(evaluate(mv)));
-		}).sorted().collect(Collectors.toList());
+		}).sorted().toList();
 		if (moves.isEmpty()) {
 			return null;
 		}

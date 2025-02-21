@@ -8,7 +8,7 @@ import com.fathzer.games.util.exec.ExecutionContext;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 public enum AiType {
-	Negamax(Negamax::new), Negamax3(Negamax3::new), AlphaBeta(AlphaBeta::new), Minimax(Minimax::new);
+	NEGAMAX(Negamax::new), NEGAMAX_3(Negamax3::new), ALPHA_BETA(AlphaBeta::new), MINIMAX(Minimax::new);
 	
 	private final Function<ExecutionContext<SearchContext<Move, ChessLibMoveGenerator>>, AbstractAI<Move, ChessLibMoveGenerator>> aiBuilder;
 

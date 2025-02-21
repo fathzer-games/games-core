@@ -45,7 +45,7 @@ class StackTest {
 	@Test
 	void test() {
 		final MyGame game = new MyGame();
-		assertThrows(NoSuchElementException.class, ()-> game.undo());
+		assertThrows(NoSuchElementException.class, game::undo);
 		
 		assertEquals(0, game.value); // Initial state will be save as index 0
 		assertEquals(1, game.move());
@@ -53,7 +53,7 @@ class StackTest {
 		assertEquals(2,game.backupContainerNumber);
 		assertEquals(1, game.undo());
 		assertEquals(0, game.undo());
-		assertThrows(NoSuchElementException.class, ()-> game.undo());
+		assertThrows(NoSuchElementException.class, game::undo);
 		assertEquals(3, game.move());
 		assertEquals(4, game.move());
 		assertEquals(5, game.move());
