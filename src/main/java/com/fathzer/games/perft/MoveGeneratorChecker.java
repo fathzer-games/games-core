@@ -2,12 +2,13 @@ package com.fathzer.games.perft;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 
 /** A class that tests a {@link MoveGenerator} against a {@link PerfTBuilder} test Data set.
  * <br>The test executes a list of {@link PerfTBuilder} test and returns the total number of moves found at a specified depth.
@@ -112,14 +113,20 @@ public class MoveGeneratorChecker {
 	 * @param playLeaves true to play leaves move (ignored if <i>legalMoves</i> is false. See {@link PerfTBuilder#setPlayLeaves(boolean)} comment).
 	 * @param parallelism The number of threads to use to perform the search 
 	 * @return The number of moves found.
+	 * @throws IllegalStateException if a test is already running.
+	 * @throws IllegalArgumentException if <code>parallelism</code> is &lt;= 0.
 	 */
 	public <M, B extends MoveGenerator<M>> long run(FromPositionMoveGeneratorBuilder<M, B> engine, int depth, boolean legalMoves, boolean playLeaves, int parallelism) {
+		if (parallelism <= 0) {
+			throw new IllegalArgumentException("Parallelism must be > 0");
+		}
 		if (!running.compareAndSet(false, true)) {
 			throw new IllegalStateException("A test is already running");
 		}
 		cancelled = false;
 		long count = 0;
-		try (ContextualizedExecutor<MoveGenerator<M>> threads = new ContextualizedExecutor<>(parallelism)) {
+		final ExecutorService threads = Executors.newFixedThreadPool(parallelism);
+		try {
 			final PerfTBuilder<M> perfT = new PerfTBuilder<>();
 			perfT.setExecutor(threads);
 			perfT.setPlayLeaves(playLeaves);
@@ -142,13 +149,16 @@ public class MoveGeneratorChecker {
 					}
 				}
 			}
+		} finally {
+			threads.shutdown();
+			running.set(false);
 		}
 		return count;
 	}
 	
 	private <M> long doTest(PerfTTestData test, int depth) {
 		@SuppressWarnings("unchecked")
-		final long count = ((PerfT<M>)current.get()).call().getNbLeaves();
+		final long count = ((PerfT<M>)current.get()).get().getNbLeaves();
 		final long expected = test.getExpectedLeaveCount(depth);
 		if (count != expected && !cancelled) {
 			countErrorManager.accept(new PerfTCountError(test.getStartPosition(), expected, count));

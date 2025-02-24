@@ -42,7 +42,7 @@ public class PerfTResult<M> {
 	 * @return The number of leaves found in the test.
 	 */
 	public long getNbLeaves() {
-		return divides.stream().mapToLong(Divide::getCount).sum();
+		return divides.stream().mapToLong(Divide::getNbLeaves).sum();
 	}
 	
 	/**

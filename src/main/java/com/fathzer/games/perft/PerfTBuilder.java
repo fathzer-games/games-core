@@ -2,16 +2,18 @@ package com.fathzer.games.perft;
 
 import static com.fathzer.games.MoveGenerator.MoveConfidence.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 
 /** A <a href="https://www.chessprogramming.org/Perft">Perft</a> builder.
  * @see PerfT
  */
 public class PerfTBuilder<M> {
 	private boolean playLeaves = true;
-	private ContextualizedExecutor<MoveGenerator<M>> exec = null;
+	private ExecutorService exec = null;
 	private MoveConfidence moveType = PSEUDO_LEGAL;
 	
 	/** Sets this PerfT to play the moves corresponding to tree leaves or not.
@@ -39,7 +41,14 @@ public class PerfTBuilder<M> {
 		}
 	}
 	
-	public void setExecutor(ContextualizedExecutor<MoveGenerator<M>> exec) {
+	/** Sets the executor service to use for running the PerfT test.
+	 * <br>By default, no executor service is used and the perfT is single threaded and executed on the thread that invokes its {@link PerfT#call} method.
+	 * @param exec the executor service to use, or null to run it on the thread calling {@link PerfT#call} method.
+	 * <br>The best performance is delivered by a {@link ForkJoinPool}, nevertheless, using a basic executor service is possible and faster than the default.
+	 * Of course if the computer has a single core, using the default option is the best.
+	 * <br><b>Warning</b>Please note that the executor service is not closed by the PerfT instance. It is the responsibility of the caller to shutdown it.
+	 */
+	public void setExecutor(ExecutorService exec) {
         this.exec = exec;
     }
 	
@@ -51,6 +60,8 @@ public class PerfTBuilder<M> {
 	public PerfT<M> build(final MoveGenerator<M> generator, final int depth) {
 		if (exec == null) {
 			return new PerfT<>(generator, depth, playLeaves, moveType);
+		} else if (exec instanceof ForkJoinPool fjp) {
+			return new ForkJoinPerfT<>(fjp, generator, depth, playLeaves, moveType);
 		} else {
 			return new MultiThreadedPerfT<>(exec, generator, depth, playLeaves, moveType);
 		}
