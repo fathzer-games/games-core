@@ -37,7 +37,7 @@ public class PerfTResult<M> {
 	}
 	
 	/** Gets the number of leaves found in the test.
-	 * <br>This is the sum of the {@link Divide#count} of each {@link Divide} and should be usually compared with the 
+	 * <br>This is the sum of the {@link Divide#getNbLeaves()} of each {@link Divide} and should be usually compared with the 
 	 * expected number of moves returned by {@link PerfTTestData#getExpectedLeaveCount(int)}).
 	 * @return The number of leaves found in the test.
 	 */

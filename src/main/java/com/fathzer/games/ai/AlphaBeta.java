@@ -13,9 +13,10 @@ import com.fathzer.games.ai.evaluation.Evaluator;
  *
  * @param <M> Implementation of the Move interface to use
  * @param <B> Implementation of the {@link MoveGenerator} interface to use
- * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
+ * @deprecated For testing and documentation purpose only, the preferred way to implement AI is to use {@link Negamax}.
  */
-@Deprecated
+@Deprecated(since="always", forRemoval=false)
+@SuppressWarnings("java:S1133")
 public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	protected AlphaBeta(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
@@ -24,13 +25,28 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
     @Override
 	protected int getRootScore(final int depth, int lowestInterestingScore) {
 		return alphabeta(depth-1, depth, lowestInterestingScore, Integer.MAX_VALUE, -1);
-	}	
-	protected void alphaCut(M move, int alpha, int score, int depth) {
-//		System.out.println ("alpha cut on "+move+"at depth "+depth+" with score="+score+" (alpha is "+alpha+")");
 	}
 
+	/** This method is called when an alpha cut is detected.
+	 * @param move The move that caused the alpha cut
+	 * @param alpha The alpha value at the time of the cut
+	 * @param score The score of the move that caused the cut
+	 * @param depth The depth of the search at the time of the cut
+	 * <br>The default implementation does nothing.
+	 */
+	protected void alphaCut(M move, int alpha, int score, int depth) {
+		// Does nothing by default
+	}
+
+	/** This method is called when a beta cut is detected.
+	 * @param move The move that caused the beta cut
+	 * @param beta The beta value at the time of the cut
+	 * @param score The score of the move that caused the cut
+	 * @param depth The depth of the search at the time of the cut
+	 * <br>The default implementation does nothing.
+	 */
 	protected void betaCut(M move, int beta, int score, int depth) {
-//		System.out.println ("beta cut on "+move+"at depth "+depth+" with score="+score+" (beta is "+beta+")");
+		// Does nothing by default
 	}
 	
     private int alphabeta(final int depth, int maxDepth, int alpha, int beta, final int who) {
@@ -53,7 +69,6 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
         if (who > 0) {
             bestScore = -Integer.MAX_VALUE;
             for (M move : moves) {
-//                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
                 if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                getStatistics().movePlayed();
@@ -67,7 +82,6 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	                	break;
 	                }
 					if (alpha<bestScore) {
-	//					System.out.println ("alpha changed on "+move+" from "+alpha+" to "+v);
 						alpha = bestScore;
 					}
                 }
@@ -75,7 +89,6 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
         } else {
             bestScore = Integer.MAX_VALUE;
             for (M move : moves) {
-//                System.out.println("Play move "+move+" at depth "+depth+" for "+who);
                 if (getContext().makeMove(move, MoveConfidence.PSEUDO_LEGAL)) {
                 	hasValidMoves = true;
 	                final int score = alphabeta(depth-1, maxDepth, alpha, beta, -who);
@@ -88,7 +101,6 @@ public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
 	                	break;
 	                }
 					if (beta>bestScore) {
-	//					System.out.println ("beta changed on "+move+" from "+beta+" to "+v);
 						beta = bestScore;
 					}
                 }

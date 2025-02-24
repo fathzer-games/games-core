@@ -46,7 +46,10 @@ public class PerfT<M> {
 
 	void compute(List<M> moves) {
 		for (M move : moves) {
-			result.add(getRootPerfT(board, move, depth - 1));
+			final Divide<M> divide = getRootPerfT(board, move, depth - 1);
+			if (divide!=null) {
+				result.add(divide);
+			}
 		}
 	}
 	
@@ -134,7 +137,7 @@ public class PerfT<M> {
 	}
 
 	/** Interrupts this PerfT.
-	 * <br>If the {@link PerfT#call()} method is currently running, it will quickly stopped and will returned a {@link PerfTResult#isInterrupted()} tagged as interrupted.
+	 * <br>If the {@link PerfT#get()} method is currently running, it will quickly stopped and will returned a {@link PerfTResult#isInterrupted()} tagged as interrupted.
 	 */
 	public void interrupt() {
 		result.setInterrupted(true);

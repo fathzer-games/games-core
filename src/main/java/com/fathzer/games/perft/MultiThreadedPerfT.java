@@ -27,13 +27,16 @@ class MultiThreadedPerfT<M> extends PerfT<M> {
 	}
 	
 	private Callable<Divide<M>> getDivideTask(MoveGenerator<M> board, M move, int depth) {
-		return () -> new Divide<>(move, getRootPerfT(board.fork(), move, depth - 1).getNbLeaves());
+		return () -> getRootPerfT(board.fork(), move, depth - 1);
 	}
 	
 	void addDivides(List<Future<Divide<M>>> results) {
 		try {
 			for (Future<Divide<M>> f : results) {
-				result.add(f.get());
+				final Divide<M> divide = f.get();
+				if (divide!=null) {
+					result.add(divide);
+				}
 			}
 		} catch (InterruptedException e) {
 			result.setInterrupted(true);

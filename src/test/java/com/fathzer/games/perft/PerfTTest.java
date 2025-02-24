@@ -24,16 +24,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 class PerfTTest {
-	private final static int CORES = Math.max(2, PhysicalCores.count());
+	private static final int CORES = Math.max(2, PhysicalCores.count());
+	private static ExecutorService exec;
+	private static ExecutorService fjp;
 
 	@BeforeAll
 	static void setUp() {
 		setDefaultPollInterval(ofMillis(25));
 		setDefaultPollDelay(ofMillis(25));
+		exec = Executors.newFixedThreadPool(CORES);
+		fjp = new ForkJoinPool(CORES);
 	}
 	
 	@AfterAll
 	static void tearDown() {
+		fjp.shutdown();
+		exec.shutdown();
 		reset();
 	}
 
@@ -45,29 +51,43 @@ class PerfTTest {
 		final PerfTResult<Move> result = builder.build(mg, 3).get();
 		assertEquals(13744, result.getNbLeaves());
 		
+		builder.setExecutor(exec);
+		final PerfTResult<Move> result2 = builder.build(mg, 3).get();
+		assertEquals(result.getNbLeaves(), result2.getNbLeaves());
+		assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
+		assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
 
-		final ExecutorService exec = Executors.newFixedThreadPool(CORES);
-		try  {
-			builder.setExecutor(exec);
-			final PerfTResult<Move> result2 = builder.build(mg, 3).get();
-			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
-			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
-			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			exec.shutdown();
-		}
+		builder.setExecutor(fjp);
+		final PerfTResult<Move> result3 = builder.build(mg, 3).get();
+		assertEquals(result.getNbLeaves(), result3.getNbLeaves());
+		assertEquals(result.getNbMovesFound(), result3.getNbMovesFound());
+		assertEquals(result.getNbMovesMade(), result3.getNbMovesMade());
+	}
 
-		final ExecutorService fjp = new ForkJoinPool(CORES);
-		try  {
-			builder.setExecutor(fjp);
-			final PerfTResult<Move> result2 = builder.build(mg, 3).get();
-			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
-			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
-			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			fjp.shutdown();
-		}
+	@Test
+	void testPseudoLegalIsFiltered() {
+		final ChessLibMoveGenerator board = new ChessLibMoveGenerator("r1b3r1/p2p1pk1/np6/4q1p1/N1P2RPp/1P1PP3/P1RK3P/1QN1B1n1 b - - 0 1", x->null);
+		final PerfTBuilder<Move> builder = new PerfTBuilder<>();
+		doPseudoLegalTest(builder, board);
 
+		builder.setExecutor(exec);
+		doPseudoLegalTest(builder, board);
+
+		builder.setExecutor(fjp);
+		doPseudoLegalTest(builder, board);
+	}
+	
+	private void doPseudoLegalTest(PerfTBuilder<Move> builder, ChessLibMoveGenerator board) {
+		final int leavesCount = 44;
+		assertEquals(leavesCount, builder.build(board, 1).get().getNbLeaves());
+		assertEquals(leavesCount, builder.build(board, 2).get().getDivides().size());
+		builder.setLegalMoves(true);
+		assertEquals(leavesCount, builder.build(board, 1).get().getNbLeaves());
+		assertEquals(leavesCount, builder.build(board, 2).get().getDivides().size());
+		builder.setPlayLeaves(false);
+		assertEquals(leavesCount, builder.build(board, 1).get().getNbLeaves());
+		assertEquals(leavesCount, builder.build(board, 2).get().getDivides().size());
+		builder.setLegalMoves(false);
 	}
 	
 	@Test
@@ -82,8 +102,7 @@ class PerfTTest {
 		final PerfTResult<Move> result = builder.build(mg, depth).get();
 		System.out.println("Single threaded: "+(System.currentTimeMillis()-start)+" ms");
 		
-		ExecutorService fjp = new ForkJoinPool(threadsCount);
-		try  {
+		{
 			builder.setExecutor(fjp);
 			start = System.currentTimeMillis();
 			final PerfTResult<Move> result2 = builder.build(mg, depth).get();
@@ -91,11 +110,9 @@ class PerfTTest {
 			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
 			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
 			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			fjp.shutdown();
 		}
-		ExecutorService exec = Executors.newFixedThreadPool(threadsCount);
-		try  {
+
+		{
 			builder.setExecutor(exec);
 			start = System.currentTimeMillis();
 			final PerfTResult<Move> result2 = builder.build(mg, depth).get();
@@ -103,13 +120,10 @@ class PerfTTest {
 			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
 			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
 			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			exec.shutdown();
 		}
 
 
-		exec = Executors.newFixedThreadPool(threadsCount);
-		try  {
+		{
 			builder.setExecutor(exec);
 			start = System.currentTimeMillis();
 			final PerfTResult<Move> result2 = builder.build(mg, depth).get();
@@ -117,11 +131,10 @@ class PerfTTest {
 			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
 			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
 			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			exec.shutdown();
 		}
-		fjp = new ForkJoinPool(threadsCount);
-		try  {
+
+
+		{
 			builder.setExecutor(fjp);
 			start = System.currentTimeMillis();
 			final PerfTResult<Move> result2 = builder.build(mg, depth).get();
@@ -129,10 +142,8 @@ class PerfTTest {
 			assertEquals(result.getNbLeaves(), result2.getNbLeaves());
 			assertEquals(result.getNbMovesFound(), result2.getNbMovesFound());
 			assertEquals(result.getNbMovesMade(), result2.getNbMovesMade());
-		} finally {
-			fjp.shutdown();
 		}
-}
+	}
 	
 	@Test
 	void perftParser() throws IOException {
@@ -152,29 +163,20 @@ class PerfTTest {
 		// Test interruption with PerfT.interrupt()
 		interruption(builder.build(mg, 100), (t,p) -> p.interrupt());
 		
-		final ExecutorService exec = Executors.newFixedThreadPool(CORES);
-		try {
-			builder.setExecutor(exec);
-            // Test interruption with thread.interrupt()
-            interruption(builder.build(mg, 100), (t,p) -> t.interrupt());
-            // Test interruption with PerfT.interrupt()
-            interruption(builder.build(mg, 100), (t,p) -> p.interrupt());
-		} finally {
-			exec.shutdown();
-		}
+		builder.setExecutor(exec);
+        // Test interruption with thread.interrupt()
+        interruption(builder.build(mg, 100), (t,p) -> t.interrupt());
+        // Test interruption with PerfT.interrupt()
+        interruption(builder.build(mg, 100), (t,p) -> p.interrupt());
 
-		final ExecutorService fjp = new ForkJoinPool(CORES);
-		try {
-			builder.setExecutor(fjp);
-            // Test interruption with thread.interrupt()
-            interruption(builder.build(mg, 100), (t,p) -> t.interrupt());
-            // Test interruption with PerfT.interrupt()
-            interruption(builder.build(mg, 100), (t,p) -> p.interrupt());
-		} finally {
-			fjp.shutdown();
-		}
-}
-	
+		builder.setExecutor(fjp);
+        // Test interruption with thread.interrupt()
+        interruption(builder.build(mg, 100), (t,p) -> t.interrupt());
+        // Test interruption with PerfT.interrupt()
+        interruption(builder.build(mg, 100), (t,p) -> p.interrupt());
+	}
+
+
 	<M> void interruption(PerfT<M> perft, BiConsumer<Thread, PerfT<M>> interruptor) {
 		final AtomicReference<PerfTResult<M>> result = new AtomicReference<>();
 		Thread t = new Thread(() -> result.set(perft.get()));
