@@ -60,11 +60,11 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 
 	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
         final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
-		context.execute(moves.stream().map(m -> getRootEvaluationTask(params, rootEvaluator, search, m)).toList());
+		context.execute(moves.stream().map(m -> getRootEvaluationTask(rootEvaluator, search, m)).toList());
         return search;
     }
 
-	private Runnable getRootEvaluationTask(SearchParameters params, BiFunction<M, Integer, Integer> rootEvaluator, final SearchResult<M> search, M m) {
+	private Runnable getRootEvaluationTask(BiFunction<M, Integer, Integer> rootEvaluator, final SearchResult<M> search, M m) {
 		return () -> {
 				final Integer score = rootEvaluator.apply(m, search.getLow());
 				if (!isInterrupted() && score!=null) {

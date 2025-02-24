@@ -43,7 +43,7 @@ class MoveListTest {
 		}
         
         assertFalse(iter.hasNext());
-        assertThrows(NoSuchElementException.class, () -> iter.next());
+        assertThrows(NoSuchElementException.class, iter::next);
         
         for (int i = 0; i < expected.size(); i++) {
 			assertEquals(expected.get(i), mvList.get(i));

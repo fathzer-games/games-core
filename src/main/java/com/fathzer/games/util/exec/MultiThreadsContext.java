@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 public class MultiThreadsContext<T extends Forkable<T>> implements ExecutionContext<T> {
 	protected final ContextualizedExecutor<T> exec;

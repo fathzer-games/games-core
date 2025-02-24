@@ -56,7 +56,7 @@ class ClockTest {
 	}
 
 	@Test
-	void test() throws InterruptedException {
+	void test() {
 		final ClockSettings settings = new FakeSettings(2).withIncrement(1, 1, true);
 		Clock clock = new Clock(settings);
 		final ClockListener listener = new ClockListener();

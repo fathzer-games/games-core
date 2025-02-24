@@ -109,6 +109,7 @@ public final class PhysicalCores {
         }
     }
 
+    @SuppressWarnings("java:S1075")
     private static NumberOfCores readFromProc() {
         final String path = "/proc/cpuinfo";
         File cpuinfo = new File(path);

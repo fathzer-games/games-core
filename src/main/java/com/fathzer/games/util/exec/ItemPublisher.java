@@ -80,7 +80,7 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 					}
 				}
 			} catch (InterruptedException e) {
-				doInterrupted(e);
+				doInterrupted();
 			}
 		}
 		for (ItemListener<T> sub : subscribers) {
@@ -88,7 +88,7 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 		}
 	}
 
-	private void doInterrupted(InterruptedException e) {
+	private void doInterrupted() {
 		wasInterrupted = true;
 		// Exit gracefully
 		this.isClosed = true;
@@ -141,7 +141,7 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 			try {
 				pauseLock.acquire();
 			} catch (InterruptedException e) {
-				doInterrupted(e);
+				doInterrupted();
 			}
 		} else {
 			pauseLock.release();

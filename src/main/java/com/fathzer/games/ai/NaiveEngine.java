@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.MoveGenerator;
@@ -34,7 +33,7 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 			return null;
 		}
 		final double best = moves.get(0).getScore();
-		List<M> bestMoves = moves.stream().filter(m -> m.getScore()==best).map(EvaluatedMove::getContent).collect(Collectors.toList());
+		List<M> bestMoves = moves.stream().filter(m -> m.getScore()==best).map(EvaluatedMove::getContent).toList();
 		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	
