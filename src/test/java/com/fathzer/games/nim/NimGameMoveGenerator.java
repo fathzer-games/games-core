@@ -62,4 +62,8 @@ public class NimGameMoveGenerator implements MoveGenerator<Integer> {
 	public MoveGenerator<Integer> fork() {
 		return new NimGameMoveGenerator(currentCount, whiteToMove);
 	}
+
+	public int getCurrentCount() {
+		return currentCount;
+	}
 }

@@ -27,7 +27,7 @@ class ForkJoinPerfT<M> extends MultiThreadedPerfT<M> {
 		}
 
 		@Override
-		public Divide<M> compute() /*throws InterruptedException, ExecutionException*/ {
+		public Divide<M> compute() {
 			return new Divide<>(move, task.compute());
 		}
 	}

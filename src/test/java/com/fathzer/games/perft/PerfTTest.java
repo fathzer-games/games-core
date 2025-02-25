@@ -16,7 +16,9 @@ import java.util.function.BiConsumer;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.chess.ChessLibMoveGenerator;
+import com.fathzer.games.nim.NimGameMoveGenerator;
 import com.fathzer.games.util.PhysicalCores;
+import com.fathzer.games.util.UncheckedException;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 import org.junit.jupiter.api.AfterAll;
@@ -43,6 +45,29 @@ class PerfTTest {
 				case FORK_JOIN: return fjp;
 				default: throw new IllegalArgumentException("Unknown service: "+this);
 			}
+		}
+	}
+
+	private static class BuggyException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+	}
+	
+	private static class BuggyNimGameMoveGenerator extends NimGameMoveGenerator {
+		public BuggyNimGameMoveGenerator(int currentCount, boolean whiteToMove) {
+			super(currentCount, whiteToMove);
+		}
+
+		@Override
+		public List<Integer> getMoves() {
+			if (getCurrentCount()==1) {
+				throw new BuggyException();
+			}
+			return super.getMoves();
+		}
+
+		@Override
+		public MoveGenerator<Integer> fork() {
+			return new BuggyNimGameMoveGenerator(getCurrentCount(), isWhiteToMove());
 		}
 	}
 
@@ -120,6 +145,21 @@ class PerfTTest {
 		var matMove = result.getDivides().stream().filter(d -> d.getMove().toString().equals("d8h4")).findFirst();
 		assertFalse(matMove.isEmpty());
 		assertEquals(0, matMove.get().getNbLeaves());
+	}
+	
+	@ParameterizedTest
+	@EnumSource(Services.class)
+	void buggyMoveGeneratorShouldBeReported(Services service) {
+		final BuggyNimGameMoveGenerator board = new BuggyNimGameMoveGenerator(3, true);
+		final PerfTBuilder<Integer> builder = new PerfTBuilder<>();
+		builder.setExecutor(service.getExecutor());
+		final PerfT<Integer> perfT = builder.build(board, 3);
+		try {
+			perfT.get();
+			fail("UncheckedException expected but nothing was thrown");
+		} catch (UncheckedException e) {
+			assertEquals(BuggyException.class, e.getCause().getClass());
+		}
 	}
 
 	@Test

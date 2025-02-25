@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -162,7 +163,7 @@ public final class PhysicalCores {
             return new NumberOfCores(parseWmicOutput(wmicOutput));
         } catch (UnsupportedEncodingException e) {
             // Java implementations are required to support US-ASCII, so this shouldn't happen
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         } catch (SecurityException | IOException e) {
             return new NumberOfCores(String.format("Error while reading WMIC output file: %s", e));
         }
@@ -230,7 +231,7 @@ public final class PhysicalCores {
             result = readToString(sysctlProc.getInputStream(), StandardCharsets.UTF_8).trim();
         } catch (UnsupportedEncodingException e) {
             // Java implementations are required to support UTF-8, so this can't happen
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         } catch (IOException e) {
         	throw new UnreachableException("Error while reading from sysctl process", e);
         }

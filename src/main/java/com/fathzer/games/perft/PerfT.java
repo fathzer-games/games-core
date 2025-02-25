@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.util.UncheckedException;
 
 /** A <a href="https://www.chessprogramming.org/Perft">Perft</a> test.
  * @see PerfTBuilder
@@ -34,17 +35,24 @@ public class PerfT<M> {
 		this.result = new PerfTResult<>();
 	}
 	
-	/** {@inheritDoc}
+	/** Gets the result of the PerfT.
 	 * @throws IllegalStateException if this method has already been called
+	 * @throws UncheckedException if an execution error occurs
 	 */
 	public PerfTResult<M> get() {
 		if (!started.compareAndSet(false, true)) {
 			throw new IllegalStateException("This PerfT has already been started");
 		}
-		final List<M> moves = getMoves(board);
-		result.addMovesFound(moves.size());
-		compute(moves);
-		return this.result;
+		try {
+			final List<M> moves = getMoves(board);
+			result.addMovesFound(moves.size());
+			compute(moves);
+			return this.result;
+		} catch (UncheckedException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new UncheckedException(e);
+		}
 	}
 
 	void compute(List<M> moves) {

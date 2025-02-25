@@ -8,6 +8,7 @@ import java.util.concurrent.Future;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.util.UncheckedException;
 
 /** A <a href="https://www.chessprogramming.org/Perft">Perft</a> test with each divide computed by a separate thread.
  * @see PerfTBuilder
@@ -43,7 +44,7 @@ class MultiThreadedPerfT<M> extends PerfT<M> {
 			interrupt();
 			Thread.currentThread().interrupt();
 		} catch (ExecutionException e) {
-			throw new RuntimeException(e.getCause());
+			throw new UncheckedException(e.getCause());
 		}
 	}
 }
