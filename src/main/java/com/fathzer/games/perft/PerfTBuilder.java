@@ -56,6 +56,7 @@ public class PerfTBuilder<M> {
 	 * @param generator the move generator initialized to the test's start position.
 	 * @param depth the depth to reach.
 	 * @return a PerfT instance.
+	 * @throws IllegalArgumentException if the generator is null or depth &lt;= 0.
 	 */
 	public PerfT<M> build(final MoveGenerator<M> generator, final int depth) {
 		if (exec == null) {

@@ -3,7 +3,7 @@ package com.fathzer.games.perft;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -125,7 +125,7 @@ public class MoveGeneratorChecker {
 		}
 		cancelled = false;
 		long count = 0;
-		final ExecutorService threads = Executors.newFixedThreadPool(parallelism);
+		final ExecutorService threads = new ForkJoinPool(parallelism);
 		try {
 			final PerfTBuilder<M> perfT = new PerfTBuilder<>();
 			perfT.setExecutor(threads);

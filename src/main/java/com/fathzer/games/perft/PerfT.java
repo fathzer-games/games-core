@@ -24,6 +24,9 @@ public class PerfT<M> {
 		if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
 		}
+		if (board==null) {
+			throw new IllegalArgumentException("Board cannot be null");
+		}
 		this.board = board;
 		this.playLeaves = playLeaves;
 		this.moveType = moveType;
@@ -67,10 +70,10 @@ public class PerfT<M> {
 				leaves = new PerfTTask(moveGenerator, depth).call();
 				moveGenerator.unmakeMove();
 			} else {
-				leaves = 0;
+				return null;
 			}
 		}
-		return leaves==0 ? null : new Divide<>(move, leaves);
+		return new Divide<>(move, leaves);
 	}
 	
 	protected PerfTTask buildPerfTTask(MoveGenerator<M> generator, int depth) {
