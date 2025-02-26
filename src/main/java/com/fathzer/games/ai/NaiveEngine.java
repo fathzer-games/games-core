@@ -3,33 +3,41 @@ package com.fathzer.games.ai;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.function.ToIntFunction;
-import java.util.stream.IntStream;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
+import com.fathzer.games.ai.evaluation.Evaluator;
 
+/**
+ * A very basic engine that chooses the move with the highest score according to a given evaluator after the opponent played.
+ * <br>Of course in complex games like chess, the move chosen by this engine may be far for the best one due to
+ * <a href="https://en.wikipedia.org/wiki/Horizon_effect">horizon effect</a>.
+ * @param <M> The type of moves
+ * @param <B> The type of board
+ */
 public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M> {
 	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
 	private static final Random RND = new Random();
-	private final ToIntFunction<MoveGenerator<M>> evaluator;
+	private final Evaluator<M, B> evaluator;
 	
-	private final MoveGenerator<M> board;
-
-	public NaiveEngine (MoveGenerator<M> board, ToIntFunction<MoveGenerator<M>> evaluator) {
-		this.board = board;
+	/** Constructor
+	 * @param evaluator The evaluator to use
+	 */
+	public NaiveEngine (Evaluator<M, B> evaluator) {
 		this.evaluator = evaluator;
 	}
 	
+	/** Gets the chosen move
+	 * @return the chosen move, or null if no moves are possible in the position.
+	 */
 	@Override
 	public M apply(B board) {
 		List<M> possibleMoves = board.getLegalMoves();
-		List<EvaluatedMove<M>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
-			final M mv = possibleMoves.get(i);
-			return new EvaluatedMove<>(mv, Evaluation.score(evaluate(mv)));
-		}).sorted().toList();
+		List<EvaluatedMove<M>> moves = possibleMoves.stream().
+				map(m -> new EvaluatedMove<>(m, Evaluation.score(evaluate(board, m)))).sorted().toList();
 		if (moves.isEmpty()) {
 			return null;
 		}
@@ -38,32 +46,39 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	
-	private int evaluate(M move) {
-		// Play the evaluated move 
-		this.board.makeMove(move, MoveConfidence.LEGAL);
+	int evaluate(B board, M move) {
+		// Play the evaluated move
+		evaluator.prepareMove(board, move);
+		board.makeMove(move, MoveConfidence.LEGAL);
 		try {
+			evaluator.commitMove();
 			// Gets the opponent responses
-			final List<M> moves = this.board.getLegalMoves();
-			//FIXME Does not work in mat and draw situations
-			int max = 0;
-			for (int i = 0; i < moves.size(); i++) {
+			final List<M> moves = board.getLegalMoves();
+			if (moves.isEmpty()) {
+				// End of game
+				final Status status = board.getEndGameStatus();
+				return status == Status.DRAW ? 0 : evaluator.getWinScore(1);
+			}
+			int min = 0;
+			for (M m : moves) {
 				// For all opponent responses
-				int value = evaluateOpponentMove(moves.get(i));
-				if (value>max) {
-					max = value;
+				final int value = evaluateOpponentMove(board, m);
+				if (value<min) {
+					min = value;
 				}
 			}
-			return max;
+			return min;
 		} finally {
-			this.board.unmakeMove();
+			board.unmakeMove();
+			evaluator.unmakeMove();
 		}
 	}
 	
-	private int evaluateOpponentMove (M oppMove) {
+	private int evaluateOpponentMove (B board, M oppMove) {
 		// Play the response and evaluate the obtained board
 		board.makeMove(oppMove, MoveConfidence.LEGAL);
 		try {
-			return evaluator.applyAsInt(board);
+			return evaluator.evaluate(board);
 		} finally {
 			board.unmakeMove();
 		}

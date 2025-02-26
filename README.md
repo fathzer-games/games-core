@@ -18,7 +18,7 @@ It also provides you with other useful building blocks like a clock, PerfT tests
 This doesn't means that the AI can't be used to play Reversi. Simply, the reversi move generator should have a special '*can't play*' move returned when a player can't move but the game is not finished.
 - The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV serach, futility prunig, killer or null move, etc ...).
 
-## TODO
+## TODO (maybe)
 - There's probably a bug or something very misleading in ClockSettings: withNext has a number of plies arguments, but it seems that the usage is to deal with number of moves (not plies which are half moves).
 - Maybe TTAi scoreToTT and ttToScore would be at a better place in TranspositionTablePolicy. Another, maybe better, approach is to compute fixed (mat) values in Negamax class and have a flag in the table (and in its store method) to explicitly set the stored value as a fixed value. It would allow those values to be used regardless of the depth at which they are recorded.
 - EvaluatedMove.compareTo does not sort in natural order which can be confusing
