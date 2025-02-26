@@ -40,7 +40,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		if ((getContext().getGamePosition() instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted() && !result.getList().isEmpty()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getMove(), p->true);
 		}
 		return result;
     }

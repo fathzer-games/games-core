@@ -12,6 +12,7 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
 
 public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M> {
+	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
 	private static final Random RND = new Random();
 	private final ToIntFunction<MoveGenerator<M>> evaluator;
 	
@@ -33,7 +34,7 @@ public class NaiveEngine<M,B extends MoveGenerator<M>> implements Function<B, M>
 			return null;
 		}
 		final double best = moves.get(0).getScore();
-		List<M> bestMoves = moves.stream().filter(m -> m.getScore()==best).map(EvaluatedMove::getContent).toList();
+		List<M> bestMoves = moves.stream().filter(m -> m.getScore()==best).map(EvaluatedMove::getMove).toList();
 		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	

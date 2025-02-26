@@ -6,8 +6,13 @@ import java.util.Random;
 
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
+/** A move selector that selects moves randomly.
+ * @param <M> The type of moves
+ * @param <D> The type of data passed by the engine to the MoveSelector
+ */
 public class RandomMoveSelector<M,D> extends MoveSelector<M,D> {
-	public static final Random RND = new Random(); 
+	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
+	private static final Random RND = new Random(); 
 	
 	@Override
 	public List<EvaluatedMove<M>> select(D data, List<EvaluatedMove<M>> bestMoves) {

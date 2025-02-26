@@ -56,7 +56,7 @@ public class SearchHistory<M> {
 	}
 	
 	public M getBest() {
-		return isEmpty() ? null : getBestMoves().get(0).getContent();
+		return isEmpty() ? null : getBestMoves().get(0).getMove();
 	}
 	
 	public int length() {

@@ -9,6 +9,7 @@ import com.fathzer.games.MoveGenerator;
 /** A trivial engine that randomly plays a possible move.
  */
 public class RandomEngine<M,B extends MoveGenerator<M>> implements Function<B, M> {
+	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
 	private static final Random RND = new Random();
 	
 	@Override

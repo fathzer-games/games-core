@@ -11,9 +11,12 @@ It provides you with a ready to use and highly configurable [iterative deepening
 In order to have a working engine for your favorite game, you have to implement your own MoveGenerator and Evaluator for this game ... and use one of the provided ai (I recommend IterativeDeepeningEngine).  
 You can implement your own transposition table and its policy (which positions to save or how to reuse them during the search). This library contains a basic implementation, try it to see if it is enough for your needs.
 
-# Known bugs
-- The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).
-- The iterative deepening search always stops deepening when it finds a winning move. It prevents finding other deeper winning moves. It's not a problem when playing a game, but for analysis, it is one.
+It also provides you with other useful building blocks like a clock, PerfT tests (for testing your move generator), or abstract implementations of move library (typically openings book for chess).
+
+# Known limitations
+- The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).  
+This doesn't means that the AI can't be used to play Reversi. Simply, the reversi move generator should have a special '*can't play*' move returned when a player can't move but the game is not finished.
+- The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV serach, futility prunig, killer or null move, etc ...).
 
 ## TODO
 - There's probably a bug or something very misleading in ClockSettings: withNext has a number of plies arguments, but it seems that the usage is to deal with number of moves (not plies which are half moves).
@@ -22,6 +25,4 @@ You can implement your own transposition table and its policy (which positions t
 - There's a strange behavior with transposition table. There's some situations where a never replace strategy leads to a faster resolution. It is totally counter intuitive.
 - MoveGenerator:
   - It would be more efficient to have the moveGenerator generating directly an iterator of moves instead of a list of moves. It would allow to use incremental move generators that starts by returning, what can hope to be the best moves (for instance captures), and other moves if these first moves are consumed. Indeed, in alpha/beta ai, the first moves are often enough to trigger a cut, so generating all the moves is a waste of time.
-- Write tests and Documentation ;-)
-- Test with Sonar
-- Publish artifact on Maven central
+- Write more tests and Documentation ;-)

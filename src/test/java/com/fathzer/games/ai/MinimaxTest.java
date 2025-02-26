@@ -150,7 +150,7 @@ class MinimaxTest {
 	}
 
 	private Optional<EvaluatedMove<Move>> getEvaluation(List<EvaluatedMove<Move>> search, Move move) {
-		return search.stream().filter(em -> move.equals(em.getContent())).findAny();
+		return search.stream().filter(em -> move.equals(em.getMove())).findAny();
 	}
 
 	@Test
@@ -277,7 +277,7 @@ class MinimaxTest {
 	}
 	
 	<M> void assertContains(EvaluatedMove<M> expected, List<EvaluatedMove<M>> moves) {
-		Optional<EvaluatedMove<M>> result = moves.stream().filter(em -> em.getContent().equals(expected.getContent())).findAny();
+		Optional<EvaluatedMove<M>> result = moves.stream().filter(em -> em.getMove().equals(expected.getMove())).findAny();
 		if (result.isEmpty()) {
 			fail("Unable to find "+expected+" in results");
 		} else {

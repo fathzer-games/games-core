@@ -174,7 +174,7 @@ class IterativeDeepeningEngineTest {
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize());
 			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.returnedMoves.forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			data.returnedMoves.forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 		}
@@ -186,7 +186,7 @@ class IterativeDeepeningEngineTest {
 			assertEquals(data.expectedSearchSize, params.getSize(),"At depth "+params.getDepth()+" search size is wrong");
 			assertEquals(data.requestedMoves(), moves,"At depth "+params.getDepth());
 			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.returnedMoves().forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			data.returnedMoves().forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 	    }

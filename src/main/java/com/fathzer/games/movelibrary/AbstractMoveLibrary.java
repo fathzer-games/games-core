@@ -14,6 +14,7 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
  * @param <B> The type of game board
  */
 public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> implements MoveLibrary<M, B> {
+	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
 	private static final Random RND = new Random();
 
 	/** A function that always select the first element of a list.

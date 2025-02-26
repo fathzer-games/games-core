@@ -74,7 +74,7 @@ public class IterativeDeepeningSearch<M> {
 			} else {
 				if (moves.size()!=evaluatedMoves.size()) {
 					// Some moves does not need deepening => Add them to ended
-					evaluatedMoves.stream().filter(em-> !moves.contains(em.getContent())).forEach(ended::add);
+					evaluatedMoves.stream().filter(em-> !moves.contains(em.getMove())).forEach(ended::add);
 				}
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);

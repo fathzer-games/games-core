@@ -39,7 +39,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 		if ((gamePosition instanceof HashProvider hp) && getTranspositionTable()!=null && !isInterrupted()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			getTranspositionTable().store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			getTranspositionTable().store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getMove(), p->true);
 		}
 		return result;
     }

@@ -123,7 +123,7 @@ public class DeepeningPolicy extends SearchParameters {
 	public <M> List<M> getMovesToDeepen(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluations) {
 		evaluations = filterWinLooseMoves(currentParams, history, evaluations);
 		// Stop deepening if not in deepenOnForced mode and there's only one move to deepen
-		return deepenOnForced || evaluations.size()>1 ? evaluations.stream().map(EvaluatedMove::getContent).toList() : Collections.emptyList();
+		return deepenOnForced || evaluations.size()>1 ? evaluations.stream().map(EvaluatedMove::getMove).toList() : Collections.emptyList();
 	}
 	
 	/** Removes the win/loose moves from the list of moves that should be evaluated (no need to deepen such moves).
@@ -195,18 +195,18 @@ public class DeepeningPolicy extends SearchParameters {
 			// Warning, some approximatively scored moves have a better value than some of partialList
 			// => Replace all scores with a score lower than the lower score in partialList
 		    final int unkownScore = partialList.get(partialList.size()-1).getEvaluation().getScore()-1;
-			historyMoves.stream().map(EvaluatedMove::getContent).collect(Collectors.toCollection(ArrayDeque::new)).
+			historyMoves.stream().map(EvaluatedMove::getMove).collect(Collectors.toCollection(ArrayDeque::new)).
 			descendingIterator().forEachRemaining(m->mergedResult.update(m, Evaluation.score(unkownScore)));
 		} else {
-			historyMoves.forEach(em -> mergedResult.add(em.getContent(), em.getEvaluation()));
+			historyMoves.forEach(em -> mergedResult.add(em.getMove(), em.getEvaluation()));
 		}
-		partialList.forEach(ev -> mergedResult.update(ev.getContent(), ev.getEvaluation()));
+		partialList.forEach(ev -> mergedResult.update(ev.getMove(), ev.getEvaluation()));
 		return Optional.of(mergedResult);
 	}
 	
 	private <M> boolean areMergeable(List<EvaluatedMove<M>> cut, List<EvaluatedMove<M>> partialList) {
 		for (EvaluatedMove<M> cutEvalMove : cut) {
-			final boolean notFound = partialList.stream().filter(em->em.getContent().equals(cutEvalMove.getContent())).findAny().isEmpty();
+			final boolean notFound = partialList.stream().filter(em->em.getMove().equals(cutEvalMove.getMove())).findAny().isEmpty();
 			if (notFound) {
 				return false;
 			}

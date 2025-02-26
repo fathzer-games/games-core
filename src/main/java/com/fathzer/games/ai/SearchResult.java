@@ -45,7 +45,7 @@ public final class SearchResult<M> {
 	synchronized int getIndex(M move) {
 		int index = 0;
 		for (EvaluatedMove<M> ev : result) {
-			if (ev.getContent().equals(move)) {
+			if (ev.getMove().equals(move)) {
 				return index;
 			} else {
 				index++;
