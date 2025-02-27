@@ -11,7 +11,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
@@ -33,7 +33,7 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	}
 	
 	@Override
-    public SearchResult<M> getBestMoves(SearchParameters params) {
+    public SearchResult<M> getBestMoves(DepthFirstSearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
 		final B gamePosition = getContext().getGamePosition();
 		if ((gamePosition instanceof HashProvider hp) && getTranspositionTable()!=null && !isInterrupted()) {

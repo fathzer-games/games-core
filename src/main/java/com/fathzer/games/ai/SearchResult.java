@@ -26,7 +26,7 @@ public final class SearchResult<M> {
 		this.result = new LinkedList<>();
 	}
 	
-	public synchronized int getLow() {
+	synchronized int getLow() {
 		return result.size()>=count ? result.get(count-1).getScore() - delta -1 : Integer.MIN_VALUE;
 	}
 	

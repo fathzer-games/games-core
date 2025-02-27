@@ -4,8 +4,9 @@ import java.util.List;
 
 /** An AI able to find the best move(s) during a game.
  * @param <M> Implementation of the Move interface to use
+ * @param <P> Implementation of the SearchParameters interface to use
  */
-public interface AI<M> {
+public interface AI<M, P extends SearchParameters> {
     
     /**
      * Gets best moves evaluations with the given search parameters
@@ -13,7 +14,7 @@ public interface AI<M> {
      * @param parameters The search parameters
      * @return The search result
      */
-    SearchResult<M> getBestMoves(SearchParameters parameters);
+    SearchResult<M> getBestMoves(P parameters);
 
     /**
      * Gets best moves evaluations at the given search parameters
@@ -23,18 +24,5 @@ public interface AI<M> {
      * @param parameters The search parameters
      * @return The search result. 
      */
-    SearchResult<M> getBestMoves(List<M> possibleMoves, SearchParameters parameters);
-    
-    /** Interrupts the current search */
-	void interrupt();
-
-    /** Tests if the search was interrupted.
-     * @return <code>true</code> if the search was interrupted, <code>false</code> otherwise
-     */
-	boolean isInterrupted();
-
-	/** Gets the statistic related to last search call.
-	 * @return The statistics
-	 */
-	SearchStatistics getStatistics();
+    SearchResult<M> getBestMoves(List<M> possibleMoves, P parameters);
 }

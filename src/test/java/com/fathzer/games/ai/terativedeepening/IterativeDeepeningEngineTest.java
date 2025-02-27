@@ -17,7 +17,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.StaticEvaluator;
@@ -169,7 +169,7 @@ class IterativeDeepeningEngineTest {
 		}
 
 		@Override
-		public SearchResult<String> getBestMoves(SearchParameters params) {
+		public SearchResult<String> getBestMoves(DepthFirstSearchParameters params) {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize());
@@ -180,7 +180,7 @@ class IterativeDeepeningEngineTest {
 		}
 		
 		@Override
-	    public SearchResult<String> getBestMoves(List<String> moves, SearchParameters params) {
+	    public SearchResult<String> getBestMoves(List<String> moves, DepthFirstSearchParameters params) {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize(),"At depth "+params.getDepth()+" search size is wrong");

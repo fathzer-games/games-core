@@ -82,14 +82,14 @@ class MinimaxTest {
 		}
 
 		List<EvaluatedMove<Move>> search(AiType ai, boolean noQuiece) {
-			return search(ai, new SearchParameters(depth, Integer.MAX_VALUE, 0), noQuiece);
+			return search(ai, new DepthFirstSearchParameters(depth, Integer.MAX_VALUE, 0), noQuiece);
 		}
 
-		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params, boolean noQuiece) {
+		List<EvaluatedMove<Move>> search(AiType aiType, DepthFirstSearchParameters params, boolean noQuiece) {
 			return search(aiType, params, noQuiece, null);
 		}
 		
-		List<EvaluatedMove<Move>> search(AiType aiType, SearchParameters params, boolean noQuiece, List<Move> searchedMoves) {
+		List<EvaluatedMove<Move>> search(AiType aiType, DepthFirstSearchParameters params, boolean noQuiece, List<Move> searchedMoves) {
 			final ChessLibMoveGenerator mg = new ChessLibMoveGenerator(fen, MINIMAX==aiType?x->null:BasicMoveComparator::new);
 			final Evaluator<Move, ChessLibMoveGenerator> ev = new BasicEvaluator();
 			final SearchContext<Move, ChessLibMoveGenerator> ctx = SearchContext.get(mg, () -> ev);
@@ -117,7 +117,7 @@ class MinimaxTest {
 		final Move illegalMove = new Move(D3, D4);
 		final Move legalMove = new Move(A6, A5);
 		Predicate<AiType> f = ai -> {
-			final List<EvaluatedMove<Move>> search = t.search(ai, new SearchParameters(2, Integer.MAX_VALUE, 0), false, Collections.singletonList(illegalMove));
+			final List<EvaluatedMove<Move>> search = t.search(ai, new DepthFirstSearchParameters(2, Integer.MAX_VALUE, 0), false, Collections.singletonList(illegalMove));
 			return getEvaluation(search, illegalMove).isEmpty();
 		};
 		assertTrue(f.test(NEGAMAX));
@@ -125,7 +125,7 @@ class MinimaxTest {
 		assertTrue(f.test(ALPHA_BETA));
 		assertTrue(f.test(MINIMAX));
 		f = ai -> {
-			final List<EvaluatedMove<Move>> search = t.search(ai, new SearchParameters(2, Integer.MAX_VALUE, 0), false, Arrays.asList(illegalMove, legalMove));
+			final List<EvaluatedMove<Move>> search = t.search(ai, new DepthFirstSearchParameters(2, Integer.MAX_VALUE, 0), false, Arrays.asList(illegalMove, legalMove));
 			return getEvaluation(search, legalMove).isPresent() && getEvaluation(search, illegalMove).isEmpty();
 		};
 		assertTrue(f.test(NEGAMAX));
@@ -210,7 +210,7 @@ class MinimaxTest {
 	@Test
 	void matIn3ForWhites() {
 		ChessLibTest t = new ChessLibTest("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1", 6);
-		SearchParameters params = new SearchParameters(6);
+		DepthFirstSearchParameters params = new DepthFirstSearchParameters(6);
 		final EvaluatedMove<Move> expected = new EvaluatedMove<>(new Move(D1,D7), Evaluation.win(3, t.getWinScore(5)));
 		matIn3forWhitesAssert(expected, t.search(NEGAMAX, params, true));
 		matIn3forWhitesAssert(expected, t.search(NEGAMAX_3, params, true));
@@ -285,7 +285,7 @@ class MinimaxTest {
 		}
 	}
 
-	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, SearchParameters params, List<M> moves) {
+	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, DepthFirstSearchParameters params, List<M> moves) {
 		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
 			final AbstractAI<M, B> ai = aiBuilder.apply(context);
 			final List<EvaluatedMove<M>> list = (moves == null? ai.getBestMoves(params) : ai.getBestMoves(moves, params)).getList();

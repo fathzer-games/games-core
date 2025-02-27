@@ -7,23 +7,23 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.fathzer.games.ai.AI;
+import com.fathzer.games.ai.DepthFirstAI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.SearchEventLogger;
 import com.fathzer.games.util.OrderedUtils;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 public class IterativeDeepeningSearch<M> {
 	private final DeepeningPolicy deepeningPolicy;
-	private final AI<M> ai;
+	private final DepthFirstAI<M, DepthFirstSearchParameters> ai;
 	private SearchHistory<M> searchHistory;
 	private List<M> searchedMoves;
 	private SearchEventLogger<M> logger;
 	private int depth;
 	
-	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
+	IterativeDeepeningSearch(DepthFirstAI<M, DepthFirstSearchParameters> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;
@@ -44,7 +44,7 @@ public class IterativeDeepeningSearch<M> {
 	private SearchHistory<M> buildBestMoves() {
 		deepeningPolicy.start();
 		this.searchHistory = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
-		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		final DepthFirstSearchParameters currentParams = new DepthFirstSearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		SearchResult<M> bestMoves = searchedMoves==null ? ai.getBestMoves(currentParams) : ai.getBestMoves(searchedMoves, currentParams);
 		searchHistory.add(bestMoves.getList(), deepeningPolicy.getStartDepth());
 		logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), bestMoves);

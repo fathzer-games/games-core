@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
@@ -27,12 +27,12 @@ class TTAiTest {
 		}
 
 		@Override
-		public SearchResult<Move> getBestMoves(SearchParameters parameters) {
+		public SearchResult<Move> getBestMoves(DepthFirstSearchParameters parameters) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public SearchResult<Move> getBestMoves(List<Move> possibleMoves, SearchParameters parameters) {
+		public SearchResult<Move> getBestMoves(List<Move> possibleMoves, DepthFirstSearchParameters parameters) {
 			throw new UnsupportedOperationException();
 		}
 

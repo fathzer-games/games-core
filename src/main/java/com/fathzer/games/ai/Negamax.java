@@ -34,7 +34,7 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(SearchParameters params) {
+    public SearchResult<M> getBestMoves(DepthFirstSearchParameters params) {
 		final SearchResult<M> result = super.getBestMoves(params);
 		// Warning, result can be empty if searching position with no possible moves
 		if ((getContext().getGamePosition() instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted() && !result.getList().isEmpty()) {

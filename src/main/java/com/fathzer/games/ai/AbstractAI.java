@@ -8,11 +8,19 @@ import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.exec.ExecutionContext;
+import com.fathzer.games.util.exec.Interruptible;
 
-public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M> {
+/** An abstract {@link DepthFirstAI} implementation.
+ * @param <M> Implementation of the Move interface to use
+ * @param <B> Implementation of the MoveGenerator interface to use
+ */
+public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements DepthFirstAI<M, DepthFirstSearchParameters>, Interruptible {
 	private final ExecutionContext<SearchContext<M,B>> context;
 	private boolean interrupted;
 	
+	/** Constructor
+	 * @param context The context to use for the search
+	 */
 	protected AbstractAI(ExecutionContext<SearchContext<M,B>> context) {
 		this.context = context;
 		this.interrupted = false;
@@ -28,7 +36,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(SearchParameters params) {
+    public SearchResult<M> getBestMoves(DepthFirstSearchParameters params) {
 		getContext().getStatistics().clear();
 		List<M> moves = getContext().getGamePosition().getMoves();
 		getStatistics().movesGenerated(moves.size());
@@ -36,7 +44,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
     }
 
 	@Override
-    public SearchResult<M> getBestMoves(List<M> moves, SearchParameters params) {
+    public SearchResult<M> getBestMoves(List<M> moves, DepthFirstSearchParameters params) {
 		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(),lowestInterestingScore));
     }
 	
@@ -58,7 +66,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements AI<M>
 	
 	protected abstract int getRootScore(final int depth, int lowestInterestingScore);
 
-	protected SearchResult<M> getBestMoves(List<M> moves, SearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
+	protected SearchResult<M> getBestMoves(List<M> moves, DepthFirstSearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
         final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
 		context.execute(moves.stream().map(m -> getRootEvaluationTask(rootEvaluator, search, m)).toList());
         return search;

@@ -19,9 +19,10 @@ This doesn't means that the AI can't be used to play Reversi. Simply, the revers
 - The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV serach, futility prunig, killer or null move, etc ...).
 
 ## TODO (maybe)
+- Make MoveLibrary implement AI.
+- Have a look at the ContextualizedExecutor and ExecutionContext (they seems so close!)
 - There's probably a bug or something very misleading in ClockSettings: withNext has a number of plies arguments, but it seems that the usage is to deal with number of moves (not plies which are half moves).
 - Maybe TTAi scoreToTT and ttToScore would be at a better place in TranspositionTablePolicy. Another, maybe better, approach is to compute fixed (mat) values in Negamax class and have a flag in the table (and in its store method) to explicitly set the stored value as a fixed value. It would allow those values to be used regardless of the depth at which they are recorded.
-- EvaluatedMove.compareTo does not sort in natural order which can be confusing
 - There's a strange behavior with transposition table. There's some situations where a never replace strategy leads to a faster resolution. It is totally counter intuitive.
 - MoveGenerator:
   - It would be more efficient to have the moveGenerator generating directly an iterator of moves instead of a list of moves. It would allow to use incremental move generators that starts by returning, what can hope to be the best moves (for instance captures), and other moves if these first moves are consumed. Indeed, in alpha/beta ai, the first moves are often enough to trigger a cut, so generating all the moves is a waste of time.

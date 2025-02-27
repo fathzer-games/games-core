@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
@@ -16,7 +16,7 @@ import com.fathzer.games.ai.evaluation.Evaluation.Type;
 /** A policy that manages how to deepen the search.
  * <br>Typically, it decides at which depth to start, what increment to add at each step, and if we should end prematurely. 
  */
-public class DeepeningPolicy extends SearchParameters {
+public class DeepeningPolicy extends DepthFirstSearchParameters {
 	private long maxTime;
 	private long start;
 	private boolean deepenOnForced;
@@ -111,7 +111,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 * @param <M> The type of moves
 	 * @param currentParams The current search parameters
 	 * @param history The search history, including the result at {@code depth}
-	 * @param evaluations The evaluations obtained at this depth that were not removed by {@link #filterWinLooseMoves(SearchParameters, SearchHistory, List)}.
+	 * @param evaluations The evaluations obtained at this depth that were not removed by {@link #filterWinLooseMoves(DepthFirstSearchParameters, SearchHistory, List)}.
 	 * @return A list of moves to deepen, an empty list to stop deepening.
 	 * <br><b>Please note</b> that {@code currentParams} could also be changed (typically to decrement its size when win moves are in {@code evaluations}
 	 * <br>The default implementation first calls filterWinLooseMoves, then it returns an empty list if attribute is false and it remains only one move
@@ -120,14 +120,14 @@ public class DeepeningPolicy extends SearchParameters {
 	 * <br>By overriding this method, a custom policy can, for instance, decide that result is stable enough to stop deepening before max depth is reached,
 	 * or stop deepening some moves that appears too bad.
 	 */
-	public <M> List<M> getMovesToDeepen(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluations) {
+	public <M> List<M> getMovesToDeepen(DepthFirstSearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluations) {
 		evaluations = filterWinLooseMoves(currentParams, history, evaluations);
 		// Stop deepening if not in deepenOnForced mode and there's only one move to deepen
 		return deepenOnForced || evaluations.size()>1 ? evaluations.stream().map(EvaluatedMove::getMove).toList() : Collections.emptyList();
 	}
 	
 	/** Removes the win/loose moves from the list of moves that should be evaluated (no need to deepen such moves).
-	 * <br>This method is called by {@link #getMovesToDeepen(SearchParameters, SearchHistory, List)}
+	 * <br>This method is called by {@link #getMovesToDeepen(DepthFirstSearchParameters, SearchHistory, List)}
 	 * <br><b>Warning</b>: Due to the use of transposition tables, this task is tricky; We can find win or loose moves at depth n with a overestimated
 	 * number of moves to reach end of game.<br>
 	 * For example M+6 at depth 7 moves when only 4 are required to force mate. The problem is removing these moves from the list of moves to deepen
@@ -140,7 +140,7 @@ public class DeepeningPolicy extends SearchParameters {
 	 * @param evaluatedMoves The evaluations obtained at {@code currentParams}'s depth
 	 * @return The list of evaluations without the win/loose moves that we do not need to deepen.
 	 */
-	protected <M> List<EvaluatedMove<M>> filterWinLooseMoves(SearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluatedMoves) {
+	protected <M> List<EvaluatedMove<M>> filterWinLooseMoves(DepthFirstSearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluatedMoves) {
 		final AtomicInteger size = new AtomicInteger(currentParams.getSize());
 		final List<EvaluatedMove<M>> list = evaluatedMoves.stream().filter( em -> {
 			Type type = em.getEvaluation().getType();

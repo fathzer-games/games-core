@@ -63,10 +63,10 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	 */
 	protected abstract Optional<List<R>> getRecord(B board);
 
-	/** Converts a database record that describes a move to a move instance.
+	/** Converts a database record that describes an evaluated move to a move instance.
 	 * @param board The position
 	 * @param move The move database record
-	 * @return An evaluated M instance
+	 * @return An evaluated move instance
 	 */
 	protected abstract EvaluatedMove<M> toEvaluatedMove(B board, R move);
 	
@@ -78,7 +78,7 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 		this.moveSelector = moveSelector;
 	}
 	
-	/** Sets another library to search when no move is available in this one.
+	/** Sets another library to search when no moves are available in this one.
 	 * @param next Another library or null to remove the current 'next' library.
 	 */
 	public void setNext(MoveLibrary<M, MoveGenerator<M>> next) {
