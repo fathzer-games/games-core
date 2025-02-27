@@ -2,10 +2,10 @@ package com.fathzer.games.util.exec;
 
 import java.util.Collection;
 
-public class SingleThreadContext<T> implements ExecutionContext<T> {
+class SingleThreadContext<T> implements ExecutionContext<T> {
 	private final T context;
 	
-	public SingleThreadContext(T position) {
+	SingleThreadContext(T position) {
 		this.context = position;
 	}
 

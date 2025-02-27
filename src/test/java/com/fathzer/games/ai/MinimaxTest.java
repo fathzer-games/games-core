@@ -25,9 +25,7 @@ import com.fathzer.games.ai.transposition.TT;
 import com.fathzer.games.chess.BasicEvaluator;
 import com.fathzer.games.chess.BasicMoveComparator;
 import com.fathzer.games.chess.ChessLibMoveGenerator;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.MultiThreadsContext;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class MinimaxTest {
@@ -286,7 +284,7 @@ class MinimaxTest {
 	}
 
 	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, DepthFirstSearchParameters params, List<M> moves) {
-		try (ExecutionContext<SearchContext<M, B>> context = new MultiThreadsContext<>(ctx, new ContextualizedExecutor<>(4))) {
+		try (ExecutionContext<SearchContext<M, B>> context = ExecutionContext.get(4,  ctx)) {
 			final AbstractAI<M, B> ai = aiBuilder.apply(context);
 			final List<EvaluatedMove<M>> list = (moves == null? ai.getBestMoves(params) : ai.getBestMoves(moves, params)).getList();
 			if (ai instanceof Negamax) {

@@ -15,10 +15,7 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.movelibrary.MoveLibrary;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.MultiThreadsContext;
-import com.fathzer.games.util.exec.SingleThreadContext;
 
 /** An engine that iteratively deepens the search. 
  * @param <M> The class that represents a move
@@ -226,12 +223,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	
 	protected ExecutionContext<SearchContext<M,B>> buildExecutionContext(B board) {
 		final SearchContext<M, B> context = SearchContext.get(board, evaluatorSupplier);
-		if (getParallelism()==1) {
-			return new SingleThreadContext<>(context);
-		} else {
-			final ContextualizedExecutor<SearchContext<M, B>> contextualizedExecutor = new ContextualizedExecutor<>(getParallelism());
-			return new MultiThreadsContext<>(context, contextualizedExecutor);
-		}
+		return ExecutionContext.get(getParallelism(), context);
 	}
 	
 	/** Builds the AI used to search best moves at different depth. 
