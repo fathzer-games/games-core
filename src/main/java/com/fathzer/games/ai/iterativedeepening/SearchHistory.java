@@ -12,19 +12,19 @@ import com.fathzer.games.ai.moveselector.MoveSelector;
  * @see IterativeDeepeningEngine
  */
 public class SearchHistory<M> {
-	private final int size;
-	private final int accuracy;
+	private final SearchParameters params;
 	private final List<List<EvaluatedMove<M>>> results;
 	private final List<Integer> depths;
 	
 	/** Constructor
 	 * <br>The parameters should be the one used in {@link SearchParameters#SearchParameters(int, int)} constructor.
-	 * @param size How many best moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
-	 * @param accuracy How many moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
+	 * @param params The search parameters.
 	 */
-	public SearchHistory(int size, int accuracy) {
-		this.size = size;
-		this.accuracy = accuracy;
+	public SearchHistory(SearchParameters params) {
+		if (params==null) {
+			throw new IllegalArgumentException();
+		}
+		this.params = params;
 		this.results = new ArrayList<>();
 		this.depths = new ArrayList<>();
 	}
@@ -39,6 +39,13 @@ public class SearchHistory<M> {
 		}
 		results.add(result);
 		depths.add(depth);
+	}
+
+	/** Gets the search parameters used in this history
+	 * @return the search parameters
+	 */
+	public SearchParameters getSearchParameters() {
+		return this.params;
 	}
 
 	/** Returns the number of results added with {@link #add(List, int)} method
@@ -72,40 +79,44 @@ public class SearchHistory<M> {
 	}
 
 	/** Returns the best moves of a result added with {@link #add(List, int)} method.
+	 * <br>This move is computed by {@link SearchResult#getBestMoves(List, SearchParameters)}
 	 * @param index The index of the result
 	 * @return a list of moves restricted to the size and accuracy of this history
 	 */
 	public List<EvaluatedMove<M>> getBestMoves(int index) {
-		return SearchResult.getBestMoves(results.get(index), size, accuracy);
+		return SearchResult.getBestMoves(results.get(index), params);
 	}
 
 	/** Gets the depth of the last list of moves added to this history
 	 * @return a positive integer (0 if no results has been added to this history)
 	 */
-	public int getDepth() {
+	public int getLastDepth() {
 		return isEmpty() ? 0 : depths.get(results.size()-1);
 	}
 
 	/** Gets the last list of moves added to this history
 	 * @return a list of moves, or null if this history is empty
 	 */
-	public List<EvaluatedMove<M>> getList() {
+	public List<EvaluatedMove<M>> getLastList() {
 		return isEmpty() ? null : results.get(results.size()-1);
 	}
 	
 	/** Gets the last list of best moves added to this history
-	 * @return a list of moves (restricted to the size and accuracy of this history), or null if this history is empty
+	 * @return a list of moves (restricted to the search parameters of this history), or null if this history is empty
+	 * @see SearchResult#getBestMoves(List, SearchParameters)
 	 */
 	public List<EvaluatedMove<M>> getBestMoves() {
-		return isEmpty() ? null : SearchResult.getBestMoves(results.get(results.size()-1), size, accuracy);
+		final List<EvaluatedMove<M>> last = getLastList();
+		return last==null ? null : SearchResult.getBestMoves(last, params);
 	}
 
 	/** Gets the best move according to the given selector
+	 * <br>It calls {@link MoveSelector#get(D, List)} with this history as the first argument and {@link #getBestMoves()} as second to choose the move
 	 * @param selector The selector to use
-	 * @return the best move
+	 * @return the best move, or null if {@link #getBestMoves()} returns null or the selector returns no move.
 	 */
 	public EvaluatedMove<M> getBestMove(MoveSelector<M, SearchHistory<M>> selector) {
-		//FIXME getBestMoves can return null
-		return selector.select(this, getBestMoves()).get(0);
+		final List<EvaluatedMove<M>> bestMoves = getBestMoves();
+		return bestMoves==null ? null : selector.get(this, bestMoves).orElse(null);
 	}
 }

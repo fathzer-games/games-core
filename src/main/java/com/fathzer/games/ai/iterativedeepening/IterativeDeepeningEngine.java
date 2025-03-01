@@ -169,7 +169,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	}
 
 	public SearchHistory<M> getBestMoves(B board, List<M> searchedMoves) {
-		final SearchHistory<M> result = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		final SearchHistory<M> result = new SearchHistory<>(deepeningPolicy);
 		//TODO Filter library with candidates + return more than one move if search params requires more than one move
 		EvaluatedMove<M> move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move!=null) {

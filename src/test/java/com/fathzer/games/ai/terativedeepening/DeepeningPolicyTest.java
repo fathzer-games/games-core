@@ -52,7 +52,7 @@ class DeepeningPolicyTest {
 		List<EvaluatedMove<String>> cut;
 		SearchResult<String> sr;
 
-		sr = new SearchResult<>(policy.getSize(), policy.getAccuracy());
+		sr = new SearchResult<>(policy);
 		sr.add("x", Evaluation.score(50));
 		sr.add("y", Evaluation.score(45));
 		sr.add("z", Evaluation.score(44));
@@ -72,7 +72,7 @@ class DeepeningPolicyTest {
 		assertEquals(50, cut.get(1).getEvaluation().getScore());
 		
 		// Difficult part: previous sr.getCut() moves are not in partial list => Nothing should change (we have no way to know if x has a better score than y or not)
-		sr = new SearchResult<>(policy.getSize(), policy.getAccuracy());
+		sr = new SearchResult<>(policy);
 		sr.add("x", Evaluation.score(50));
 		sr.add("y", Evaluation.score(45));
 		sr.add("z", Evaluation.score(44));
@@ -83,7 +83,7 @@ class DeepeningPolicyTest {
 		assertTrue(merge(policy, sr, partialList).isEmpty());
 		
 		// Difficult part: some scores are lower than previous 'sr.getLow()'
-		sr = new SearchResult<>(policy.getSize(), policy.getAccuracy());
+		sr = new SearchResult<>(policy);
 		sr.add("x", Evaluation.score(50));
 		sr.add("y", Evaluation.score(45));
 		sr.add("z", Evaluation.score(44));
@@ -104,8 +104,8 @@ class DeepeningPolicyTest {
 	}
 	
 	private <M> Optional<SearchResult<M>> merge(DeepeningPolicy policy, SearchResult<M> history, List<EvaluatedMove<M>> partialList) {
-		final SearchResult<M> interrupted = new SearchResult<M>(policy.getSize(), policy.getAccuracy());
-		final SearchHistory<M> theHistory = new SearchHistory<M>(policy.getSize(), policy.getAccuracy());
+		final SearchResult<M> interrupted = new SearchResult<M>(policy);
+		final SearchHistory<M> theHistory = new SearchHistory<M>(policy);
 		theHistory.add(history.getList(), 1);
 		partialList.forEach(ev -> interrupted.add(ev.getMove(), ev.getEvaluation()));
 		return policy.mergeInterrupted(theHistory, interrupted, 2);

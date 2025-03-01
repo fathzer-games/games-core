@@ -12,22 +12,19 @@ import com.fathzer.games.util.OrderedUtils;
  */
 public final class SearchResult<M> {
 	private final LinkedList<EvaluatedMove<M>> result;
-	private final int count;
-	private final int delta;
+	private final SearchParameters params;
 
 	/**
 	 * Constructor
-	 * @param size How many best moves are requested to have an exact value (Integer.MAX_VALUE to have all moves).
-	 * @param accuracy the evaluation gap under which two moves are considered as equivalent.
+	 * @param params The search parameters.
 	 */
-	public SearchResult(int size, int accuracy) {
-		this.count = size;
-		this.delta = accuracy;
+	public SearchResult(SearchParameters params) {
+		this.params = params;
 		this.result = new LinkedList<>();
 	}
 	
 	synchronized int getLow() {
-		return result.size()>=count ? result.get(count-1).getScore() - delta -1 : Integer.MIN_VALUE;
+		return getLow(result, params);
 	}
 	
 	public synchronized void add(M move, Evaluation value) {
@@ -60,19 +57,20 @@ public final class SearchResult<M> {
      * It can also have less than size elements if there's less than size legal moves or search was interrupted before it finished. 
 	 */
 	public synchronized List<EvaluatedMove<M>> getCut() {
-		return getBestMoves(result, count, delta);
+		return getBestMoves(result, params);
 	}
 	
-	public static <M> int getLow(List<EvaluatedMove<M>> moves, int size, int accuracy) {
-		return moves.size()>=size ? moves.get(size-1).getScore() - accuracy -1 : Integer.MIN_VALUE;
+	public static <M> int getLow(List<EvaluatedMove<M>> moves, SearchParameters params) {
+		return moves.size()>=params.getSize() ? moves.get(params.getSize()-1).getScore() - params.getAccuracy() -1 : Integer.MIN_VALUE;
 	}
 	
-	public static <M> List<EvaluatedMove<M>> getBestMoves(List<EvaluatedMove<M>> moves, int size, int accuracy) {
+	//TODO Move this method in SearchParameters?
+	public static <M> List<EvaluatedMove<M>> getBestMoves(List<EvaluatedMove<M>> moves, SearchParameters params) {
 		final List<EvaluatedMove<M>> cut = new ArrayList<>(moves.size());
-		final int low = getLow(moves, size, accuracy);
+		final int low = getLow(moves, params);
 		int currentCount = 0;
 		for (EvaluatedMove<M> ev : moves) {
-			if (ev.getScore()>low || currentCount<size) {
+			if (ev.getScore()>low || currentCount<params.getSize()) {
 				cut.add(ev);
 				currentCount++;
 			}

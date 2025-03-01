@@ -187,10 +187,10 @@ public class DeepeningPolicy extends DepthFirstSearchParameters {
 		if (partialList.isEmpty() || !areMergeable(history.getBestMoves(), partialList)) {
 			return Optional.empty();
 		}
-		final List<EvaluatedMove<M>> historyMoves = history.getList();
-		final int previousLow = SearchResult.getLow(historyMoves, getSize(), getAccuracy());
+		final List<EvaluatedMove<M>> historyMoves = history.getLastList();
+		final int previousLow = SearchResult.getLow(historyMoves, this);
 		final boolean trap = partialList.get(partialList.size()-1).getScore()<=previousLow;
-		final SearchResult<M> mergedResult = new SearchResult<>(getSize(), getAccuracy());
+		final SearchResult<M> mergedResult = new SearchResult<>(this);
 		if (trap) {
 			// Warning, some approximatively scored moves have a better value than some of partialList
 			// => Replace all scores with a score lower than the lower score in partialList

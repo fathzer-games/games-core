@@ -67,7 +67,7 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
 	protected abstract int getRootScore(final int depth, int lowestInterestingScore);
 
 	protected SearchResult<M> getBestMoves(List<M> moves, DepthFirstSearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
-        final SearchResult<M> search = new SearchResult<>(params.getSize(), params.getAccuracy());
+        final SearchResult<M> search = new SearchResult<>(params);
 		context.execute(moves.stream().map(m -> getRootEvaluationTask(rootEvaluator, search, m)).toList());
         return search;
     }

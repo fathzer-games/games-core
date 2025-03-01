@@ -43,7 +43,7 @@ public class IterativeDeepeningSearch<M> {
 	
 	private SearchHistory<M> buildBestMoves() {
 		deepeningPolicy.start();
-		this.searchHistory = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		this.searchHistory = new SearchHistory<>(deepeningPolicy);
 		final DepthFirstSearchParameters currentParams = new DepthFirstSearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		SearchResult<M> bestMoves = searchedMoves==null ? ai.getBestMoves(currentParams) : ai.getBestMoves(searchedMoves, currentParams);
 		searchHistory.add(bestMoves.getList(), deepeningPolicy.getStartDepth());

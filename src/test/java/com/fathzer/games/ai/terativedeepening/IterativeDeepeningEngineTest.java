@@ -90,7 +90,7 @@ class IterativeDeepeningEngineTest {
 		SearchHistory<String> bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		// Test it stops after first evaluation (because there's one win move)
 		assertEquals(1, bestMoves.length());
-		assertEquals(4, bestMoves.getList().size());
+		assertEquals(4, bestMoves.getLastList().size());
 		
 		// Now look for 2 bestmoves
 		policy.setSize(2);
@@ -173,7 +173,7 @@ class IterativeDeepeningEngineTest {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize());
-			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
+			final SearchResult<String> r = new SearchResult<String>(params);
 			data.returnedMoves.forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
@@ -185,7 +185,7 @@ class IterativeDeepeningEngineTest {
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize(),"At depth "+params.getDepth()+" search size is wrong");
 			assertEquals(data.requestedMoves(), moves,"At depth "+params.getDepth());
-			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
+			final SearchResult<String> r = new SearchResult<String>(params);
 			data.returnedMoves().forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;

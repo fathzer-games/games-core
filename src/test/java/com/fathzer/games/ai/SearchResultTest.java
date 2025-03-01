@@ -13,7 +13,7 @@ class SearchResultTest {
 
 	@Test
 	void test() {
-		SearchResult<Integer> fns = new SearchResult<>(3, 2);
+		SearchResult<Integer> fns = new SearchResult<>(new SearchParameters(3, 2));
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
 		fns.add(1, score(0));
 		assertEquals(Integer.MIN_VALUE, fns.getLow());
