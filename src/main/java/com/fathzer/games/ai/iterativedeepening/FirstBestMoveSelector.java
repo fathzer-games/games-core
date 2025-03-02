@@ -2,7 +2,6 @@ package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.List;
 
-import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 
@@ -21,7 +20,7 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> 
 
 	protected List<EvaluatedMove<M>> filter(SearchHistory<M> history, List<EvaluatedMove<M>> bestMoves) {
 		for (int i=history.length()-1;i>=0;i--) {
-			final List<EvaluatedMove<M>> best = SearchResult.getBestMoves(history.getList(i), history.getSearchParameters());
+			final List<EvaluatedMove<M>> best = history.getSearchParameters().getBestMoves(history.getList(i));
 			final List<M> cut = best.stream().map(EvaluatedMove::getMove).toList();
 			bestMoves = getCandidates(bestMoves, cut);
 			log(i, cut, bestMoves);

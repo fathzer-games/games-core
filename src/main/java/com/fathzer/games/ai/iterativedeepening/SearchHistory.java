@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fathzer.games.ai.SearchParameters;
-import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 
@@ -79,12 +78,12 @@ public class SearchHistory<M> {
 	}
 
 	/** Returns the best moves of a result added with {@link #add(List, int)} method.
-	 * <br>This move is computed by {@link SearchResult#getBestMoves(List, SearchParameters)}
+	 * <br>This move is computed by {@link SearchParameters#getBestMoves(List)}
 	 * @param index The index of the result
 	 * @return a list of moves restricted to the size and accuracy of this history
 	 */
 	public List<EvaluatedMove<M>> getBestMoves(int index) {
-		return SearchResult.getBestMoves(results.get(index), params);
+		return params.getBestMoves(results.get(index));
 	}
 
 	/** Gets the depth of the last list of moves added to this history
@@ -103,11 +102,11 @@ public class SearchHistory<M> {
 	
 	/** Gets the last list of best moves added to this history
 	 * @return a list of moves (restricted to the search parameters of this history), or null if this history is empty
-	 * @see SearchResult#getBestMoves(List, SearchParameters)
+	 * @see SearchParameters#getBestMoves(List)
 	 */
 	public List<EvaluatedMove<M>> getBestMoves() {
 		final List<EvaluatedMove<M>> last = getLastList();
-		return last==null ? null : SearchResult.getBestMoves(last, params);
+		return last==null ? null : params.getBestMoves(last);
 	}
 
 	/** Gets the best move according to the given selector

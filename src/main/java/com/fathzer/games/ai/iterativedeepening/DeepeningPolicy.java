@@ -139,6 +139,9 @@ public class DeepeningPolicy extends DepthFirstSearchParameters {
 	 * @param history The search history, including the result at {@code depth}
 	 * @param evaluatedMoves The evaluations obtained at {@code currentParams}'s depth
 	 * @return The list of evaluations without the win/loose moves that we do not need to deepen.
+	 * <br>If some winning moves has been removed, <code>currentParams</code> is also decremented accordingly
+	 * (for instance, if size was 3 and 2 moves are winning, <code>currentParams</code>'s size is set to 1,
+	 * allowing deeper search to return only 1 move with an exact evaluation). 
 	 */
 	protected <M> List<EvaluatedMove<M>> filterWinLooseMoves(DepthFirstSearchParameters currentParams, SearchHistory<M> history, List<EvaluatedMove<M>> evaluatedMoves) {
 		final AtomicInteger size = new AtomicInteger(currentParams.getSize());
@@ -188,7 +191,7 @@ public class DeepeningPolicy extends DepthFirstSearchParameters {
 			return Optional.empty();
 		}
 		final List<EvaluatedMove<M>> historyMoves = history.getLastList();
-		final int previousLow = SearchResult.getLow(historyMoves, this);
+		final int previousLow = this.getLow(historyMoves);
 		final boolean trap = partialList.get(partialList.size()-1).getScore()<=previousLow;
 		final SearchResult<M> mergedResult = new SearchResult<>(this);
 		if (trap) {

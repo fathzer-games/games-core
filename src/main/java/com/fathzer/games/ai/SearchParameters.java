@@ -1,5 +1,10 @@
 package com.fathzer.games.ai;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+
 /** The parameters of an AI search.
  * @see SearchResult
  */
@@ -72,5 +77,22 @@ public class SearchParameters {
 			throw new IllegalArgumentException("Accuracy should be strictly positive");
 		}
 		this.accuracy = accuracy;
+	}
+	
+	public <M> int getLow(List<EvaluatedMove<M>> moves) {
+		return moves.size()>=size ? moves.get(size-1).getScore() - accuracy -1 : Integer.MIN_VALUE;
+	}
+	
+	public <M> List<EvaluatedMove<M>> getBestMoves(List<EvaluatedMove<M>> moves) {
+		final List<EvaluatedMove<M>> cut = new ArrayList<>(moves.size());
+		final int low = getLow(moves);
+		int currentCount = 0;
+		for (EvaluatedMove<M> ev : moves) {
+			if (ev.getScore()>low || currentCount<size) {
+				cut.add(ev);
+				currentCount++;
+			}
+		}
+		return cut;
 	}
 }

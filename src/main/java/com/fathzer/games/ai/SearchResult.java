@@ -1,6 +1,5 @@
 package com.fathzer.games.ai;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,8 +22,12 @@ public final class SearchResult<M> {
 		this.result = new LinkedList<>();
 	}
 	
+	public SearchParameters getSearchParameters() {
+		return params;
+	}
+	
 	synchronized int getLow() {
-		return getLow(result, params);
+		return params.getLow(result);
 	}
 	
 	public synchronized void add(M move, Evaluation value) {
@@ -57,26 +60,7 @@ public final class SearchResult<M> {
      * It can also have less than size elements if there's less than size legal moves or search was interrupted before it finished. 
 	 */
 	public synchronized List<EvaluatedMove<M>> getCut() {
-		return getBestMoves(result, params);
-	}
-	
-	public static <M> int getLow(List<EvaluatedMove<M>> moves, SearchParameters params) {
-		return moves.size()>=params.getSize() ? moves.get(params.getSize()-1).getScore() - params.getAccuracy() -1 : Integer.MIN_VALUE;
-	}
-	
-	//TODO Move this method in SearchParameters?
-	public static <M> List<EvaluatedMove<M>> getBestMoves(List<EvaluatedMove<M>> moves, SearchParameters params) {
-		final List<EvaluatedMove<M>> cut = new ArrayList<>(moves.size());
-		final int low = getLow(moves, params);
-		int currentCount = 0;
-		for (EvaluatedMove<M> ev : moves) {
-			if (ev.getScore()>low || currentCount<params.getSize()) {
-				cut.add(ev);
-				currentCount++;
-			}
-		}
-		return cut;
-		
+		return params.getBestMoves(result);
 	}
 	
 	/** Gets the list of moves evaluation.
