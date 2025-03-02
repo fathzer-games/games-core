@@ -191,7 +191,7 @@ public class DeepeningPolicy extends DepthFirstSearchParameters {
 			return Optional.empty();
 		}
 		final List<EvaluatedMove<M>> historyMoves = history.getLastList();
-		final int previousLow = this.getLow(historyMoves);
+		final int previousLow = this.getLowerBound(historyMoves);
 		final boolean trap = partialList.get(partialList.size()-1).getScore()<=previousLow;
 		final SearchResult<M> mergedResult = new SearchResult<>(this);
 		if (trap) {

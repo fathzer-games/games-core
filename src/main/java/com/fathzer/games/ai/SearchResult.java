@@ -27,7 +27,7 @@ public final class SearchResult<M> {
 	}
 	
 	synchronized int getLow() {
-		return params.getLow(result);
+		return params.getLowerBound(result);
 	}
 	
 	public synchronized void add(M move, Evaluation value) {
