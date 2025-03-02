@@ -20,6 +20,7 @@ This doesn't means that the AI can't be used to play Reversi. Simply, the revers
 
 ## TODO (maybe)
 - Make MoveLibrary implement AI?
+- RandowEngine and NaiveEngine should be replaced by AI implementations, probably, AbstractAI and its subclasses should be in a specific package.
 - There's probably a bug or something very misleading in ClockSettings: withNext has a number of plies arguments, but it seems that the usage is to deal with number of moves (not plies which are half moves).
 - Maybe TTAi scoreToTT and ttToScore would be at a better place in TranspositionTablePolicy. Another, maybe better, approach is to compute fixed (mat) values in Negamax class and have a flag in the table (and in its store method) to explicitly set the stored value as a fixed value. It would allow those values to be used regardless of the depth at which they are recorded.
 - There's a strange behavior with transposition table. There's some situations where a never replace strategy leads to a faster resolution. It is totally counter intuitive.

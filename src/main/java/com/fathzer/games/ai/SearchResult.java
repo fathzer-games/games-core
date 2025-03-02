@@ -22,6 +22,9 @@ public final class SearchResult<M> {
 		this.result = new LinkedList<>();
 	}
 	
+	/** Gets the search parameters.
+	 * @return The search parameters.
+	 */
 	public SearchParameters getSearchParameters() {
 		return params;
 	}
@@ -30,10 +33,18 @@ public final class SearchResult<M> {
 		return params.getLowerBound(result);
 	}
 	
+	/** Adds a new move evaluation.
+	 * @param move The move
+	 * @param value The evaluation of the move
+	 */
 	public synchronized void add(M move, Evaluation value) {
 		OrderedUtils.insert(this.result, new EvaluatedMove<M>(move, value));
 	}
 	
+	/** Updates the evaluation of a move.
+	 * @param move The move (if the move was not already in this search result, it will be added)
+	 * @param value The evaluation
+	 */
 	public synchronized void update(M move, Evaluation value) {
 		final int index = getIndex(move);
 		if (index>=0) {
@@ -66,7 +77,7 @@ public final class SearchResult<M> {
 	/** Gets the list of moves evaluation.
 	 * @return The list sorted (best first) of all valid moves
      * <br>Please note the list may contain upper bounded evaluation (moves we determine they are not good enough to be selected in {@link #getCut()}).
-     * <br>Please note this list may not contains all valid moves if search wass interrupted before it finished.
+     * <br>Please note this list may not contains all valid moves if search was interrupted before it finished.
 	 */
 	public List<EvaluatedMove<M>> getList() {
 		return result;
