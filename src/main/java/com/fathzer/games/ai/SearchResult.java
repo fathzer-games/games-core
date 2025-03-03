@@ -65,7 +65,7 @@ public final class SearchResult<M> {
 		return -1;
 	}
 	
-	/** Gets the list of moves evaluation, truncated to the number of moves requested in this instance constructor.
+	/** Gets the sorted (best first) list of moves evaluation, truncated to the number of moves requested in this instance constructor.
 	 * @return The sorted (best first) list of better moves
      * <br>Please note the list may have more than size elements in case of equivalent moves or almost equivalent moves.
      * It can also have less than size elements if there's less than size legal moves or search was interrupted before it finished. 
@@ -75,7 +75,7 @@ public final class SearchResult<M> {
 	}
 	
 	/** Gets the list of moves evaluation.
-	 * @return The list sorted (best first) of all valid moves
+	 * @return The sorted (best first) list  of all valid moves
      * <br>Please note the list may contain upper bounded evaluation (moves we determine they are not good enough to be selected in {@link #getCut()}).
      * <br>Please note this list may not contains all valid moves if search was interrupted before it finished.
 	 */

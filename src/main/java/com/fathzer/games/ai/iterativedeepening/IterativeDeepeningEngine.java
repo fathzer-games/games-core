@@ -200,7 +200,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 			transpositionTable.newPosition(board);
 		}
 		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
-			final TTAi<M, B> internal = buildAi(context);
+			final TTAi<M, B> internal = buildAI(context);
 			internal.setTranspositonTable(transpositionTable);
 			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException();
@@ -228,9 +228,9 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	
 	/** Builds the AI used to search best moves at different depth. 
 	 * @param context An execution context that can be used by the AI.
-	 * @return An ai that supports transposition tables. THe default implementation returns a Negamax instance.
+	 * @return An AI that supports transposition tables. THe default implementation returns a Negamax instance.
 	 */
-	protected TTAi<M, B> buildAi(ExecutionContext<SearchContext<M,B>> context) {
+	protected TTAi<M, B> buildAI(ExecutionContext<SearchContext<M,B>> context) {
 		return new Negamax<>(context);
 	}
 }
