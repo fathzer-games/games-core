@@ -10,7 +10,7 @@ import java.util.TimerTask;
 import com.fathzer.games.ai.DepthFirstAI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.SearchEventLogger;
-import com.fathzer.games.util.OrderedUtils;
+import com.fathzer.games.util.SortedUtils;
 import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -97,7 +97,7 @@ public class IterativeDeepeningSearch<M> {
 			return result.getList();
 		}
 		final var moves = new ArrayList<>(result.getList());
-		ended.stream().forEach(em -> OrderedUtils.insert(moves, em));
+		ended.stream().forEach(em -> SortedUtils.insert(moves, em));
 		return moves;
 	}
 	

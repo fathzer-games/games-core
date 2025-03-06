@@ -1,5 +1,6 @@
 package com.fathzer.games.movelibrary;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -12,6 +13,11 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
  * @param <B> The type of game board
  */
 public interface MoveLibrary<M, B extends MoveGenerator<M>> extends Function<B, Optional<EvaluatedMove<M>>> {
+	/** Gets the moves for a position.
+	 * @param board a position
+	 * @return The moves available for the position in the library and their evaluations, or an empty list if it can't find any move.
+	 */
+	List<EvaluatedMove<M>> getMoves(B board);
 	
 	/**
 	 * Gets the move to play for a position.

@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.ListIterator;
 
 /** A specialized list optimized to sort moves.
- * Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted with the (a priori) best moves first.
- * Usually, the <i>a priori</i> considers a lot of possible moves as equivalent;
+ * <br>Some ai algorithm, like alpha-beta pruning can be greatly optimized when moves are sorted with the (a priori) best moves first.
+ * Usually, the <i>a priori</i> comparator considers a lot of possible moves as equivalent;
  * Typically, in chess, all non promotion, non capture moves are considered equivalent.<br>
  * As <a href="https://en.wikipedia.org/wiki/Sorting_algorithm#Classification">sort has a O(<i>n</i>&#160;log&#160;<i>n</i>) computational complexity</a>, an optimization is to sort only the promotion or capture moves.
  * This class does this optimization by excluding from the sort all moves with an evaluation of Integer.MIN_VALUE.  

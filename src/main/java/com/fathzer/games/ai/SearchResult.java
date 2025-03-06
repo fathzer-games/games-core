@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
-import com.fathzer.games.util.OrderedUtils;
+import com.fathzer.games.util.SortedUtils;
 
 /** The result of a best move search.
  */
@@ -38,7 +38,7 @@ public final class SearchResult<M> {
 	 * @param value The evaluation of the move
 	 */
 	public synchronized void add(M move, Evaluation value) {
-		OrderedUtils.insert(this.result, new EvaluatedMove<M>(move, value));
+		SortedUtils.insert(this.result, new EvaluatedMove<M>(move, value));
 	}
 	
 	/** Updates the evaluation of a move.

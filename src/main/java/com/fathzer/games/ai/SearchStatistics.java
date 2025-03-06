@@ -103,7 +103,7 @@ public class SearchStatistics {
 	}
 	
 	/** Gets the duration of the search in milliseconds.
-	 * <br>This method returns the time elapsed since the call to {@link #start()} or since this instance was created if {@link #start()} has not been called yet.
+	 * <br>This method returns the time elapsed since the call to {@link #clear()} or since this instance was created if {@link #clear()} has not been called yet.
 	 * @return a positive long
 	 */
 	public long getDurationMs() {

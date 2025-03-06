@@ -8,7 +8,7 @@ import com.fathzer.games.ai.AlphaBetaState;
 /** A class that decide if a transposition table entry should be replaced or not.
  */
 public interface TranspositionTablePolicy<M, B extends MoveGenerator<M>> {
-    /** Process a transposition table entry.
+    /** Processes a transposition table entry.
      * <br>This method is called before iterating on possible moves to use entry data in order to speed up the Negamax algorithm.
      * <br>One can override it to customize how transposition table entries are used.
      * <br>The default behaviour is to return the value of entries with {@link EntryType#EXACT} type and depth &gt;= the current negamax depth and ignore others.

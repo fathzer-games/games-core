@@ -1,5 +1,6 @@
 package com.fathzer.games.movelibrary;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -59,9 +60,9 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	
 	/** Gets the records related to a position.
 	 * @param board The position
-	 * @return A list of records, each of them describes a move. Or an empty optional if the position is not in the base
+	 * @return A list of records, each of them describes a move, an empty list if the position is not in the base
 	 */
-	protected abstract Optional<List<R>> getRecord(B board);
+	protected abstract List<R> getRecords(B board);
 
 	/** Converts a database record that describes an evaluated move to a move instance.
 	 * @param board The position
@@ -70,7 +71,7 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	 */
 	protected abstract EvaluatedMove<M> toEvaluatedMove(B board, R move);
 	
-	/** Sets the move selector (the function that selects a move in the list of move records returned by {@link #getRecord(MoveGenerator)}
+	/** Sets the move selector (the function that selects a move in the list of move records returned by {@link #getRecords(MoveGenerator)}
 	 * <br>By default, the move is randomly chosen in the list.
 	 * @param moveSelector A move selector
 	 */
@@ -85,17 +86,25 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 		this.other = next;
 	}
 
+	@Override
+	public List<EvaluatedMove<M>> getMoves(B board) {
+		final List<R> moves = getRecords(board);
+		if (moves.isEmpty()) {
+			return other==null ? Collections.emptyList() : other.getMoves(board);
+		}
+		return moves.stream().map(r -> toEvaluatedMove(board, r)).toList();
+	}
+
 	/** {@inheritDoc}
 	 * <br>If this library can't find a move for this position, and a 'next' library was linked with this using {@link #setNext(MoveLibrary)},
 	 * its apply method's result is returned.
 	 */
 	@Override
 	public Optional<EvaluatedMove<M>> apply(B board) {
-		final Optional<List<R>> theRecordO = getRecord(board);
-		if (theRecordO.isEmpty()) {
+		final List<R> moves = getRecords(board);
+		if (moves.isEmpty()) {
 			return other==null ? Optional.empty() : other.apply(board);
 		}
-		final List<R> moves = theRecordO.get();
 		final R selectedRecord = moveSelector.apply(moves);
 		return Optional.of(toEvaluatedMove(board, selectedRecord));
 	}

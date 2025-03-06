@@ -16,7 +16,11 @@ It also provides you with other useful building blocks like a clock, PerfT tests
 # Known limitations
 - The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).  
 This doesn't means that the AI can't be used to play Reversi. Simply, the reversi move generator should have a special '*can't play*' move returned when a player can't move but the game is not finished.
-- The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV serach, futility prunig, killer or null move, etc ...).
+- The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV search, futility pruning, killer or null move, etc ...).
+
+## TODO (probable breaking changes)
+- com.fathzer.games.ai.AbstractAI requires an ExecutionContext in its constructor. I think this is not a good approach (even it was mine ;-)) to have this non standard implementation detail exposed outside this public class. Moreover, this disallow building different multi-threading models in AI implementation. Typically it is currently impossible to use a fork/join pool to perform the search.
+As it seems, in real life, a new context is created at each AI invocation, a better approach would be to let the AI manage its own threading scheme, and simply pass a SearchContext to the constructor.
 
 ## TODO (maybe)
 - Make MoveLibrary implement AI?
