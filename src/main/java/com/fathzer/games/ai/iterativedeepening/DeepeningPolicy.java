@@ -187,7 +187,7 @@ public class DeepeningPolicy extends DepthFirstSearchParameters {
 	 */
 	public <M> Optional<SearchResult<M>> mergeInterrupted(SearchHistory<M> history, SearchResult<M> interruptedSearch, int interruptionDepth) {
 		final List<EvaluatedMove<M>> partialList = interruptedSearch.getList();
-		if (partialList.isEmpty() || !areMergeable(history.getBestMoves(), partialList)) {
+		if (partialList.isEmpty() || !areMergeable(history.getAccurateMoves(), partialList)) {
 			return Optional.empty();
 		}
 		final List<EvaluatedMove<M>> historyMoves = history.getLastList();

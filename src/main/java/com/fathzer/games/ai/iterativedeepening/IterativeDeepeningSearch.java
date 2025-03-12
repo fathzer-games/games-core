@@ -23,7 +23,7 @@ public class IterativeDeepeningSearch<M> {
 	private SearchEventLogger<M> logger;
 	private int depth;
 	
-	IterativeDeepeningSearch(DepthFirstAI<M, DepthFirstSearchParameters> ai, DeepeningPolicy deepeningPolicy) {
+	public IterativeDeepeningSearch(DepthFirstAI<M, DepthFirstSearchParameters> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;

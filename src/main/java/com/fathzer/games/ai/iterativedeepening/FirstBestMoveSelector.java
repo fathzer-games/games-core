@@ -6,9 +6,9 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 
 /** A {@link MoveSelector} that, in case of ties, selects moves that have already been found as best for lower depths.
- * <br>It starts at the last depth searched in the history. If some of the candidates moves were already in best moves list at immediate lower depth, it retains only them.
- * It none were in this list, it ignores this depth and keep the whole candidates list.
- * <br>Then it continues until the first depth in history is reached.
+ * <br>It starts at the last depth searched in the history. If some of the best moves were already in best moves list at immediate lower depth, it retains only them.
+ * It none were in this list, it ignores this depth and keep the whole best moves list.
+ * <br>Then it continues until the first depth in history is reached or only one move remains in best moves.
  * @param <M> The type of moves
  */
 public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> {
@@ -20,9 +20,13 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> 
 
 	protected List<EvaluatedMove<M>> filter(SearchHistory<M> history, List<EvaluatedMove<M>> bestMoves) {
 		for (int i=history.length()-1;i>=0;i--) {
-			final List<EvaluatedMove<M>> best = history.getSearchParameters().getBestMoves(history.getList(i));
+			if (bestMoves.size()==1) {
+				break;
+			}
+			final List<EvaluatedMove<M>> depthList = history.getList(i);
+			final List<EvaluatedMove<M>> best = depthList.subList(0, history.getSearchParameters().getBestMovesCount(depthList));
 			final List<M> cut = best.stream().map(EvaluatedMove::getMove).toList();
-			bestMoves = getCandidates(bestMoves, cut);
+			bestMoves = filter(bestMoves, cut);
 			log(history,i, cut, bestMoves);
 		}
 		return bestMoves;
@@ -39,7 +43,7 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> 
 		// Does nothing by default
 	}
 	
-	private List<EvaluatedMove<M>> getCandidates(List<EvaluatedMove<M>> bestMoves, List<M> moves) {
+	private List<EvaluatedMove<M>> filter(List<EvaluatedMove<M>> bestMoves, List<M> moves) {
 		final List<EvaluatedMove<M>> alreadyBest = bestMoves.stream().filter(em -> moves.contains(em.getMove())).toList();
 		return alreadyBest.isEmpty() ? bestMoves : alreadyBest;
 	}

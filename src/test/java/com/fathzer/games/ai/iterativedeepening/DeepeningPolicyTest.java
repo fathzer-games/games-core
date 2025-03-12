@@ -1,4 +1,4 @@
-package com.fathzer.games.ai.terativedeepening;
+package com.fathzer.games.ai.iterativedeepening;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
-import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
-import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 
 class DeepeningPolicyTest {
 	@Test

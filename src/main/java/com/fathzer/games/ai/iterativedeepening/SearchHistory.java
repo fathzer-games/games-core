@@ -1,6 +1,7 @@
 package com.fathzer.games.ai.iterativedeepening;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.fathzer.games.ai.SearchParameters;
@@ -31,9 +32,10 @@ public class SearchHistory<M> {
 	/** Adds a new search result at a specified depth.
 	 * @param result The search result
 	 * @param depth The depth at which the result was obtained
+	 * @throws IllegalArgumentException if the depth is negative or &lt;= the last depth added
 	 */
 	public void add(List<EvaluatedMove<M>> result, int depth) {
-		if (!isEmpty() && depth<depths.get(depths.size()-1)) {
+		if (depth < 0 || (!isEmpty() && depth<=depths.get(depths.size()-1))) {
 			throw new IllegalArgumentException();
 		}
 		results.add(result);
@@ -55,10 +57,11 @@ public class SearchHistory<M> {
 	}
 	
 	/** Checks whether this history is empty
-	 * @return true if this history is empty
+	 * @return true if this history contains no result ({@link #add(List, int)} was never called or called with empty lists).
+	 * <br><b>WARNING:</b>A history with an empty move list is not empty. 
 	 */
 	public boolean isEmpty() {
-		return results.isEmpty();
+		return getLastList().isEmpty();
 	}
 
 	/** Returns the depth of a result added with {@link #add(List, int)} method
@@ -77,45 +80,47 @@ public class SearchHistory<M> {
 		return results.get(index);
 	}
 
-	/** Returns the best moves of a result added with {@link #add(List, int)} method.
-	 * <br>This move is computed by {@link SearchParameters#getBestMoves(List)}
+	/** Returns the accurate moves of a result added with {@link #add(List, int)} method.
 	 * @param index The index of the result
-	 * @return a list of moves restricted to the size and accuracy of this history
+	 * @return a list of moves restricted to the size and accuracy of this history (its length is the result of {@link SearchParameters#getAccurateMovesCount(List)})
 	 */
-	public List<EvaluatedMove<M>> getBestMoves(int index) {
-		return params.getBestMoves(results.get(index));
+	public List<EvaluatedMove<M>> getAccurateMoves(int index) {
+		return results.get(index).subList(0, params.getAccurateMovesCount(results.get(index)));
 	}
 
 	/** Gets the depth of the last list of moves added to this history
 	 * @return a positive integer (0 if no results has been added to this history)
 	 */
 	public int getLastDepth() {
-		return isEmpty() ? 0 : depths.get(results.size()-1);
+		return results.isEmpty() ? 0 : depths.get(results.size()-1);
 	}
 
 	/** Gets the last list of moves added to this history
-	 * @return a list of moves, or null if this history is empty
+	 * @return a list of moves, or and empty list if this history is empty
 	 */
 	public List<EvaluatedMove<M>> getLastList() {
-		return isEmpty() ? null : results.get(results.size()-1);
+		return results.isEmpty() ? Collections.emptyList() : results.get(results.size()-1);
 	}
 	
-	/** Gets the last list of best moves added to this history
-	 * @return a list of moves (restricted to the search parameters of this history), or null if this history is empty
-	 * @see SearchParameters#getBestMoves(List)
+	/** Gets the last list of accurate moves added to this history
+	 * @return a list of moves (restricted to the search parameters of this history), or an empty list if this history is empty
+	 * @see #getAccurateMoves(int)
 	 */
-	public List<EvaluatedMove<M>> getBestMoves() {
-		final List<EvaluatedMove<M>> last = getLastList();
-		return last==null ? null : params.getBestMoves(last);
+	public List<EvaluatedMove<M>> getAccurateMoves() {
+		return results.isEmpty() ? Collections.emptyList() : getAccurateMoves(length()-1);
 	}
 
 	/** Gets the best move according to the given selector
-	 * <br>It calls {@link MoveSelector#get(D, List)} with this history as the first argument and {@link #getBestMoves()} as second to choose the move
+	 * <br>It calls {@link MoveSelector#get(D, List)} with this history as the first argument and {@link #getAccurateMoves()} as second to choose the move
 	 * @param selector The selector to use
-	 * @return the best move, or null if {@link #getBestMoves()} returns null or the selector returns no move.
+	 * @return the best move, or null if {@link #getLastList()} returns an empty list or the selector returns no move.
 	 */
 	public EvaluatedMove<M> getBestMove(MoveSelector<M, SearchHistory<M>> selector) {
-		final List<EvaluatedMove<M>> bestMoves = getBestMoves();
-		return bestMoves==null ? null : selector.get(this, bestMoves).orElse(null);
+		final List<EvaluatedMove<M>> list = getLastList();
+		if (list.isEmpty()) {
+			return null;
+		}
+		final List<EvaluatedMove<M>> bestMoves = list.subList(0, params.getBestMovesCount(list));
+		return selector.get(this, bestMoves).orElse(null);
 	}
 }

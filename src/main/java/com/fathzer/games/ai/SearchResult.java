@@ -71,7 +71,7 @@ public final class SearchResult<M> {
      * It can also have less than size elements if there's less than size legal moves or search was interrupted before it finished. 
 	 */
 	public synchronized List<EvaluatedMove<M>> getCut() {
-		return params.getBestMoves(result);
+		return result.subList(0, params.getAccurateMovesCount(result));
 	}
 	
 	/** Gets the list of moves evaluation.

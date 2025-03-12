@@ -49,11 +49,11 @@ public abstract class MoveSelector<M,D> {
 	/** Gets the selected move.
 	 * <br>The default implementation returns the first element of the list returned by {@link #select(Object, List)}.
 	 * @param data The data passed by the engine. The selector is free to use this data or not.
-	 * @param moveLIst The move list in which to choose the move.
+	 * @param moveList The move list in which to choose the move.
 	 * @return The selected move, if any.
 	 */
-	public Optional<EvaluatedMove<M>> get(D data, List<EvaluatedMove<M>> moveLIst) {
-		final List<EvaluatedMove<M>> selected = select(data, moveLIst);
+	public Optional<EvaluatedMove<M>> get(D data, List<EvaluatedMove<M>> moveList) {
+		final List<EvaluatedMove<M>> selected = select(data, moveList);
 		return selected==null || selected.isEmpty() ? Optional.empty() : Optional.of(selected.get(0));
 	}
 }

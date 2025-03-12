@@ -1,6 +1,5 @@
 package com.fathzer.games.ai;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -79,34 +78,56 @@ public class SearchParameters {
 		this.accuracy = accuracy;
 	}
 	
-	/** Gets the lower bound score under which moves will not be considered as one of the best moves returned by {@link #getBestMoves(List)}.
-	 * <br>An {@link AI} can returned the lower bound score instead of the real one if it is sure that its real score is lower than the lower bound score.
-	 * <br>This is because such a move is guaranteed not to be among the best {@link #getSize()} moves returned by {@link #getBestMoves(List)}.
+	/** Gets the lower bound score under which moves will not be considered as accurate by {@link #getAccurateMovesCount(List)}.
+	 * <br>An {@link AI} can return the lower bound score instead of the real one if it is sure that its real score is &lt;= the lower bound score.
 	 * @param moves A ordered (best first) list of moves. If this list is not sorted, the result is unpredictable.
 	 * @param <M> The type of the moves
-	 * @return an int
+	 * @return an int, Integer.MIN_VALUE if list is empty
 	 */
 	public <M> int getLowerBound(List<EvaluatedMove<M>> moves) {
 		return moves.size()>=size ? moves.get(size-1).getScore() - accuracy -1 : Integer.MIN_VALUE;
 	}
 	
-	/** Gets the best moves of a sorted move list according to the {@link #getSize()} and {@link #getAccuracy()} of this search parameter.
-	 * @param moves The list of moves to cut. This list must be sorted (best first). If it is not sorted, the result is unpredictable.
+	/** Gets the number moves of a sorted move list that have an exact evaluation according to the {@link #getSize()} and {@link #getAccuracy()} of this search parameter.
+	 * @param moves The list of moves to analyze. This list must be sorted (best first). If it is not sorted, the result is unpredictable.
 	 * @param <M> The type of the moves
-	 * @return a list of moves restricted to the size and accuracy of this search parameter.
-     * <br>Please note that the returned list may have more than {@link #getSize()} elements in case of equivalent moves or almost equivalent moves (according to {@link #getAccuracy()}).
-     * It can also have less than {@link #getSize()} elements if there's less than {@link #getSize()} legal moves or search was interrupted before it finished. 
+	 * @return a positive integer (0 if the <code>moves</code> is empty).
+     * <br>Please note that the returned may be greater than {@link #getSize()} elements in case of equivalent moves or almost equivalent moves (according to {@link #getAccuracy()}).
+     * It can also be less than {@link #getSize()} if there's less than {@link #getSize()} legal moves or search was interrupted before it finished. 
 	 */
-	public <M> List<EvaluatedMove<M>> getBestMoves(List<EvaluatedMove<M>> moves) {
-		final List<EvaluatedMove<M>> cut = new ArrayList<>(moves.size());
+	public <M> int getAccurateMovesCount(List<EvaluatedMove<M>> moves) {
 		final int low = getLowerBound(moves);
-		int currentCount = 0;
+		int count = 0;
 		for (EvaluatedMove<M> ev : moves) {
-			if (ev.getScore()>low || currentCount<size) {
-				cut.add(ev);
-				currentCount++;
+			if (ev.getScore()>low || count<size) {
+				count++;
+			} else {
+				break;
 			}
 		}
-		return cut;
+		return count;
+	}
+
+	/** Gets the number of best moves of a sorted move list according to the {@link #getAccuracy()} of this search parameter.
+	 * @param moves The list of moves to cut. This list must be sorted (best first). If it is not sorted, the result is unpredictable.
+	 * @param <M> The type of the moves
+	 * @return a positive integer (0 if the <code>moves</code> is empty).
+     * <br>Please note that the returned may be greater than {@link #getSize()} elements in case of equivalent moves or almost equivalent moves (according to {@link #getAccuracy()}).
+     * It can also be less than {@link #getSize()} if there's less than {@link #getSize()} legal moves or search was interrupted before it finished. 
+	 */
+	public <M> int getBestMovesCount(List<EvaluatedMove<M>> moves) {
+		if (moves.isEmpty()) {
+			return 0;
+		}
+		final int low = moves.get(0).getScore()-accuracy; 
+		int count = 0;
+		for (EvaluatedMove<M> ev : moves) {
+			if (ev.getScore()>=low) {
+				count++;
+			} else {
+				break;
+			}
+		}
+		return count;
 	}
 }
