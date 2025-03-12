@@ -37,14 +37,18 @@ public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	
 	/** Called when position changes.
 	 * <br>On this event, the table can clean itself, or increment a generation counter in Entry generation.
+	 * @param board The new position
 	 */
 	void newPosition(B board);
 	
+	/** Called when a new game starts.
+	 * <br>On this event, the table can clean itself, or increment a generation counter in Entry generation.
+	 */
 	void newGame(); //TODO Should call transpositionTablePolicy
 	
 	/** Gets the transposition table's policy.
 	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
-	 * @return
+	 * @return the table's policy
 	 */
 	TranspositionTablePolicy<M, B> getPolicy();
 	

@@ -18,6 +18,9 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 @Deprecated(since="always", forRemoval=false)
 @SuppressWarnings("java:S1133")
 public class AlphaBeta<M,B extends MoveGenerator<M>> extends AbstractAI<M, B> {
+	/** Constructor.
+	 * @param exec The execution context
+	 */
 	protected AlphaBeta(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
 	}

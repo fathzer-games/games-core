@@ -1,5 +1,9 @@
 package com.fathzer.games.ai;
 
+/** 
+ * The state of the Alpha-Beta search.
+ * @param <M> The type of the move
+ */
 public class AlphaBetaState<M> {
 	private final int depth;
 	private final int alpha;

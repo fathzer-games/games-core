@@ -118,6 +118,7 @@ public class EvaluatedMove<M> implements Comparable<EvaluatedMove<M>> {
 	/** Converts a collection of evaluated moves to a string using a given move to string function.
 	 * @param moves The collection of evaluated moves
 	 * @param toString The function that converts the move to a string
+	 * @param <M> The type of move
 	 * @return the string representation of the collection of evaluated moves
 	 */
 	public static <M> String toString(Collection<EvaluatedMove<M>> moves, Function<M,String> toString) {

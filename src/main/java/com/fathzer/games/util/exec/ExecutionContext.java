@@ -29,6 +29,7 @@ public interface ExecutionContext<T> extends AutoCloseable {
 	/** Gets a new execution context.
 	 * @param parallelism The number of threads to use. If 1, a single thread will be used. Otherwise, a thread pool of the given size will be used.
 	 * @param context The context to use. It will be forked to each thread.
+	 * @param <T> The context's class
 	 * @return An execution context.
 	 * @throws IllegalArgumentException if the parallelism is less than 1 or the context is null.
 	 */

@@ -6,9 +6,9 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 
 /** A {@link MoveSelector} that, in case of ties, selects moves that have already been found as best for lower depths.
- * <br>It starts at the last depth searched in the history. If some of the candidates moves were already in best moves list at this lower depth, it retains only them.
+ * <br>It starts at the last depth searched in the history. If some of the candidates moves were already in best moves list at immediate lower depth, it retains only them.
  * It none were in this list, it ignores this depth and keep the whole candidates list.
- * <br>Then it continues untils the first depth in history is reached.
+ * <br>Then it continues until the first depth in history is reached.
  * @param <M> The type of moves
  */
 public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> {
@@ -23,12 +23,19 @@ public class FirstBestMoveSelector<M> extends MoveSelector<M, SearchHistory<M>> 
 			final List<EvaluatedMove<M>> best = history.getSearchParameters().getBestMoves(history.getList(i));
 			final List<M> cut = best.stream().map(EvaluatedMove::getMove).toList();
 			bestMoves = getCandidates(bestMoves, cut);
-			log(i, cut, bestMoves);
+			log(history,i, cut, bestMoves);
 		}
 		return bestMoves;
 	}
 	
-	protected void log(int index, List<M> cut, List<EvaluatedMove<M>> result) {
+	/** Logs the selection process at a specified index of the SearchHistory.
+	 * <br>Does nothing by default.
+	 * @param history The search history
+	 * @param index The depth index in the search history (0 is the last depth searched)
+	 * @param cut The best moves at the index in search history
+	 * @param result The moves after filtering with this history index
+	 */
+	protected void log(SearchHistory<M> history, int index, List<M> cut, List<EvaluatedMove<M>> result) {
 		// Does nothing by default
 	}
 	

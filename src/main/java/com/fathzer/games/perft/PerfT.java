@@ -36,6 +36,7 @@ public class PerfT<M> {
 	}
 	
 	/** Gets the result of the PerfT.
+	 * @return The result of the PerfT
 	 * @throws IllegalStateException if this method has already been called
 	 * @throws UncheckedException if an execution error occurs
 	 */
@@ -84,10 +85,6 @@ public class PerfT<M> {
 		return new Divide<>(move, leaves);
 	}
 	
-	protected PerfTTask buildPerfTTask(MoveGenerator<M> generator, int depth) {
-        return new PerfTTask(generator, depth);
-	}
-	
 	class PerfTTask implements Callable<Long> {
 		private final MoveGenerator<M> generator;
 		private int depth;
@@ -134,7 +131,8 @@ public class PerfT<M> {
 		}
 	}
 
-	/** Returns true if this PerfT has been interrupted.
+	/** Checks if this PerfT has been interrupted.
+	 * @return true if this PerfT has been interrupted
 	 */
 	public boolean isInterrupted() {
 		if (result.isInterrupted()) {

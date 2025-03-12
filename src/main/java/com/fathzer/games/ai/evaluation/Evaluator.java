@@ -32,6 +32,7 @@ public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
 	void unmakeMove();
 	
 	/** Evaluates a board's position from the point of view of the player who should make the next move.
+	 * @param board The board to evaluate
 	 * @return An integer
 	 */
 	int evaluate(B board);
@@ -62,6 +63,10 @@ public interface Evaluator<M, B> extends Forkable<Evaluator<M, B>> {
 		return Math.abs(score) > Short.MAX_VALUE-256;
 	}
 	
+	/** Converts a score to an evaluation.
+	 * @param score a score
+	 * @return an evaluation
+	 */
 	default Evaluation toEvaluation(int score) {
 		if (isWinLooseScore(score)) {
 			final int endCount = (getNbHalfMovesToWin(Math.abs(score))+1)/2;

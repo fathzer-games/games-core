@@ -31,6 +31,10 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
 		return context.getContext().getStatistics();
 	}
 
+	/**
+	 * Gets the context used for the search.
+	 * @return the context
+	 */
 	public SearchContext<M, B> getContext() {
 		return context.getContext();
 	}
@@ -45,9 +49,16 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
 
 	@Override
     public SearchResult<M> getBestMoves(List<M> moves, DepthFirstSearchParameters params) {
-		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(),lowestInterestingScore));
+		return getBestMoves(moves, params, (m,lowestInterestingScore)->rootEvaluation(m,params.getDepth(), lowestInterestingScore));
     }
 	
+	/**
+	 * Evaluates a root move of the search tree.
+	 * @param move The move to evaluate
+	 * @param depth The depth of the search
+	 * @param lowestInterestingScore The lowest interesting score under which the evaluation is not interesting (typically this can be used to cut the tree when this evaluation can't be reached)
+	 * @return The score of the move (the score is computed by the {@link #getRootScore(int, int)} method), or null if the move is not valid
+	 */
 	protected Integer rootEvaluation(M move, final int depth, int lowestInterestingScore) {
     	if (lowestInterestingScore==Integer.MIN_VALUE) {
     		// WARNING: -Integer.MIN_VALUE is equals to ... Integer.MIN_VALUE
@@ -64,8 +75,22 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
         }
 	}
 	
+	/** 
+	 * Gets the score of a root move.
+	 * @param depth The depth of the search
+	 * @param lowestInterestingScore The lowest interesting score under which the evaluation is not interesting (typically this can be used to cut the tree when this evaluation can't be reached)
+	 * @return The score of the move
+	 */
 	protected abstract int getRootScore(final int depth, int lowestInterestingScore);
 
+	/**
+	 * Performs a search on a list of moves.
+	 * <br>It is called by the {@link #getBestMoves(List, DepthFirstSearchParameters)} method and uses the execution context to process the moves (see {@link ExecutionContext#execute(Collection)}).
+	 * @param moves The moves to evaluate
+	 * @param params The parameters of the search
+	 * @param rootEvaluator A function that evaluates the root moves
+	 * @return The search result
+	 */
 	protected SearchResult<M> getBestMoves(List<M> moves, DepthFirstSearchParameters params, BiFunction<M,Integer, Integer> rootEvaluator) {
         final SearchResult<M> search = new SearchResult<>(params);
 		context.execute(moves.stream().map(m -> getRootEvaluationTask(rootEvaluator, search, m)).toList());
@@ -92,6 +117,14 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
 		interrupted = true;
 	}
 	
+	/**
+	 * Gets the score when the game ended during the search (for instance, for chess, when the last move played during the search is a mate).
+	 * @param evaluator The evaluator used (returned by {@link SearchContext#getEvaluator()})
+	 * @param status The status of the game
+	 * @param depth The current search depth
+	 * @param maxDepth The maximum depth of the search
+	 * @return The score. The default implementation returns 0 for a draw, and calls {@link Evaluator#getWinScore(int)} for a loss.
+	 */
 	protected int getScore(final Evaluator<M,B> evaluator, final Status status, final int depth, int maxDepth) {
 		if (Status.DRAW==status) {
 			return 0;
