@@ -61,11 +61,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		default void logSearchStart(B board, IterativeDeepeningEngine<M, B> engine) {
 			// Does nothing by default
 		}
- 
-		@Deprecated
-		default void logMoveChosen(B board, EvaluatedMove<M> evaluatedMove) {
-			// Does nothing by default
-		}
 
 		/** Called when the search ends (at the end of {@link #doSearch(MoveGenerator, List)}).
 		 * @param board The board
