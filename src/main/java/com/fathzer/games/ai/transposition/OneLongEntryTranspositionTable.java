@@ -85,7 +85,16 @@ public abstract class OneLongEntryTranspositionTable<M, B extends MoveGenerator<
 		this.policy = policy;
 	}
 
+	/** Converts a move to an int.
+	 * @param move The move to convert
+	 * @return The converted move
+	 */
 	protected abstract int toInt(M move);
+	
+	/** Converts an int to a move.
+	 * @param value The value to convert
+	 * @return The converted move
+	 */
 	protected abstract M toMove(int value);
 	
 	/**

@@ -78,6 +78,7 @@ public class MoveGeneratorChecker {
 
 	/** Executes the test
 	 * @param <M> The class that represents a move
+	 * @param <B> The class that represents a move generator
 	 * @param engine The tested engine.
 	 * @param depth The search depth.
 	 * @param legalMoves true to play only legal moves.

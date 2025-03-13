@@ -66,6 +66,14 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return quiesceEvaluator.evaluate(getContext(), depth, alpha, beta);
 	}
 	
+    /**
+	 * Performs a recursive search.
+	 * @param depth The depth (number of half moves) at which the method is called (it is useful to return correct mate scores)
+	 * @param maxDepth The maximum depth of the search
+	 * @param alpha The alpha value
+	 * @param beta The beta value
+	 * @return the position evaluation
+	 */
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
     	final SearchContext<M, B> context = getContext();
 		final B position = context.getGamePosition();
@@ -169,6 +177,10 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     	this.transpositionTable = table;
     }
 
+	/** Gets the quiesce evaluator used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
+	 * <br>The default implementation simply returns the current position evaluation without performing any quiescence search.
+	 * @return The quiesce evaluator.
+	 */
 	public QuiesceEvaluator<M,B> getQuiesceEvaluator() {
 		return quiesceEvaluator;
 	}
