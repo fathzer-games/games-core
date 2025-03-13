@@ -15,6 +15,10 @@ import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
+/**
+ * An iterative deepening search for the best moves.
+ * @param <M> The type of moves
+ */
 public class IterativeDeepeningSearch<M> {
 	private final DeepeningPolicy deepeningPolicy;
 	private final DepthFirstAI<M, DepthFirstSearchParameters> ai;
@@ -23,21 +27,45 @@ public class IterativeDeepeningSearch<M> {
 	private SearchEventLogger<M> logger;
 	private int depth;
 	
+	/**
+	 * Creates a new instance.
+	 * @param ai The depth-first AI to use
+	 * @param deepeningPolicy The deepening policy to use
+	 */
 	public IterativeDeepeningSearch(DepthFirstAI<M, DepthFirstSearchParameters> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;
 	}
 	
+	/**
+	 * Sets the moves to search.
+	 * @param searchedMoves The moves to search. By default, the search is made on all legal moves.
+	 * @throws IllegalStateException if the search history has already been built
+	 */
 	public void setSearchedMoves(List<M> searchedMoves) {
+		if (searchHistory!=null) {
+			throw new IllegalStateException("The search history has already been built");
+		}
 		this.searchedMoves = searchedMoves;
 	}
 
+	/**
+	 * Interrupts the search.
+	 */
 	public void interrupt() {
 		this.ai.interrupt();
 	}
 	
+	/**
+	 * Sets the event logger.
+	 * @param logger The event logger
+	 * @throws IllegalStateException if the search history has already been built
+	 */
 	public void setEventLogger(SearchEventLogger<M> logger) {
+		if (searchHistory!=null) {
+			throw new IllegalStateException("The search history has already been built");
+		}
 		this.logger = logger;
 	}
 	
@@ -101,6 +129,11 @@ public class IterativeDeepeningSearch<M> {
 		return moves;
 	}
 	
+	/**
+	 * Computes the search history.
+	 * <br>On first call, this method builds the search history. On subsequent calls, it returns the already computed search history.
+	 * @return The search history
+	 */
 	public SearchHistory<M> getSearchHistory() {
 		if (searchHistory==null) {
 			searchHistory = buildBestMoves();

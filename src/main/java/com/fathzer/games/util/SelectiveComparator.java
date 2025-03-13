@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 
 /** A comparator combined with a Predicate that returns false if an element should not be sorted.
  * <br>It allows to implement the partial sort in {@link MoveList}
+ * @param <T> The type of elements
  */
 public interface SelectiveComparator<T> extends Comparator<T>, Predicate<T> {
 

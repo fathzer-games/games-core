@@ -17,41 +17,12 @@ import com.fathzer.games.MoveGenerator;
  */
 public class MoveGeneratorChecker {
 	/** Details of PerfT count error.
+	 * @param startPosition The start position
+	 * @param expectedCount The expected count
+	 * @param actualCount The actual count
 	 */
-	public static class PerfTCountError implements Serializable {
+	public record PerfTCountError(String startPosition, long expectedCount, long actualCount) implements Serializable {
 		private static final long serialVersionUID = 1L;
-		
-		private final String startPosition;
-		private final long expectedCount;
-		private final long actualCount;
-		
-		private PerfTCountError(String startPosition, long expectedCount, long actualCount) {
-			super();
-			this.startPosition = startPosition;
-			this.expectedCount = expectedCount;
-			this.actualCount = actualCount;
-		}
-
-		/** Gets the start position.
-		 * @return A string
-		 */
-		public String getStartPosition() {
-			return startPosition;
-		}
-
-		/** Gets the expected count.
-		 * @return a long
-		 */
-		public long getExpectedCount() {
-			return expectedCount;
-		}
-
-		/** Gets the actual count.
-		 * @return a long
-		 */
-		public long getActualCount() {
-			return actualCount;
-		}
 	}
 	
 	/** An exception throws when PerfT returns an unexpected move count.
@@ -61,7 +32,7 @@ public class MoveGeneratorChecker {
 		private final PerfTCountError countError;
 
 		private PerfTCountException(PerfTCountError countError) {
-			super("Error for "+countError.getStartPosition()+" expected "+countError.getExpectedCount()+" got "+countError.getActualCount());
+			super("Error for "+countError.startPosition()+" expected "+countError.expectedCount()+" got "+countError.actualCount());
 			this.countError = countError;
 		}
 

@@ -9,7 +9,10 @@ import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.Evaluation;
 
-/** A basic AI */
+/** A basic AI
+ * @param <M> The type of moves
+ * @param <B> The type of move generator
+ */
 public abstract class BasicAI<M,B extends MoveGenerator<M>> implements AI<M, SearchParameters> {
 
 	/** The board on which the AI plays */

@@ -16,6 +16,8 @@ import com.fathzer.games.MoveGenerator;
  * <li>depth is limited to 127 (8 bits), of course, it should be &gt;= 0</li>
  * <li>move can be represented as a integer (32 bits)</li>
  * </ul>
+ * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
 public abstract class OneLongEntryTranspositionTable<M, B extends MoveGenerator<M>> implements TranspositionTable<M, B> {
 	private static final int SLOTS = 2; // The number of long per record

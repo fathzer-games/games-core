@@ -9,6 +9,7 @@ import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.moveselector.MoveSelector;
 
 /** A history of search results in an iterative deepening search.
+ * @param <M> The type of moves
  * @see IterativeDeepeningEngine
  */
 public class SearchHistory<M> {

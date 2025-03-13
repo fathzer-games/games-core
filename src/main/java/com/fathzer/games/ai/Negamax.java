@@ -9,6 +9,7 @@ import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.QuiesceEvaluator;
+import com.fathzer.games.ai.transposition.AlphaBetaState;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -24,6 +25,9 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     private TranspositionTable<M, B> transpositionTable;
     private QuiesceEvaluator<M,B> quiesceEvaluator;
     
+	/** Constructor
+	 * @param exec The execution context
+	 */
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
 		quiesceEvaluator = (ctx, depth, alpha, beta) -> {

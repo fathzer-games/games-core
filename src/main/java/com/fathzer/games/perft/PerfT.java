@@ -11,6 +11,7 @@ import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.util.UncheckedException;
 
 /** A <a href="https://www.chessprogramming.org/Perft">Perft</a> test.
+ * @param <M> The type of moves
  * @see PerfTBuilder
  */
 public class PerfT<M> {

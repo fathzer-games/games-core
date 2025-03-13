@@ -20,6 +20,7 @@ public class NaiveAI<M,B extends MoveGenerator<M>> extends BasicAI<M, B> {
 	private final Evaluator<M, B> evaluator;
 	
 	/** Constructor
+	 * @param board The board
 	 * @param evaluator The evaluator to use
 	 */
 	public NaiveAI (B board, Evaluator<M, B> evaluator) {

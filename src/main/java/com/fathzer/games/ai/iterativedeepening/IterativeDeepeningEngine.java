@@ -27,14 +27,28 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @param <M> The class that represents a move
 	 */
 	public interface SearchEventLogger<M> {
+		/** Called when the search ends at a specified depth.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was done
+		 * @param stats The search statistics
+		 * @param results The search results
+		 */
 		default void logSearchAtDepth(int depth, SearchStatistics stats, SearchResult<M> results) {
 			// Does nothing by default
 		}
 		
+		/** Called when the search is interrupted by timeout.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was interrupted
+		 */
 		default void logTimeOut(int depth) {
 			// Does nothing by default
 		}
 
+		/** Called when the search is interrupted by the {@link DeepeningPolicy}.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was interrupted
+		 */
 		default void logEndedByPolicy(int depth) {
 			// Does nothing by default
 		}

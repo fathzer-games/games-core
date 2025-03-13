@@ -3,7 +3,14 @@ package com.fathzer.games;
 /** The status of a game (playing, draw, white or black won).
  */
 public enum Status {
-	PLAYING, DRAW, WHITE_WON, BLACK_WON;
+	/** The game is still playing */
+	PLAYING, 
+	/** The game ends with a draw */
+	DRAW, 
+	/** The white player has won */
+	WHITE_WON, 
+	/** The black player has won */
+	BLACK_WON;
 	
 	/** Gets the winner's color.
 	 * @return A color or null if there's no winner

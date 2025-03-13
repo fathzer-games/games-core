@@ -6,7 +6,8 @@ import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.evaluation.Evaluator;
 
 /** An AI that uses a transposition table to speed up its search.
- *  <br>
+ * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
 public interface TTAi<M, B extends MoveGenerator<M>> extends DepthFirstAI<M, DepthFirstSearchParameters> {
 	/** Sets the transposition table.

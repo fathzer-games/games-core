@@ -9,6 +9,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 
 /** A <a href="https://www.chessprogramming.org/Perft">Perft</a> builder.
+ * @param <M> The type of moves
  * @see PerfT
  */
 public class PerfTBuilder<M> {

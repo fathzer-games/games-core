@@ -3,9 +3,10 @@ package com.fathzer.games.ai.transposition;
 import java.util.function.IntUnaryOperator;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.AlphaBetaState;
 
 /** A class that decide if a transposition table entry should be replaced or not.
+ * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
 public interface TranspositionTablePolicy<M, B extends MoveGenerator<M>> {
     /** Processes a transposition table entry.

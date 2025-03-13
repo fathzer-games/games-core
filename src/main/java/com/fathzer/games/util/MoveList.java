@@ -32,6 +32,11 @@ public class MoveList<E> extends AbstractList<E> {
 		}
 	}
 	
+	/** Gets a selective comparator that does not sort.
+	 * <br>Its compare method always returns 0 and its test method always returns false.
+	 * @param <T> The type of objects to compare
+	 * @return a selective comparator that does not sort
+	 */
     @SuppressWarnings("unchecked")
     public static final <T> SelectiveComparator<T> noSort() {
         return NoSort.NO_SORT;

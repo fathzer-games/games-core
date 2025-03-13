@@ -5,7 +5,6 @@ import static com.fathzer.games.ai.transposition.EntryType.*;
 import java.util.function.IntUnaryOperator;
 
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.AlphaBetaState;
 
 /** A basic transposition table policy that records exact, lower or upper score and best/cut.
  * <br>It restores all best moves, exact, lower and upper values records recorded at a higher depth (closer to the root of evaluation)
@@ -16,6 +15,7 @@ import com.fathzer.games.ai.AlphaBetaState;
  * <li>In other cases, replace entries if new one has higher depth</li>
  * </ul>
  * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
 public class BasicPolicy<M, B extends MoveGenerator<M>> implements TranspositionTablePolicy<M, B> {
 	@Override

@@ -8,6 +8,7 @@ import com.fathzer.games.ai.evaluation.Evaluation;
 import com.fathzer.games.util.SortedUtils;
 
 /** The result of a best move search.
+ * @param <M> The type of moves
  */
 public final class SearchResult<M> {
 	private final LinkedList<EvaluatedMove<M>> result;

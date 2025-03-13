@@ -13,6 +13,7 @@ import com.fathzer.games.HashProvider;
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
  * <br>Implementations of this interface should be thread safe.
  * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
  */
 public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	/** Get a table entry.
