@@ -21,6 +21,8 @@ This doesn't means that the AI can't be used to play Reversi. Simply, the revers
 ## TODO (probable breaking changes)
 - com.fathzer.games.ai.AbstractAI requires an ExecutionContext in its constructor. I think this is not a good approach (even it was mine ;-)) to have this non standard implementation detail exposed outside this public class. Moreover, this disallow building different multi-threading models in AI implementation. Typically it is currently impossible to use a fork/join pool to perform the search.
 As it seems, in real life, a new context is created at each AI invocation, a better approach would be to let the AI manage its own threading scheme, and simply pass a SearchContext to the constructor.
+- Some methods in `TranspositionTable` and `com.fathzer.games.ai/iterativedeepening` implicitly suppose that the move generator implement `HashProvider`. This may be changed for an explicit requirement.
+
 
 ## TODO (maybe)
 - Make MoveLibrary implement AI?
