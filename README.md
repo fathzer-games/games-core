@@ -14,7 +14,7 @@ You can implement your own transposition table and its policy (which positions t
 It also provides you with other useful building blocks like a clock, PerfT tests (for testing your move generator), or abstract implementations of move library (typically openings book for chess).
 
 # Known limitations
-- The AI always supposes a player that can't move loosed or make a draw ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).  
+- The AI always supposes that when a player can't move the game is ended ... which is not always the case (typically in [Reversi](https://en.wikipedia.org/wiki/Reversi)).  
 This doesn't means that the AI can't be used to play Reversi. Simply, the reversi move generator should have a special '*can't play*' move returned when a player can't move but the game is not finished.
 - The Negamax is quite basic, it implements a highly configurable transposition and quiesce move search, but none other advanced algorithm (no PV search, futility pruning, killer or null move, etc ...).
 
@@ -29,4 +29,4 @@ As it seems, in real life, a new context is created at each AI invocation, a bet
 - There's a strange behavior with transposition table. There's some situations where a never replace strategy leads to a faster resolution. It is totally counter intuitive.
 - MoveGenerator:
   - It would be more efficient to have the moveGenerator generating directly an iterator of moves instead of a list of moves. It would allow to use incremental move generators that starts by returning, what can hope to be the best moves (for instance captures), and other moves if these first moves are consumed. Indeed, in alpha/beta ai, the first moves are often enough to trigger a cut, so generating all the moves is a waste of time.
-- Write more tests and Documentation ;-)
+- Write more tests ;-)

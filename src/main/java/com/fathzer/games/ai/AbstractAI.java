@@ -123,13 +123,12 @@ public abstract class AbstractAI<M, B extends MoveGenerator<M>> implements Depth
 	 * @param status The status of the game
 	 * @param depth The current search depth
 	 * @param maxDepth The maximum depth of the search
-	 * @return The score. The default implementation returns 0 for a draw, and calls {@link Evaluator#getWinScore(int)} for a loss.
+	 * @return The score. The default implementation returns 0 for a draw, otherwise it considers the player loose and returns -{@link Evaluator#getWinScore(int)}.
 	 */
 	protected int getScore(final Evaluator<M,B> evaluator, final Status status, final int depth, int maxDepth) {
 		if (Status.DRAW==status) {
 			return 0;
 		} else {
-			//FIXME Maybe there's some games where the player wins if it can't move...
 			return -evaluator.getWinScore(maxDepth-depth);
 		}
 	}
