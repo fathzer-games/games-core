@@ -67,16 +67,15 @@ public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	 *            each other infinitely)
 	 * @return The moves
 	 */
-	default List<M> collectPV(MoveGenerator<M> board, int maxDepth) {
-		final HashProvider zp = (HashProvider)board; 
+	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, int maxDepth) {
 		final List<M> arrayPV = new ArrayList<>(maxDepth);
-		TranspositionTableEntry<M> entry = get(zp.getHashKey());
+		TranspositionTableEntry<M> entry = get(board.getHashKey());
 
 		for (int i=0;i<maxDepth;i++) {
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
 			if (move!=null && board.makeMove(move, MoveConfidence.UNSAFE)) {
 				arrayPV.add(move);
-				entry = get(zp.getHashKey());
+				entry = get(board.getHashKey());
 			} else {
 				break;
 			}
@@ -99,7 +98,7 @@ public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	 *            each other infinitely)
 	 * @return The moves
 	 */
-	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
+	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, M move, int maxDepth) {
 		if (maxDepth==0) {
 			return Collections.singletonList(move);
 		}

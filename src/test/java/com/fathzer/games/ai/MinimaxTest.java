@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
@@ -283,16 +284,10 @@ class MinimaxTest {
 		}
 	}
 
-	private static <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, DepthFirstSearchParameters params, List<M> moves) {
+	private static <M, B extends MoveGenerator<M>&HashProvider> List<EvaluatedMove<M>> search(SearchContext<M, B> ctx, Function<ExecutionContext<SearchContext<M, B>>, AbstractAI<M, B>> aiBuilder, DepthFirstSearchParameters params, List<M> moves) {
 		try (ExecutionContext<SearchContext<M, B>> context = ExecutionContext.get(4,  ctx)) {
 			final AbstractAI<M, B> ai = aiBuilder.apply(context);
-			final List<EvaluatedMove<M>> list = (moves == null? ai.getBestMoves(params) : ai.getBestMoves(moves, params)).getList();
-			if (ai instanceof Negamax) {
-				for (EvaluatedMove<M> ev:list) {
-					ev.setPvBuilder(m -> ((Negamax<M, B>)ai).getTranspositionTable().collectPV(ctx.getGamePosition(), m, params.getDepth()));
-				}
-			}
-			return list;
+			return (moves == null? ai.getBestMoves(params) : ai.getBestMoves(moves, params)).getList();
 		}
 	}
 }

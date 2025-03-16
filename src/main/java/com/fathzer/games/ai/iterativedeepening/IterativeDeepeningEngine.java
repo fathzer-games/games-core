@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
@@ -267,12 +266,6 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 				rs = new IterativeDeepeningSearch<>(internal, deepeningPolicy);
 				rs.setEventLogger(logger);
 				rs.setSearchedMoves(searchedMoves);
-				final List<EvaluatedMove<M>> result = rs.getSearchHistory().getAccurateMoves();
-				if (board instanceof HashProvider) {
-					for (EvaluatedMove<M> ev:result) {
-						ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
-					}
-				}
 				logger.logSearchEnd(board, rs.getSearchHistory());
 				return rs;
 			}
