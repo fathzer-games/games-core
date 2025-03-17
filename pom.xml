@@ -70,6 +70,17 @@
 	<build>
 		<plugins>
 			<plugin>
+			    <groupId>org.jacoco</groupId>
+			    <artifactId>jacoco-maven-plugin</artifactId>
+			    <version>0.8.12</version>
+			    <configuration>
+			        <excludes>
+			            <!-- Exclude the PhysicalCores class from code coverage because it is too tiedly coupled with the runtime environment -->
+			            <exclude>**/PhysicalCores.class</exclude>
+			        </excludes>
+			     </configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.6.3</version>
