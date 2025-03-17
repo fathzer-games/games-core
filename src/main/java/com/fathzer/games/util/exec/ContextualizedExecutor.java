@@ -13,12 +13,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.games.util.UncheckedException;
 
-/** A kind of an executor service that manages a context attached to every thread it used.
- * <br>When developing a multithreaded game engine typically requires to have a game representation attached to each thread
- * that are processing the requests. This class allows you to attach a context object to every thread of an executor service and then retrieve it with no information but the calling thread. 
+/** A kind of an executor service that manages a {@link Forkable} context attached to every thread it used.
+ * <br>Developing a multi-threaded game engine typically requires to have a game representation attached to each thread
+ * that is processing the requests.
+ * <br>This class allows you to attach a fork of the context object to every thread of an executor service and then retrieve it
+ * with no information but the calling thread. 
  * @param <T> The context's class
  */
-public class ContextualizedExecutor<T extends Forkable<T>> implements AutoCloseable {
+class ContextualizedExecutor<T extends Forkable<T>> implements AutoCloseable {
 	
 	private static class ContextThread<T> extends Thread {
 		T context;
@@ -37,14 +39,14 @@ public class ContextualizedExecutor<T extends Forkable<T>> implements AutoClosea
 	 * <br>The created instance will use a number of threads equals to the number of processors.
 	 * @see PhysicalCores#count()
 	 */
-	public ContextualizedExecutor() {
+	ContextualizedExecutor() {
 		this(PhysicalCores.count());
 	}
 
 	/** Constructor.
 	 * @param parallelism The number of threads to use to process tasks submitted to {@link #invokeAll(Collection, Forkable)}
 	 */
-	public ContextualizedExecutor(int parallelism) {
+	ContextualizedExecutor(int parallelism) {
 		this.running = new AtomicBoolean();
 		this.threads = new LinkedList<>();
 		this.exec = Executors.newFixedThreadPool(parallelism, r -> {
@@ -65,11 +67,13 @@ public class ContextualizedExecutor<T extends Forkable<T>> implements AutoClosea
 	 */
 	public <V> List<Future<V>> invokeAll(Collection<Callable<V>> tasks, T context) throws InterruptedException {
 		if (running.compareAndSet(false, true)) {
-			masterContext = context;
-			threads.forEach(t -> t.context = context.fork());
-			final List<Future<V>> result = exec.invokeAll(tasks);
-			running.set(false);
-			return result;
+			try {
+				masterContext = context;
+				threads.forEach(t -> t.context = context.fork());
+				return exec.invokeAll(tasks);
+			} finally {
+				running.set(false);
+			}
 		} else {
 			throw new IllegalStateException();
 		}

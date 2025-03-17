@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -40,10 +41,10 @@ public final class PhysicalCores {
      * installed number, the available number will be returned.
      * </p>
      * <p>
-     * The method is threadsafe.
+     * The method is thread safe.
      * </p>
      * @return number of physical cores
- 	 * @throws UnreachableException if it could not be determined
+ 	 * @throws UnavailableException if it could not be determined
      */
     public static int count() {
     	if (CORES.e!=null) {
@@ -52,20 +53,22 @@ public final class PhysicalCores {
         return CORES.count;
     }
     
-    public static class UnreachableException extends RuntimeException {
+    /** Exception thrown when core count can't be found.
+     */
+    public static class UnavailableException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 
-		public UnreachableException(String message, Throwable cause) {
+		private UnavailableException(String message, Throwable cause) {
 			super(message, cause);
 		}
 
-		public UnreachableException(String message) {
+		private UnavailableException(String message) {
 			super(message);
 		}
     }
 
     private static class NumberOfCores {
-    	private final UnreachableException e;
+    	private final UnavailableException e;
         private final int count;
         
 		private NumberOfCores(int count) {
@@ -74,10 +77,10 @@ public final class PhysicalCores {
 		}
 
 		private NumberOfCores(String message) {
-			this(new UnreachableException(message));
+			this(new UnavailableException(message));
 		}
 
-		private NumberOfCores(UnreachableException e) {
+		private NumberOfCores(UnavailableException e) {
 			this.e = e;
 			this.count = -1;
 		}
@@ -88,7 +91,7 @@ public final class PhysicalCores {
         try {
         	osName = System.getProperty("os.name");
         } catch (SecurityException e) {
-            return new NumberOfCores(new UnreachableException("Could not read system property 'os.name'",e));
+            return new NumberOfCores(new UnavailableException("Could not read system property 'os.name'",e));
         }
         try {
 	        if (osName == null) {
@@ -104,11 +107,12 @@ public final class PhysicalCores {
 	        } else {
 	        	return new NumberOfCores(String.format("Unknown OS '%s'. Please report this so a case can be added.", osName));
 	        }
-        } catch (UnreachableException e) {
+        } catch (UnavailableException e) {
         	return new NumberOfCores(e);
         }
     }
 
+    @SuppressWarnings("java:S1075")
     private static NumberOfCores readFromProc() {
         final String path = "/proc/cpuinfo";
         File cpuinfo = new File(path);
@@ -158,16 +162,16 @@ public final class PhysicalCores {
         waitFor(wmicProc);
         try (InputStream in = wmicProc.getInputStream()) {
             String wmicOutput = readToString(in, StandardCharsets.US_ASCII);
-            return new NumberOfCores(parseWmicOutput(wmicOutput));
+            return parseWmicOutput(wmicOutput);
         } catch (UnsupportedEncodingException e) {
             // Java implementations are required to support US-ASCII, so this shouldn't happen
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         } catch (SecurityException | IOException e) {
             return new NumberOfCores(String.format("Error while reading WMIC output file: %s", e));
         }
     }
 
-    private static Integer parseWmicOutput(String wmicOutput) {
+    private static NumberOfCores parseWmicOutput(String wmicOutput) {
         String[] rows = wmicOutput.split("\n");
         int coreCount = 0;
         for (String row : rows) {
@@ -176,12 +180,12 @@ public final class PhysicalCores {
                 try {
                     coreCount += Integer.parseInt(num);
                 } catch (NumberFormatException e) {
-                    throw new NumberFormatException(String.format("Unexpected output from WMIC: \"{}\". " +
-                              "Will not be able to provide physical core count.", wmicOutput));
+                    return new NumberOfCores(new UnavailableException(String.format("Unexpected output from WMIC: \"{}\". " +
+                              "Will not be able to provide physical core count.", wmicOutput), e));
                 }
             }
         }
-        return coreCount > 0 ? coreCount : null;
+        return coreCount > 0 ? new NumberOfCores(coreCount) : new NumberOfCores(String.format("WMIC returned a negative of null number of cores (%d)", coreCount));
     }
 
     private static NumberOfCores readFromSysctlOsX() {
@@ -221,7 +225,7 @@ public final class PhysicalCores {
         try {
             sysctlProc = pb.start();
         } catch (IOException | SecurityException e) {
-            throw new UnreachableException("Failed to spawn sysctl process. " +
+            throw new UnavailableException("Failed to spawn sysctl process. " +
                       "Will not be able to provide physical core count.", e);
         }
         String result;
@@ -229,13 +233,13 @@ public final class PhysicalCores {
             result = readToString(sysctlProc.getInputStream(), StandardCharsets.UTF_8).trim();
         } catch (UnsupportedEncodingException e) {
             // Java implementations are required to support UTF-8, so this can't happen
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         } catch (IOException e) {
-        	throw new UnreachableException("Error while reading from sysctl process", e);
+        	throw new UnavailableException("Error while reading from sysctl process", e);
         }
         int exitStatus = waitFor(sysctlProc);
         if (exitStatus != 0) {
-        	throw new UnreachableException(String.format("Could not read sysctl variable %s. Exit status was %s", variable, exitStatus));
+        	throw new UnavailableException(String.format("Could not read sysctl variable %s. Exit status was %s", variable, exitStatus));
         }
         return result;
     }
@@ -272,7 +276,7 @@ public final class PhysicalCores {
             return proc.waitFor();
         } catch (InterruptedException e) {
         	Thread.currentThread().interrupt();
-            throw new UnreachableException("Interrupted while waiting for process", e);
+            throw new UnavailableException("Interrupted while waiting for process", e);
         }
     }
 }

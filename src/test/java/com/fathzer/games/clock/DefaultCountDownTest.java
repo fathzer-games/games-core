@@ -36,7 +36,7 @@ class DefaultCountDownTest {
 		
 		// Test move done fails if count down is paused
 		final CountDown cd = state;
-		assertThrows(IllegalStateException.class, () -> cd.moveDone());
+		assertThrows(IllegalStateException.class, cd::moveDone);
 		// Test pause does nothing
 		state.pause();
 		assertEquals(2000, state.getRemainingTime());
@@ -48,7 +48,7 @@ class DefaultCountDownTest {
 		CLOCK.add(500);
 		// Ensure a second start fails
 		final CountDown cd2 = state;
-		assertThrows(IllegalStateException.class, () -> cd2.start());
+		assertThrows(IllegalStateException.class, cd2::start);
 		assertEquals(1500, state.getRemainingTime());
 		CLOCK.add(500);
 		// Play a move

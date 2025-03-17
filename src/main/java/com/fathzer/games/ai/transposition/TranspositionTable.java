@@ -12,8 +12,10 @@ import com.fathzer.games.HashProvider;
 
 /** A <a href="https://en.wikipedia.org/wiki/Transposition_table">transposition table</a>.
  * <br>Implementations of this interface should be thread safe.
+ * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
  */
-public interface TranspositionTable<M> {
+public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	/** Get a table entry.
 	 * @param key The key
 	 * @return a table entry or null if this position should not be stored in transposition table.
@@ -35,42 +37,45 @@ public interface TranspositionTable<M> {
 	boolean store(long key, EntryType type, int depth, int value, M move, Predicate<TranspositionTableEntry<M>> validator);
 	
 	/** Called when position changes.
-	 * <br>On this event, the table can clean itself, or in a future release increment a generation counter in Entry generation.
+	 * <br>On this event, the table can clean itself, or increment a generation counter in Entry generation.
+	 * @param board The new position
 	 */
-	void newPosition(); //TODO Change comment when generation will be used in TableEntry
+	void newPosition(B board);
 	
+	/** Called when a new game starts.
+	 * <br>On this event, the table can clean itself, or increment a generation counter in Entry generation.
+	 */
 	void newGame(); //TODO Should call transpositionTablePolicy
 	
 	/** Gets the transposition table's policy.
 	 * <br>The policy decides what should be stored in the table and how to use it in the search algorithm.
-	 * @return
+	 * @return the table's policy
 	 */
-	TranspositionTablePolicy<M> getPolicy();
+	TranspositionTablePolicy<M, B> getPolicy();
 	
 	/** Sets the transposition table's policy.
 	 * @param policy The policy decides what should be stored in the table and how to use it in the search algorithm.
 	 */
-	void setPolicy(TranspositionTablePolicy<M> policy);
+	void setPolicy(TranspositionTablePolicy<M, B> policy);
 	
 	/**
 	 * Collects the principal variation starting from the position on the board
 	 * <br>Warning, this method should not be called during table modification.
 	 * @param board The position to collect pv from.
 	 * <br>The move generator should implement the {@link HashProvider} interface.
-	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
-	 *            each other infinitely)
+	 * @param maxDepth How deep the pv goes
+	 * @param <T> The type of the board
 	 * @return The moves
 	 */
-	default List<M> collectPV(MoveGenerator<M> board, int maxDepth) {
-		final HashProvider zp = (HashProvider)board; 
+	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, int maxDepth) {
 		final List<M> arrayPV = new ArrayList<>(maxDepth);
-		TranspositionTableEntry<M> entry = get(zp.getHashKey());
+		TranspositionTableEntry<M> entry = get(board.getHashKey());
 
 		for (int i=0;i<maxDepth;i++) {
 			M move = entry!=null && entry.isValid() ? entry.getMove() : null;
 			if (move!=null && board.makeMove(move, MoveConfidence.UNSAFE)) {
 				arrayPV.add(move);
-				entry = get(zp.getHashKey());
+				entry = get(board.getHashKey());
 			} else {
 				break;
 			}
@@ -89,11 +94,11 @@ public interface TranspositionTable<M> {
 	 * @param board The position to collect pv from.
 	 * @param move The move to play (if move is not a valid move, result is not specified).
 	 * <br>The move generator should implement the {@link HashProvider} interface.
-	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
-	 *            each other infinitely)
+	 * @param maxDepth How deep the pv goes.
+	 * @param <T> The type of the board
 	 * @return The moves
 	 */
-	default List<M> collectPV(MoveGenerator<M> board, M move, int maxDepth) {
+	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, M move, int maxDepth) {
 		if (maxDepth==0) {
 			return Collections.singletonList(move);
 		}

@@ -7,6 +7,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
+import com.fathzer.games.MoveGenerator;
+
 /**
  * A transposition table that associates a key to an entry represented by a long.
  * <br>Here are its limitations:<ul>
@@ -14,14 +16,16 @@ import java.util.function.Predicate;
  * <li>depth is limited to 127 (8 bits), of course, it should be &gt;= 0</li>
  * <li>move can be represented as a integer (32 bits)</li>
  * </ul>
+ * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
-public abstract class OneLongEntryTranspositionTable<M> implements TranspositionTable<M> {
+public abstract class OneLongEntryTranspositionTable<M, B extends MoveGenerator<M>> implements TranspositionTable<M, B> {
 	private static final int SLOTS = 2; // The number of long per record
 	private final AtomicLongArray table; // Used for transposition table
 	private final ReadWriteLock lock;
 	private final int size; // The number of slots the table will have
 	private int entryCount; // The number of currently occupied slots.
-	private TranspositionTablePolicy<M> policy;
+	private TranspositionTablePolicy<M, B> policy;
 
 	/** Constructor.
 	 * @param size The table size
@@ -72,16 +76,25 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	}
 	
 	@Override
-	public TranspositionTablePolicy<M> getPolicy() {
+	public TranspositionTablePolicy<M, B> getPolicy() {
 		return policy;
 	}
 	
 	@Override
-	public void setPolicy(TranspositionTablePolicy<M> policy) {
+	public void setPolicy(TranspositionTablePolicy<M, B> policy) {
 		this.policy = policy;
 	}
 
+	/** Converts a move to an int.
+	 * @param move The move to convert
+	 * @return The converted move
+	 */
 	protected abstract int toInt(M move);
+	
+	/** Converts an int to a move.
+	 * @param value The value to convert
+	 * @return The converted move
+	 */
 	protected abstract M toMove(int value);
 	
 	/**
@@ -102,7 +115,7 @@ public abstract class OneLongEntryTranspositionTable<M> implements Transposition
 	 * In this implementation, the whole table is cleared.
 	 */
 	@Override
-	public void newPosition() {
+	public void newPosition(B board) {
 		newGame();
 	}
 	

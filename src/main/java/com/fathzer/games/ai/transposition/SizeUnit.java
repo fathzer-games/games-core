@@ -1,7 +1,13 @@
 package com.fathzer.games.ai.transposition;
 
+/** A unit of size for memory size. */
 public enum SizeUnit {
-	MB(1024*1024), KB(1024), B(1);
+	/** Megabytes (1024KB) */
+	MB(1024*1024), 
+	/** Kilobytes (1024 Bytes) */
+	KB(1024), 
+	/** Bytes (1B) */
+	B(1);
 
 	private final int size;
 

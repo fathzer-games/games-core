@@ -6,31 +6,33 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.DummyEvaluator;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.chess.ChessLibMoveGenerator;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 class TTAiTest {
-	private static class DummyTTAi implements TTAi<Move> {
+	private static class DummyTTAi implements TTAi<Move, ChessLibMoveGenerator> {
 		@Override
-		public void setTranspositonTable(TranspositionTable<Move> table) {
+		public void setTranspositonTable(TranspositionTable<Move, ChessLibMoveGenerator> table) {
+			// Nothing to do, there is no table
 		}
 
 		@Override
-		public TranspositionTable<Move> getTranspositionTable() {
+		public TranspositionTable<Move, ChessLibMoveGenerator> getTranspositionTable() {
 			return null;
 		}
 
 		@Override
-		public SearchResult<Move> getBestMoves(SearchParameters parameters) {
+		public SearchResult<Move> getBestMoves(DepthFirstSearchParameters parameters) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public SearchResult<Move> getBestMoves(List<Move> possibleMoves, SearchParameters parameters) {
+		public SearchResult<Move> getBestMoves(List<Move> possibleMoves, DepthFirstSearchParameters parameters) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -53,7 +55,7 @@ class TTAiTest {
 	@Test
 	void test() {
 		Evaluator<Move, ?> ev = new DummyEvaluator<>();
-		final TTAi<Move> wse = new DummyTTAi();
+		final TTAi<Move, ChessLibMoveGenerator> wse = new DummyTTAi();
 		// A mat in 0 found at depth 3 on 8
 		int encoded = wse.scoreToTT(-32762, 3, 8, ev);
 		assertEquals(-Short.MAX_VALUE, encoded);

@@ -65,7 +65,7 @@ class ItemPublisherTest {
 		final TestData<Long> data = new TestData<>(new LinkedList<>(), Arrays.asList(new MyListener<>(), new MyListener<>()));
 		data.assertExpected();
 		data.forEach(l -> assertTrue(!l.subscribed && !l.completed));
-		data.forEach(l -> pub.subscribe(l));
+		data.forEach(pub::subscribe);
 		pubThread.start();
 		data.forEach(l -> assertTrue(l.subscribed && l.items.isEmpty() && !l.completed));
 		assertTrue(pub.submit(Arrays.asList(1L,2L)));

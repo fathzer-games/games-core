@@ -2,137 +2,154 @@ package com.fathzer.games.perft;
 
 import static com.fathzer.games.MoveGenerator.MoveConfidence.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
+import com.fathzer.games.util.UncheckedException;
 
+/** A <a href="https://www.chessprogramming.org/Perft">Perft</a> test.
+ * @param <M> The type of moves
+ * @see PerfTBuilder
+ */
 public class PerfT<M> {
-	private boolean playLeaves;
-	private boolean interrupted;
-	private ContextualizedExecutor<MoveGenerator<M>> exec;
-	private MoveConfidence moveType = PSEUDO_LEGAL;
+	final boolean playLeaves;
+	final MoveConfidence moveType;
+	final MoveGenerator<M> board;
+	private final AtomicBoolean started = new AtomicBoolean();
+	final int depth;
+	final PerfTResult<M> result;
 	
-	public PerfT(ContextualizedExecutor<MoveGenerator<M>> exec) {
-		this.exec = exec;
-		this.playLeaves = true;
-	}
-	
-	public boolean isPlayLeaves() {
-		return playLeaves;
-	}
-
-	/** Sets this PerfT to play the moves corresponding to tree leaves or not.
-	 * <br>The default setting is to play the leave moves.
-	 * @param playLeaves true to play the leave moves false to not play them.
-	 * <br>If <i>playLeaves</i> is false, the tested move generator is requested for legal moves to prevent erroneous results.
-	 * Indeed, every non legal leave move returned by the pseudo-legal move generator would not be tested and would be counted as a legal move.
-	 */
-	public void setPlayLeaves(boolean playLeaves) {
-		this.playLeaves = playLeaves;
-		if (!playLeaves) {
-			moveType = LEGAL;
-		}
-	}
-	
-	/** Sets this PerfT to get legal or <a href="https://www.chessprogramming.org/Pseudo-Legal_Move">pseudo legal</a> moves from the move generator.
-	 * <br>By default PerfT plays pseudo legal moves.
-	 * @param legal true to use legal moves, false to use pseudo-legal moves.
-	 * <br>When <i>legal</i> is false, <i>playLeaves</i> is automatically set to true (because not doing this would result in wrong leaves count)
-	 */
-	public void setLegalMoves(boolean legal) {
-		moveType = legal ? LEGAL : PSEUDO_LEGAL;
-		if (!legal) {
-			playLeaves = true;
-		}
-	}
-	
-	public PerfTResult<M> divide(final int depth, MoveGenerator<M> generator) {
+	PerfT(MoveGenerator<M> board, int depth, boolean playLeaves, MoveConfidence moveType) {
 		if (depth <= 0) {
             throw new IllegalArgumentException("Search depth MUST be > 0");
 		}
-		final List<M> moves = getMoves(generator);
-		final PerfTResult<M> result = new PerfTResult<>();
-		result.addMovesFound(moves.size());
-		final List<Callable<Divide<M>>> tasks = new ArrayList<>(moves.size());
-		for (M move : moves) {
-			tasks.add(new Callable<Divide<M>>() {
-				@Override
-				public Divide<M> call() throws Exception {
-					return getPrfT(move, depth - 1, result);
-				}
-			});
+		if (board==null) {
+			throw new IllegalArgumentException("Board cannot be null");
 		}
-		try {
-			final List<Future<Divide<M>>> results = exec.invokeAll(tasks, generator);
-			for (Future<Divide<M>> f : results) {
-				result.add(f.get());
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			result.setInterrupted(true);
-		} catch (ExecutionException e) {
-			throw new RuntimeException(e);
-		}
-		return result;
+		this.board = board;
+		this.playLeaves = playLeaves;
+		this.moveType = moveType;
+		this.depth = depth;
+		this.result = new PerfTResult<>();
 	}
 	
-	private List<M> getMoves(MoveGenerator<M> moveGenerator) {
+	/** Gets the result of the PerfT.
+	 * @return The result of the PerfT
+	 * @throws IllegalStateException if this method has already been called
+	 * @throws UncheckedException if an execution error occurs
+	 */
+	public PerfTResult<M> get() {
+		if (!started.compareAndSet(false, true)) {
+			throw new IllegalStateException("This PerfT has already been started");
+		}
+		try {
+			final List<M> moves = getMoves(board);
+			result.addMovesFound(moves.size());
+			compute(moves);
+			return this.result;
+		} catch (UncheckedException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new UncheckedException(e);
+		}
+	}
+
+	void compute(List<M> moves) {
+		for (M move : moves) {
+			final Divide<M> divide = getRootPerfT(board, move, depth - 1);
+			if (divide!=null) {
+				result.add(divide);
+			}
+		}
+	}
+	
+	List<M> getMoves(MoveGenerator<M> moveGenerator) {
 		return LEGAL==moveType ? moveGenerator.getLegalMoves() : moveGenerator.getMoves();
 	}
 
-	private Divide<M> getPrfT(M move, int depth, PerfTResult<M> result) {
+	Divide<M> getRootPerfT(MoveGenerator<M> moveGenerator, M move, int depth) {
 		final long leaves;
 		if (depth==0 && !playLeaves) {
 			leaves = 1;
 		} else {
-			final MoveGenerator<M> moveGenerator = exec.getContext();
 			if (moveGenerator.makeMove(move, moveType)) {
 				result.addMoveMade();
-				leaves = get(depth, result);
+				leaves = new PerfTTask(moveGenerator, depth).call();
 				moveGenerator.unmakeMove();
 			} else {
-				leaves = 0;
+				return null;
 			}
 		}
 		return new Divide<>(move, leaves);
 	}
 	
-    private long get (final int depth, PerfTResult<M> result) {
-		if (interrupted) {
-			result.setInterrupted(true);
-			return 1;
+	class PerfTTask implements Callable<Long> {
+		private final MoveGenerator<M> generator;
+		private int depth;
+
+		public PerfTTask(MoveGenerator<M> generator, int depth) {
+			this.generator = generator;
+			this.depth = depth;
 		}
-    	if (depth==0) {
-    		return 1;
-    	}
-    	final MoveGenerator<M> generator = exec.getContext();
-		final List<M> moves = getMoves(generator);
-		result.addMovesFound(moves.size());
-		if (depth==1 && !playLeaves) {
-			return moves.size();
+
+		@Override
+		public Long call() {
+			if (isInterrupted()) {
+				result.setInterrupted(true);
+				return 1L;
+			}
+	    	if (depth==0) {
+	    		return 1L;
+	    	}
+			final List<M> moves = getMoves(generator);
+			result.addMovesFound(moves.size());
+			if (depth==1 && !playLeaves) {
+				return (long)moves.size();
+			}
+	        return process(moves);
 		}
-		long count = 0;
-		for (M move : moves) {
-            if (generator.makeMove(move, moveType)) {
-	            result.addMoveMade();
-	            count += get(depth-1, result);
-	            generator.unmakeMove();
-            }
+		
+		protected Long process(List<M> moves) {
+			long count = 0;
+			for (M move : moves) {
+	            if (generator.makeMove(move, moveType)) {
+		            result.addMoveMade();
+		            count += goDeeper();
+		            generator.unmakeMove();
+	            }
+			}
+            return count;
+         }
+		
+		protected Long goDeeper() {
+			depth--;
+			long nbLeaves = call();
+			depth++;
+			return nbLeaves;
 		}
-        return count;
-    }
-	
-	public boolean isInterrupted() {
-		return interrupted;
 	}
 
+	/** Checks if this PerfT has been interrupted.
+	 * @return true if this PerfT has been interrupted
+	 */
+	public boolean isInterrupted() {
+		if (result.isInterrupted()) {
+            return true;
+		}
+		if (Thread.interrupted()) {
+			Thread.currentThread().interrupt();
+            result.setInterrupted(true);
+		}
+		return result.isInterrupted();
+	}
+
+	/** Interrupts this PerfT.
+	 * <br>If the {@link PerfT#get()} method is currently running, it will quickly stopped and will returned a {@link PerfTResult#isInterrupted()} tagged as interrupted.
+	 */
 	public void interrupt() {
-		interrupted = true;
+		result.setInterrupted(true);
 	}
 }

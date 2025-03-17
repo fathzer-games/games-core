@@ -4,7 +4,7 @@ import static com.fathzer.games.ai.transposition.EntryType.*;
 
 import java.util.function.IntUnaryOperator;
 
-import com.fathzer.games.ai.AlphaBetaState;
+import com.fathzer.games.MoveGenerator;
 
 /** A basic transposition table policy that records exact, lower or upper score and best/cut.
  * <br>It restores all best moves, exact, lower and upper values records recorded at a higher depth (closer to the root of evaluation)
@@ -15,8 +15,9 @@ import com.fathzer.games.ai.AlphaBetaState;
  * <li>In other cases, replace entries if new one has higher depth</li>
  * </ul>
  * @param <M> The type of moves
+ * @param <B> The type of move generator
  */
-public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
+public class BasicPolicy<M, B extends MoveGenerator<M>> implements TranspositionTablePolicy<M, B> {
 	@Override
 	public AlphaBetaState<M> accept(TranspositionTableEntry<M> entry, int depth, int alpha, int beta, IntUnaryOperator fromTTScoreConverter) {
 		final AlphaBetaState<M> state = new AlphaBetaState<>(depth, alpha, beta);
@@ -34,6 +35,14 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 		return state;
 	}
 
+	/** Processes an non exact transposition table entry.
+	 * <br>This method is called by {@link #accept(TranspositionTableEntry, int, int, int, IntUnaryOperator)} when entry is not null and it is not invalid and its type is not EXACT.
+	 * @param entry The entry
+	 * @param alpha The current alpha value
+	 * @param beta The current beta value
+	 * @param value The value stored in the entry, converted by the <code>toTTScoreConverter</code> function passed to the {@link #accept(TranspositionTableEntry, int, int, int, IntUnaryOperator)} method.
+	 * @param state The state to update (this state will be returned by @link #accept(TranspositionTableEntry, int, int, int, IntUnaryOperator)).
+	 */
 	protected void acceptNonExactRecord(TranspositionTableEntry<M> entry, int alpha, int beta, final int value, final AlphaBetaState<M> state) {
 		boolean updated = false;
 		if (LOWER_BOUND==entry.getEntryType()) {
@@ -57,7 +66,7 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 	}
 	
 	@Override
-	public boolean store(TranspositionTable<M> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter) {
+	public boolean store(TranspositionTable<M, B> table, long key, AlphaBetaState<M> state, IntUnaryOperator toTTScoreConverter) {
     	final EntryType type;
     	if (state.getValue() <= state.getAlpha()) {
     		type = UPPER_BOUND;
@@ -70,6 +79,17 @@ public class BasicPolicy<M> implements TranspositionTablePolicy<M> {
 		return table.store(key, type, state.getDepth(), toTTScoreConverter.applyAsInt(state.getValue()), state.getBestMove(), p-> shouldReplace(p, key, state.getDepth(), type));
 	}
 
+	/** Checks whether an entry should be replaced by new data.
+	 * @param entry The entry that is currently in the transposition table
+	 * @param newKey The new entry key
+	 * @param newDepth The new entry depth
+	 * @param newType The new entry type
+	 * @return true if the entry should be replaced, false otherwise. The default implementation returns true if:<ul>
+	 * <li>of course, the current entry is invalid</li>
+	 * <li>the new entry is exact and the current entry is not exact</li>
+	 * <li>the current entry and the new depth is &gt; the current depth</li>
+	 * </ul>
+	 */
 	protected boolean shouldReplace(TranspositionTableEntry<M> entry, long newKey, int newDepth, EntryType newType) {
 		if (!entry.isValid()) {
 			// Always write if no entry is in the table

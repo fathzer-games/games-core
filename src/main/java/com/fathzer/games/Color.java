@@ -6,7 +6,10 @@ package com.fathzer.games;
  * <br>Ok, ok, so let say "white" means "X" and "black" means "O". The important thing is to identify both players, isn't it?.
  */
 public enum Color {
-	WHITE, BLACK;
+	/** White player */
+	WHITE, 
+	/** Black player */
+	BLACK;
 
 	static {
 		WHITE.opposite = BLACK;

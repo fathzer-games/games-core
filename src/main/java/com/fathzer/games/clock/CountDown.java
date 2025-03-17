@@ -44,6 +44,7 @@ public interface CountDown {
 	/** Gets the current settings of this countDown.
 	 * <br>Please note the returned settings may change during the game. If the original clock settings had a {@link ClockSettings#getNext()} settings,
 	 * this 'next' settings will be returned as soon as it will be activated.
+	 * @return the current settings
 	 */
 	ClockSettings getCurrentSettings();
 }

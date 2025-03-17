@@ -8,13 +8,13 @@ import com.fathzer.games.Status;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.transposition.AlphaBetaState;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TranspositionTableEntry;
 import com.fathzer.games.util.exec.ExecutionContext;
@@ -22,7 +22,8 @@ import com.fathzer.games.util.exec.ExecutionContext;
 /**
  * An experimental of a Negamax with alpha beta pruning implementation and transposition table.
  * <br>It has the same functionalities than {@link Negamax} except it allows easier search debugging at the price of a (little) performance loss.
- * @param <M> Implementation of the Move interface to use
+ * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
  */
 public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     private Spy<M,B> spy = new Spy<M,B>() {};
@@ -32,13 +33,13 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
 	}
 	
 	@Override
-    public SearchResult<M> getBestMoves(SearchParameters params) {
+    public SearchResult<M> getBestMoves(DepthFirstSearchParameters params) {
 		SearchResult<M> result = super.getBestMoves(params);
 		final B gamePosition = getContext().getGamePosition();
-		if ((gamePosition instanceof HashProvider) && getTranspositionTable()!=null && !isInterrupted()) {
+		if ((gamePosition instanceof HashProvider hp) && getTranspositionTable()!=null && !isInterrupted()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			getTranspositionTable().store(((HashProvider)gamePosition).getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			getTranspositionTable().store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getMove(), p->true);
 		}
 		return result;
     }
@@ -50,7 +51,6 @@ public class Negamax3<M,B extends MoveGenerator<M>> extends Negamax<M,B> {
     		// So using it as alpha value makes negamax fail 
     		lowestInterestingScore += 1;
     	}
-//System.out.println("Play move "+move+" at depth "+depth+" for "+1);
         final TreeSearchStateStack<M,B> stack = new TreeSearchStateStack<>(getContext(), depth);
         stack.init(stack.getCurrent(), lowestInterestingScore, Integer.MAX_VALUE);
         if (stack.makeMove(move, MoveConfidence.UNSAFE)) {

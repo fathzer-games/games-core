@@ -7,44 +7,72 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.fathzer.games.ai.AI;
+import com.fathzer.games.ai.DepthFirstAI;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.Mute;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.SearchEventLogger;
-import com.fathzer.games.util.OrderedUtils;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.util.SortedUtils;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
+/**
+ * An iterative deepening search for the best moves.
+ * @param <M> The type of moves
+ */
 public class IterativeDeepeningSearch<M> {
 	private final DeepeningPolicy deepeningPolicy;
-	private final AI<M> ai;
+	private final DepthFirstAI<M, DepthFirstSearchParameters> ai;
 	private SearchHistory<M> searchHistory;
 	private List<M> searchedMoves;
 	private SearchEventLogger<M> logger;
 	private int depth;
 	
-	IterativeDeepeningSearch(AI<M> ai, DeepeningPolicy deepeningPolicy) {
+	/**
+	 * Creates a new instance.
+	 * @param ai The depth-first AI to use
+	 * @param deepeningPolicy The deepening policy to use
+	 */
+	public IterativeDeepeningSearch(DepthFirstAI<M, DepthFirstSearchParameters> ai, DeepeningPolicy deepeningPolicy) {
 		this.ai = ai;
 		this.logger = new Mute<>();
 		this.deepeningPolicy = deepeningPolicy;
 	}
 	
+	/**
+	 * Sets the moves to search.
+	 * @param searchedMoves The moves to search. By default, the search is made on all legal moves.
+	 * @throws IllegalStateException if the search history has already been built
+	 */
 	public void setSearchedMoves(List<M> searchedMoves) {
+		if (searchHistory!=null) {
+			throw new IllegalStateException("The search history has already been built");
+		}
 		this.searchedMoves = searchedMoves;
 	}
 
+	/**
+	 * Interrupts the search.
+	 */
 	public void interrupt() {
 		this.ai.interrupt();
 	}
 	
+	/**
+	 * Sets the event logger.
+	 * @param logger The event logger
+	 * @throws IllegalStateException if the search history has already been built
+	 */
 	public void setEventLogger(SearchEventLogger<M> logger) {
+		if (searchHistory!=null) {
+			throw new IllegalStateException("The search history has already been built");
+		}
 		this.logger = logger;
 	}
 	
 	private SearchHistory<M> buildBestMoves() {
 		deepeningPolicy.start();
-		this.searchHistory = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
-		final SearchParameters currentParams = new SearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		this.searchHistory = new SearchHistory<>(deepeningPolicy);
+		final DepthFirstSearchParameters currentParams = new DepthFirstSearchParameters(deepeningPolicy.getStartDepth(), deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
 		SearchResult<M> bestMoves = searchedMoves==null ? ai.getBestMoves(currentParams) : ai.getBestMoves(searchedMoves, currentParams);
 		searchHistory.add(bestMoves.getList(), deepeningPolicy.getStartDepth());
 		logger.logSearchAtDepth(currentParams.getDepth(), ai.getStatistics(), bestMoves);
@@ -74,7 +102,7 @@ public class IterativeDeepeningSearch<M> {
 			} else {
 				if (moves.size()!=evaluatedMoves.size()) {
 					// Some moves does not need deepening => Add them to ended
-					evaluatedMoves.stream().filter(em-> !moves.contains(em.getContent())).forEach(ended::add);
+					evaluatedMoves.stream().filter(em-> !moves.contains(em.getMove())).forEach(ended::add);
 				}
 				currentParams.setDepth(deepeningPolicy.getNextDepth(currentParams.getDepth()));
 				final SearchResult<M> deeper = ai.getBestMoves(moves, currentParams);
@@ -97,10 +125,15 @@ public class IterativeDeepeningSearch<M> {
 			return result.getList();
 		}
 		final var moves = new ArrayList<>(result.getList());
-		ended.stream().forEach(em -> OrderedUtils.insert(moves, em));
+		ended.stream().forEach(em -> SortedUtils.insert(moves, em));
 		return moves;
 	}
 	
+	/**
+	 * Computes the search history.
+	 * <br>On first call, this method builds the search history. On subsequent calls, it returns the already computed search history.
+	 * @return The search history
+	 */
 	public SearchHistory<M> getSearchHistory() {
 		if (searchHistory==null) {
 			searchHistory = buildBestMoves();

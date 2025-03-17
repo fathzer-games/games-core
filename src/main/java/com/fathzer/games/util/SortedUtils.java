@@ -3,14 +3,16 @@ package com.fathzer.games.util;
 import java.util.Collections;
 import java.util.List;
 
-public final class OrderedUtils {
-	private OrderedUtils() {
+/** A utility class to deal with ordered lists.
+ */
+public final class SortedUtils {
+	private SortedUtils() {
 		super();
 	}
 	
-	/** Insert an element in an ordered list.
+	/** Insert an element in an sorted list.
 	 * @param <T> The type of the elements
-	 * @param list The list where to insert the new element.
+	 * @param list The list where to insert the new element (The list should be sorted in ascending (natural) order).
 	 * @param element The new element.
 	 */
 	public static <T extends Comparable<T>> void insert(List<T> list, T element) {

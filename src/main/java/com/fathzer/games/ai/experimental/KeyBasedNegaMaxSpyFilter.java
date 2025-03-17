@@ -2,11 +2,16 @@ package com.fathzer.games.ai.experimental;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.MoveGenerator;
 
+/**
+ * A spy that can be used to monitor the search process of {@link Negamax3}.
+ * <br>It is called by the search process at various points.
+ * @param <M> The type of the moves
+ * @param <B> The type of the {@link MoveGenerator} to use
+ */
 public abstract class KeyBasedNegaMaxSpyFilter<M,B extends MoveGenerator<M>> {
 	private int enteringDepth=-1;
 	private final long searchedKey;
@@ -66,6 +71,6 @@ public abstract class KeyBasedNegaMaxSpyFilter<M,B extends MoveGenerator<M>> {
 				final M mv = state.get(i).lastMove;
 				return mv==null ? "?"+i: toString.apply(mv);
 			})
-			.collect(Collectors.toList());
+			.toList();
 	}
 }

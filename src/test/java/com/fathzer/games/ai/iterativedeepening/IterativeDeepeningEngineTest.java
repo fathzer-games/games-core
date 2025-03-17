@@ -1,4 +1,4 @@
-package com.fathzer.games.ai.terativedeepening;
+package com.fathzer.games.ai.iterativedeepening;
 
 import static com.github.bhlangonijr.chesslib.Square.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,13 +17,10 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.StaticEvaluator;
-import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
-import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
-import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TT;
 import com.fathzer.games.ai.transposition.TTAi;
@@ -41,11 +38,11 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy deepeningPolicy = new DeepeningPolicy(4);
 		IterativeDeepeningEngine<Move, ChessLibMoveGenerator> engine = new IterativeDeepeningEngine<>(deepeningPolicy, new TT(16, SizeUnit.MB), BasicEvaluator::new);
 		ChessLibMoveGenerator mg = new ChessLibMoveGenerator("r1bq1rk1/3n1ppp/p3p3/2bpP3/Np1B1P1P/7R/PPPQ2P1/2KR1B2 b - - 1 14", BasicMoveComparator::new);
-		assertEquals(new Move(C5, D4),engine.getBestMoves(mg).getBest());
+		assertEquals(new Move(C5, D4), getBest(engine.getBestMoves(mg)));
 		final Move illegalMove = new Move(D3, D4);
 		assertTrue(engine.getBestMoves(mg, Collections.singletonList(illegalMove)).isEmpty());
 		final Move legalMove = new Move(A6, A5);
-		assertEquals(legalMove, engine.getBestMoves(mg, Arrays.asList(illegalMove, legalMove)).getBest());
+		assertEquals(legalMove, getBest(engine.getBestMoves(mg, Arrays.asList(illegalMove, legalMove))));
 	}
 	
 	@Test
@@ -53,7 +50,8 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy deepeningPolicy = new DeepeningPolicy(4);
 		IterativeDeepeningEngine<Move, ChessLibMoveGenerator> engine = new IterativeDeepeningEngine<>(deepeningPolicy, new TT(16, SizeUnit.MB), BasicEvaluator::new);
 		ChessLibMoveGenerator mg = new ChessLibMoveGenerator("r1bq1rk1/3n1ppQ/p3p3/2bpP3/Np1B1P1P/3B3R/PPP3P1/2KR4 b - - 1 14", BasicMoveComparator::new);
-		assertNull(engine.getBestMoves(mg).getBest());
+		final SearchHistory<Move> bestMoves = engine.getBestMoves(mg);
+		assertNull(getBest(bestMoves));
 	}
 	
 	@Test
@@ -61,7 +59,7 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy policy = new DeepeningPolicy(4);
 		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
 			@Override
-			protected TTAi<String> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
+			protected TTAi<String, FakeMoveGenerator> buildAI(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
 				return new FakeNegamax(context);
 			}
 		};
@@ -69,12 +67,12 @@ class IterativeDeepeningEngineTest {
 		FakeNegamax.setSearchData("2:1:As101,Bs100,Cs99,Ds98/3:1:As80,Bi0,Ci0,Di0");
 		SearchHistory<String> bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2, bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("As80"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("As80"), bestMoves.getAccurateMoves());
 
 		FakeNegamax.setSearchData("2:1:As101,Bs100,Cs99,Ds98/3:1:As80,Bs90,Ci0,Di0");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2, bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("As90"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("As90"), bestMoves.getAccurateMoves());
 	}
 	
 	@Test
@@ -82,7 +80,7 @@ class IterativeDeepeningEngineTest {
 		final DeepeningPolicy policy = new DeepeningPolicy(6);
 		IterativeDeepeningEngine<String, FakeMoveGenerator> engine = new IterativeDeepeningEngine<>(policy, null, FakeEvaluator::new) {
 			@Override
-			protected TTAi<String> buildAi(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
+			protected TTAi<String, FakeMoveGenerator> buildAI(ExecutionContext<SearchContext<String, FakeMoveGenerator>> context) {
 				return new FakeNegamax(context);
 			}
 		};
@@ -90,7 +88,7 @@ class IterativeDeepeningEngineTest {
 		SearchHistory<String> bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		// Test it stops after first evaluation (because there's one win move)
 		assertEquals(1, bestMoves.length());
-		assertEquals(4, bestMoves.getList().size());
+		assertEquals(4, bestMoves.getLastList().size());
 		
 		// Now look for 2 bestmoves
 		policy.setSize(2);
@@ -99,9 +97,9 @@ class IterativeDeepeningEngineTest {
 								 + "4:1:Dl1,Cs80");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(3,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Cs80"), bestMoves.getBestMoves());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bs100"), bestMoves.getBestMoves(0));
-		assertEquals(encodedEvMovetoList.apply("Aw1,Ds105"), bestMoves.getBestMoves(1));
+		assertEquals(encodedEvMovetoList.apply("Aw1,Cs80"), bestMoves.getAccurateMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bs100"), bestMoves.getAccurateMoves(0));
+		assertEquals(encodedEvMovetoList.apply("Aw1,Ds105"), bestMoves.getAccurateMoves(1));
 		// Check that policy did not change its size
 		assertEquals(2, policy.getSize());
 		
@@ -110,7 +108,7 @@ class IterativeDeepeningEngineTest {
 		FakeNegamax.setSearchData("2:2:Aw1,Bw1,Cs-105,Ds-106");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(1,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1"), bestMoves.getAccurateMoves());
 
 		// Look for 3 best moves and have two wins at first depth and 1 at second
 		policy.setSize(3);
@@ -118,7 +116,7 @@ class IterativeDeepeningEngineTest {
 				 				 + "3:1:Cs104,Dw1/");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1,Dw1"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bw1,Dw1"), bestMoves.getAccurateMoves());
 		
 		// Look for 2 best moves and do no deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
@@ -126,7 +124,7 @@ class IterativeDeepeningEngineTest {
 		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(1,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bs100"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bs100"), bestMoves.getAccurateMoves());
 		
 		// Look for 2 best moves and do forced deepen with 1 win and only one non 'end game' move at first depth
 		policy.setSize(2);
@@ -134,7 +132,7 @@ class IterativeDeepeningEngineTest {
 		FakeNegamax.setSearchData("2:2:Aw1,Bs100,Cl2,Dl2/3:1:Bw2");
 		bestMoves = engine.getBestMoves(new FakeMoveGenerator());
 		assertEquals(2,bestMoves.length());
-		assertEquals(encodedEvMovetoList.apply("Aw1,Bw2"), bestMoves.getBestMoves());
+		assertEquals(encodedEvMovetoList.apply("Aw1,Bw2"), bestMoves.getAccurateMoves());
 	}
 	
 	public static Optional<EvaluatedMove<String>> parseMove(String encoded) {
@@ -158,7 +156,7 @@ class IterativeDeepeningEngineTest {
 		return Optional.of(new EvaluatedMove<>(mv, ev.toEvaluation(score)));
 	}
 	
-	private record SearchData(int expectedSearchSize, List<String> requestedMoves, List<EvaluatedMove<String>> returnedMoves, boolean isInterrupted) {};
+	private record SearchData(int expectedSearchSize, List<String> requestedMoves, List<EvaluatedMove<String>> returnedMoves, boolean isInterrupted) {}
 	
 	private static class FakeNegamax extends Negamax<String, FakeMoveGenerator> {
 		private static Map<Integer, SearchData> expectedMoveListMap;
@@ -169,24 +167,24 @@ class IterativeDeepeningEngineTest {
 		}
 
 		@Override
-		public SearchResult<String> getBestMoves(SearchParameters params) {
+		public SearchResult<String> getBestMoves(DepthFirstSearchParameters params) {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize());
-			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.returnedMoves.forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			final SearchResult<String> r = new SearchResult<String>(params);
+			data.returnedMoves.forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 		}
 		
 		@Override
-	    public SearchResult<String> getBestMoves(List<String> moves, SearchParameters params) {
+	    public SearchResult<String> getBestMoves(List<String> moves, DepthFirstSearchParameters params) {
 			final SearchData data = expectedMoveListMap.get(params.getDepth());
 			assertNotNull(data, "Depth "+params.getDepth()+" is unexpected here");
 			assertEquals(data.expectedSearchSize, params.getSize(),"At depth "+params.getDepth()+" search size is wrong");
 			assertEquals(data.requestedMoves(), moves,"At depth "+params.getDepth());
-			final SearchResult<String> r = new SearchResult<String>(params.getSize(), params.getAccuracy());
-			data.returnedMoves().forEach(em -> r.add(em.getContent(), em.getEvaluation()));
+			final SearchResult<String> r = new SearchResult<String>(params);
+			data.returnedMoves().forEach(em -> r.add(em.getMove(), em.getEvaluation()));
 			isInterrupted = data.isInterrupted();
 			return r;
 	    }
@@ -230,6 +228,7 @@ class IterativeDeepeningEngineTest {
 
 		@Override
 		public void unmakeMove() {
+			// Nothing to do
 		}
 
 		@Override
@@ -241,5 +240,10 @@ class IterativeDeepeningEngineTest {
 		public Status getEndGameStatus() {
 			return null;
 		}
+	}
+	
+	private Move getBest(SearchHistory<Move> history) {
+		List<EvaluatedMove<Move>> moves = history.getAccurateMoves();
+		return moves==null || moves.isEmpty() ? null : moves.get(0).getMove(); 
 	}
 }

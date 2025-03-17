@@ -192,6 +192,10 @@ public class Clock {
 		}
 	}
 	
+	/** Gets the current settings for a player.
+	 * @param player The player
+	 * @return The current settings for the player
+	 */
 	public ClockSettings getCurrentSettings(Color player) {
 		return getPlayerCountdown(player).getCurrentSettings();
 	}

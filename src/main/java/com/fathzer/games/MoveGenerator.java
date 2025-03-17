@@ -1,7 +1,6 @@
 package com.fathzer.games;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fathzer.games.util.exec.Forkable;
 
@@ -70,7 +69,7 @@ public interface MoveGenerator<M> extends Forkable<MoveGenerator<M>> {
 				unmakeMove();
 			}
 			return ok;
-		}).collect(Collectors.toList());
+		}).toList();
 	}
 	
 	/** This method is called before evaluating a position or looking for a previous evaluation in a transposition table.

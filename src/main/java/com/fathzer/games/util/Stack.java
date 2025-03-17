@@ -72,6 +72,7 @@ public class Stack<T> {
 		current = backups.get(index);
 	}
 
+	/** Clears the stack. */
 	public void clear() {
 		this.backups.clear();
 		this.index = 0;

@@ -9,6 +9,7 @@ import com.fathzer.games.HashProvider;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.QuiesceEvaluator;
+import com.fathzer.games.ai.transposition.AlphaBetaState;
 import com.fathzer.games.ai.transposition.EntryType;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -20,10 +21,13 @@ import com.fathzer.games.util.exec.ExecutionContext;
  * @param <M> The type of the moves
  * @param <B> The type of the {@link MoveGenerator} to use
  */
-public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M> {
-    private TranspositionTable<M> transpositionTable;
+public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> implements TTAi<M, B> {
+    private TranspositionTable<M, B> transpositionTable;
     private QuiesceEvaluator<M,B> quiesceEvaluator;
     
+	/** Constructor
+	 * @param exec The execution context
+	 */
 	public Negamax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
 		quiesceEvaluator = (ctx, depth, alpha, beta) -> {
@@ -34,13 +38,13 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 	}
 
 	@Override
-    public SearchResult<M> getBestMoves(SearchParameters params) {
+    public SearchResult<M> getBestMoves(DepthFirstSearchParameters params) {
 		final SearchResult<M> result = super.getBestMoves(params);
 		// Warning, result can be empty if searching position with no possible moves
 		if ((getContext().getGamePosition() instanceof HashProvider hp) && transpositionTable!=null && !isInterrupted() && !result.getList().isEmpty()) {
 			// Store best move info in table
 			final EvaluatedMove<M> best = result.getList().get(0);
-			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getContent(), p->true);
+			transpositionTable.store(hp.getHashKey(), EntryType.EXACT, params.getDepth(), best.getScore(), best.getMove(), p->true);
 		}
 		return result;
     }
@@ -62,6 +66,14 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
 		return quiesceEvaluator.evaluate(getContext(), depth, alpha, beta);
 	}
 	
+    /**
+	 * Performs a recursive search.
+	 * @param depth The depth (number of half moves) at which the method is called (it is useful to return correct mate scores)
+	 * @param maxDepth The maximum depth of the search
+	 * @param alpha The alpha value
+	 * @param beta The beta value
+	 * @return the position evaluation
+	 */
     protected int negamax(final int depth, int maxDepth, int alpha, int beta) {
     	final SearchContext<M, B> context = getContext();
 		final B position = context.getGamePosition();
@@ -156,15 +168,19 @@ public class Negamax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> imple
     }
     
     @Override
-    public final TranspositionTable<M> getTranspositionTable() {
+    public final TranspositionTable<M, B> getTranspositionTable() {
     	return transpositionTable;
     }
     
     @Override
-    public void setTranspositonTable(TranspositionTable<M> table) {
+    public void setTranspositonTable(TranspositionTable<M, B> table) {
     	this.transpositionTable = table;
     }
 
+	/** Gets the quiesce evaluator used to evaluate positions (see <a href="https://en.wikipedia.org/wiki/Quiescence_search">quiescence search</a>).
+	 * <br>The default implementation simply returns the current position evaluation without performing any quiescence search.
+	 * @return The quiesce evaluator.
+	 */
 	public QuiesceEvaluator<M,B> getQuiesceEvaluator() {
 		return quiesceEvaluator;
 	}

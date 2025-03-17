@@ -12,11 +12,14 @@ import com.fathzer.games.ai.evaluation.Evaluator;
  * <a href="https://en.wikipedia.org/wiki/Minimax">Minimax</a> based implementation.
  * @param <M> Implementation of the Move interface to use
  * @param <B> Implementation of the {@link MoveGenerator} interface to use
- * @deprecated For testing and documentation purpose only, the preferred way to implement IA is to use {@link Negamax}.
+ * @deprecated For testing and documentation purpose only, the preferred way to implement AI is to use {@link Negamax}.
  */
-@Deprecated
+@Deprecated(since="always", forRemoval=false)
+@SuppressWarnings("java:S1133")
 public class Minimax<M,B extends MoveGenerator<M>> extends AbstractAI<M,B> {
-
+	/** Constructor
+	 * @param exec The execution context that will run the AI
+	 */
     protected Minimax(ExecutionContext<SearchContext<M,B>> exec) {
 		super(exec);
 	}

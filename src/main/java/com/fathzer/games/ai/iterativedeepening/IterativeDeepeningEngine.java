@@ -15,10 +15,7 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.transposition.TTAi;
 import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.movelibrary.MoveLibrary;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.MultiThreadsContext;
-import com.fathzer.games.util.exec.SingleThreadContext;
 
 /** An engine that iteratively deepens the search. 
  * @param <M> The class that represents a move
@@ -30,14 +27,28 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @param <M> The class that represents a move
 	 */
 	public interface SearchEventLogger<M> {
+		/** Called when the search ends at a specified depth.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was done
+		 * @param stats The search statistics
+		 * @param results The search results
+		 */
 		default void logSearchAtDepth(int depth, SearchStatistics stats, SearchResult<M> results) {
 			// Does nothing by default
 		}
 		
+		/** Called when the search is interrupted by timeout.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was interrupted
+		 */
 		default void logTimeOut(int depth) {
 			// Does nothing by default
 		}
 
+		/** Called when the search is interrupted by the {@link DeepeningPolicy}.
+		 * <br>Does nothing by default.
+		 * @param depth The depth at which the search was interrupted
+		 */
 		default void logEndedByPolicy(int depth) {
 			// Does nothing by default
 		}
@@ -49,18 +60,26 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @param <B> The class that represents the move generator 
 	 */
 	public interface EngineEventLogger<M, B extends MoveGenerator<M>> extends SearchEventLogger<M> {
+		/** Called when the move is choosen from the library.
+		 * @param board The board
+		 * @param move The move
+		 */
 		default void logLibraryMove(B board, EvaluatedMove<M> move) {
 			// Does nothing by default
 		}
 
+		/** Called when the search starts (at the beginning of {@link #doSearch(MoveGenerator, List)}).
+		 * @param board The board
+		 * @param engine The engine
+		*/
 		default void logSearchStart(B board, IterativeDeepeningEngine<M, B> engine) {
 			// Does nothing by default
 		}
 
-		default void logMoveChosen(B board, EvaluatedMove<M> evaluatedMove) {
-			// Does nothing by default
-		}
-
+		/** Called when the search ends (at the end of {@link #doSearch(MoveGenerator, List)}).
+		 * @param board The board
+		 * @param result The result
+		*/
 		default void logSearchEnd(B board, SearchHistory<M> result) {
 			// Does nothing by default
 		}
@@ -75,7 +94,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	private MoveLibrary<M, B> movesLibrary;
 	private Supplier<Evaluator<M, B>> evaluatorSupplier;
 	private DeepeningPolicy deepeningPolicy;
-	private TranspositionTable<M> transpositionTable;
+	private TranspositionTable<M, B> transpositionTable;
 	private int parallelism;
 	private EngineEventLogger<M, B> logger;
 	private IterativeDeepeningSearch<M> rs;
@@ -89,7 +108,7 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 	 * @see #setParallelism(int)
 	 * @see #setLogger(EngineEventLogger)
 	 */
-	public IterativeDeepeningEngine(DeepeningPolicy deepeningPolicy, TranspositionTable<M> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
+	public IterativeDeepeningEngine(DeepeningPolicy deepeningPolicy, TranspositionTable<M, B> tt, Supplier<Evaluator<M, B>> evaluatorSupplier) {
 		this.parallelism = 1;
 		this.transpositionTable = tt;
 		this.evaluatorSupplier = evaluatorSupplier;
@@ -98,12 +117,18 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		this.deepeningPolicy = deepeningPolicy;
 	}
 	
+	/** Interrupts the current search if any.
+	 * <br>Does nothing if there's no search running.
+	 */
 	public void interrupt() {
 		if (running.get()) {
 			rs.interrupt();
 		}
 	}
 
+	/** Gets the number of threads used to perform the searches.
+	 * @return the number of threads used to perform the search (default is 1)
+	 */
 	public int getParallelism() {
 		return parallelism;
 	}
@@ -124,14 +149,23 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		this.movesLibrary = library;
 	}
 
+	/** Gets the supplier of the evaluation function.
+	 * @return the supplier of the evaluation function
+	 */
 	public Supplier<Evaluator<M, B>> getEvaluationSupplier() {
 		return this.evaluatorSupplier;
 	}
 
+	/** Sets the supplier of the evaluation function.
+	 * @param evaluatorSupplier The supplier of the evaluation function
+	 */
 	public void setEvaluatorSupplier(Supplier<Evaluator<M, B>> evaluatorSupplier) {
 		this.evaluatorSupplier = evaluatorSupplier;
 	}
 
+	/** Gets the logger.
+	 * @return the logger (The default one does nothing - see {@link Mute})
+	 */
 	public EngineEventLogger<M, B> getLogger() {
 		return logger;
 	}
@@ -143,18 +177,30 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		this.logger = logger;
 	}
 
-	public TranspositionTable<M> getTranspositionTable() {
+	/** Gets the transposition table.
+	 * @return the transposition table or null, the default value, if no transposition table is set
+	 */
+	public TranspositionTable<M, B> getTranspositionTable() {
 		return transpositionTable;
 	}
 	
-	public void setTranspositionTable(TranspositionTable<M> transpositionTable) {
+	/** Sets the transposition table.
+	 * @param transpositionTable The transposition table or null to use no transposition table (not recommended)
+	 */
+	public void setTranspositionTable(TranspositionTable<M, B> transpositionTable) {
 		this.transpositionTable = transpositionTable;
 	}
 
+	/** Gets the deepening policy.
+	 * @return the deepening policy
+	 */
 	public DeepeningPolicy getDeepeningPolicy() {
 		return deepeningPolicy;
 	}
 
+	/** Sets the deepening policy.
+	 * @param policy The new deepening policy
+	 */
 	public void setDeepeningPolicy(DeepeningPolicy policy) {
 		this.deepeningPolicy = policy;
 	}
@@ -171,8 +217,14 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 		}
 	}
 
+	/** Searches for the best moves.
+	 * <br>By default, this method will return the moves from the library if any, otherwise the result of the {@link #doSearch(MoveGenerator, List)} method.
+	 * @param board The board
+	 * @param searchedMoves A restricted list of moves to search, null to search all possible moves
+	 * @return A search history
+	 */
 	public SearchHistory<M> getBestMoves(B board, List<M> searchedMoves) {
-		final SearchHistory<M> result = new SearchHistory<>(deepeningPolicy.getSize(), deepeningPolicy.getAccuracy());
+		final SearchHistory<M> result = new SearchHistory<>(deepeningPolicy);
 		//TODO Filter library with candidates + return more than one move if search params requires more than one move
 		EvaluatedMove<M> move = movesLibrary==null ? null : movesLibrary.apply(board).orElse(null);
 		if (move!=null) {
@@ -181,64 +233,62 @@ public class IterativeDeepeningEngine<M, B extends MoveGenerator<M>> {
 			return result;
 		}
 		final IterativeDeepeningSearch<M> search = doSearch(board, searchedMoves);
-		final List<EvaluatedMove<M>> moves = search.getSearchHistory().getBestMoves();
-		if (moves.isEmpty()) {
-			// No possible move
-			logger.logMoveChosen(board, null);
-			return result;
-		} else {
-			logger.logMoveChosen(board, moves.get(0));
-			return search.getSearchHistory();
-		}
+		return search.getSearchHistory();
 	}
 
+	/** Searches for the best moves.
+	 * <br>Calls {@link #getBestMoves(MoveGenerator, List)} with null as second parameter.
+	 * @param board The board
+	 * @return A search history
+	 */
 	public SearchHistory<M> getBestMoves(B board) {
 		return getBestMoves(board, null);
 	}
 	
+	/** Performs the iterative deepening search.
+	 * @param board The board
+	 * @param searchedMoves A restricted list of moves to search, null to search all possible moves
+	 * @return A search history
+	 * @throws IllegalStateException If a search is already running
+	 */
 	protected IterativeDeepeningSearch<M> doSearch(B board, List<M> searchedMoves) {
-		logger.logSearchStart(board, this);
-		// TODO Test if it is really a new position?
-		if (transpositionTable!=null) {
-			transpositionTable.newPosition();
+		if (!running.compareAndSet(false, true)) {
+			throw new IllegalStateException();
 		}
-		try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
-			final TTAi<M> internal = buildAi(context);
-			internal.setTranspositonTable(transpositionTable);
-			if (!running.compareAndSet(false, true)) {
-				throw new IllegalStateException();
+		try {
+			logger.logSearchStart(board, this);
+			if (transpositionTable!=null) {
+				transpositionTable.newPosition(board);
 			}
-			try {
+			try (ExecutionContext<SearchContext<M,B>> context = buildExecutionContext(board)) {
+				final TTAi<M, B> internal = buildAI(context);
+				internal.setTranspositonTable(transpositionTable);
 				rs = new IterativeDeepeningSearch<>(internal, deepeningPolicy);
 				rs.setEventLogger(logger);
 				rs.setSearchedMoves(searchedMoves);
-				final List<EvaluatedMove<M>> result = rs.getSearchHistory().getBestMoves();
-				for (EvaluatedMove<M> ev:result) {
-					ev.setPvBuilder(m -> getTranspositionTable().collectPV(board, m, deepeningPolicy.getDepth()));
-				}
 				logger.logSearchEnd(board, rs.getSearchHistory());
 				return rs;
-			} finally {
-				running.set(false);
 			}
+		} finally {
+			running.set(false);
 		}
 	}
 	
+	/** Builds the execution context used for a search.
+	 * <br>The default implementation builds a new execution context with the given board and evaluator supplier using {@link #getParallelism()} threads. 
+	 * @param board The board to search
+	 * @return The execution context
+	 */
 	protected ExecutionContext<SearchContext<M,B>> buildExecutionContext(B board) {
 		final SearchContext<M, B> context = SearchContext.get(board, evaluatorSupplier);
-		if (getParallelism()==1) {
-			return new SingleThreadContext<>(context);
-		} else {
-			final ContextualizedExecutor<SearchContext<M, B>> contextualizedExecutor = new ContextualizedExecutor<>(getParallelism());
-			return new MultiThreadsContext<>(context, contextualizedExecutor);
-		}
+		return ExecutionContext.get(getParallelism(), context);
 	}
 	
 	/** Builds the AI used to search best moves at different depth. 
 	 * @param context An execution context that can be used by the AI.
-	 * @return An ai that supports transposition tables. THe default implementation returns a Negamax instance.
+	 * @return An AI that supports transposition tables. THe default implementation returns a Negamax instance.
 	 */
-	protected TTAi<M> buildAi(ExecutionContext<SearchContext<M,B>> context) {
+	protected TTAi<M, B> buildAI(ExecutionContext<SearchContext<M,B>> context) {
 		return new Negamax<>(context);
 	}
 }

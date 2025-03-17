@@ -1,16 +1,15 @@
 package com.fathzer.games.chess;
 
-import java.util.Comparator;
-
 import static com.fathzer.games.chess.BasicEvaluator.PIECE_VALUE;
 
+import com.fathzer.games.util.SelectiveComparator;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 /** A move comparator that considers a catch is better than other moves and taking a high value piece with a small value piece is better than the opposite.
  */
-public class BasicMoveComparator implements Comparator<Move> {
+public class BasicMoveComparator implements SelectiveComparator<Move> {
 	private Board board;
 	
 	public BasicMoveComparator(Board board) {
@@ -22,6 +21,12 @@ public class BasicMoveComparator implements Comparator<Move> {
 		// Important sort from higher to lower scores
 		return getValue(m2) - getValue(m1);
 	}
+	
+	@Override
+	public boolean test(Move m) {
+		return getValue(m)!=0;
+	}
+
 
 	public int getValue(Move m) {
 		final PieceType promotion = m.getPromotion().getPieceType();
