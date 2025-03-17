@@ -15,6 +15,7 @@ public class CustomStats {
 	private boolean on;
 	private final Map<String, AtomicLong> map;
 	
+	/** Constructor */
 	public CustomStats() {
 		map = new HashMap<>();
 	}
@@ -43,7 +44,7 @@ public class CustomStats {
 		return true;
 	}
 	
-	/** Checks whether the statistivs are enabled.
+	/** Checks whether the statistics are enabled.
 	 * @return true if statistics are enabled
 	 */
 	public boolean isOn() {
@@ -61,6 +62,7 @@ public class CustomStats {
 
 	/** Increments a statistics counter.
 	 * @param counter The name of the counter to increment
+	 * @param count The number of times the counter should be incremented
 	 */
 	public void increment(String counter, long count) {
 		if (on) {
