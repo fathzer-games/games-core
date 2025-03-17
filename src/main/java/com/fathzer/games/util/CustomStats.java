@@ -5,73 +5,81 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** A utility class to create custom statistics.
+/** A class to create custom statistics.
  * <br>For instance, you can use the {@link #increment(String)} in a class to count the number of instances created.
  * <br><b>Be aware that doing such a thing can result in an important performance penalty</b>.
- * Remove, or at least, call {@link CustomStats#off()} in production code. 
+ * Remove, or at least, call {@link CustomStats#off()} in production code.
+ * <br><b>Warning:</b> Only {@link #increment(String)} and {@link #increment(String, long)} are thread safe.
  */
-public abstract class CustomStats {
-	private static boolean on = false;
-	private static final Map<String, AtomicLong> MAP = new HashMap<>();
+public class CustomStats {
+	private boolean on;
+	private final Map<String, AtomicLong> map;
 	
-	private CustomStats() {
-		// Prevents subclassing
+	public CustomStats() {
+		map = new HashMap<>();
 	}
 	
 	/** Enables the statistics.
 	 * <br>Statistics are deactivated by default
 	 * @return The previous activation state
 	 */
-	public static boolean on() {
+	public boolean on() {
 		if (on) {
 			return true;
 		}
-		final boolean old = on;
 		on = true;
-		return old;
+		return false;
 	}
 	
 	/** Disables the statistics.
 	 * <br>Statistics are deactivated by default
 	 * @return The previous activation state
 	 */
-	public static boolean off() {
+	public boolean off() {
 		if (!on) {
 			return false;
 		}
-		final boolean old = on;
-		on = true;
-		return old;
+		on = false;
+		return true;
 	}
 	
 	/** Checks whether the statistivs are enabled.
 	 * @return true if statistics are enabled
 	 */
-	public static boolean isOn() {
+	public boolean isOn() {
 		return on;
 	}
 
 	/** Increments a statistics counter.
 	 * @param counter The name of the counter to increment
 	 */
-	public static void increment(String counter) {
+	public void increment(String counter) {
 		if (on) {
-			MAP.computeIfAbsent(counter, k->new AtomicLong()).incrementAndGet();
+			map.computeIfAbsent(counter, k->new AtomicLong()).incrementAndGet();
 		}
 	}
-	
+
+	/** Increments a statistics counter.
+	 * @param counter The name of the counter to increment
+	 */
+	public void increment(String counter, long count) {
+		if (on) {
+			map.computeIfAbsent(counter, k->new AtomicLong()).addAndGet(count);
+		}
+	}
+
 	/** Clears all counters.
 	 */
-	public static void clear() {
-		MAP.clear();
+	public void clear() {
+		map.clear();
 	}
 
 	/** Gets a counter.
 	 * @param counter The name of the counter
 	 * @return The counter's value
 	 */
-	public static long get(String counter) {
-		final AtomicLong count = MAP.get(counter);
+	public long get(String counter) {
+		final AtomicLong count = map.get(counter);
 		return count==null ? 0 : count.get();
 	}
 
@@ -79,8 +87,8 @@ public abstract class CustomStats {
 	 * @param counter The name of the counter to clear
 	 * @return The counter's value before its removal
 	 */
-	public static long clear(String counter) {
-		final AtomicLong count = MAP.remove(counter);
+	public long clear(String counter) {
+		final AtomicLong count = map.remove(counter);
 		return count==null ? 0 : count.get();
 	}
 	
@@ -88,14 +96,15 @@ public abstract class CustomStats {
 	 * @return A set of strings.
 	 * <br><b>Warning:</b> Removing or adding counters while iterating on the returned set may throw exceptions.
 	 */
-	public static Set<String> getCounters() {
-		return MAP.keySet();
+	public Set<String> getCounters() {
+		return map.keySet();
 	}
 	
 	/** Returns a string representation of the counters.
 	 * @return a String
 	 */
-	public static String asString() {
-		return MAP.toString();
+	@Override
+	public String toString() {
+		return map.toString();
 	}
 }

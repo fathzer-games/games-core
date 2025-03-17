@@ -27,6 +27,7 @@ class AbstractMoveLibraryTest {
 	private static class MyMoveLibrary extends AbstractMoveLibrary<String, String, String> {
 		private final String expected;
 		private final List<String> results;
+		private boolean newGameCalled;
 		
 		public MyMoveLibrary(String expected, List<String> results) {
 			this.expected = expected;
@@ -50,6 +51,12 @@ class AbstractMoveLibraryTest {
 			} catch (NumberFormatException e) {
 				return super.getWeight(move);
 			}
+		}
+
+		@Override
+		public void newGame() {
+			newGameCalled = true;
+			super.newGame();
 		}
 	}
 
@@ -76,5 +83,12 @@ class AbstractMoveLibraryTest {
 	    lib.setMoveSelector(lib.weightedMoveSelector());
 	    when(mockedRnd.nextLong(15)).thenReturn(4L);
 	    assertEquals("2", lib.apply("ok").get().getMove());
+	    assertEquals(5, lib.getMoves("ok").size());
+	    assertEquals(1, lib.getMoves("ko").size());
+	    assertTrue(lib.getMoves("unknown").isEmpty());
+	    
+	    lib.newGame();
+	    assertTrue(lib.newGameCalled);
+	    assertTrue(next.newGameCalled);
 	}
 }

@@ -77,6 +77,7 @@
 			        <excludes>
 			            <!-- Exclude the PhysicalCores class from code coverage because it is too tiedly coupled with the runtime environment -->
 			            <exclude>**/PhysicalCores.class</exclude>
+			            <exclude>**/experimental/*</exclude>
 			        </excludes>
 			     </configuration>
 			</plugin>
