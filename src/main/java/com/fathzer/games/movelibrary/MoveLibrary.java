@@ -4,15 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 /** A class that can choose a move from a database, without any tree search.
  * <br>The typical usage is for <a href="https://en.wikipedia.org/wiki/Chess_opening_book_(computers)">Opening books</a> or <a href="https://en.wikipedia.org/wiki/Endgame_tablebase">End game tablebases</a>
  * @param <M> The type of moves
- * @param <B> The type of game board
+ * @param <B> The type of the keys that allow to retrieve the moves from the library (typically, the game board)
  */
-public interface MoveLibrary<M, B extends MoveGenerator<M>> extends Function<B, Optional<EvaluatedMove<M>>> {
+public interface MoveLibrary<M, B> extends Function<B, Optional<EvaluatedMove<M>>> {
 	/** Gets the moves for a position.
 	 * @param board a position
 	 * @return The moves available for the position in the library and their evaluations, or an empty list if it can't find any move.

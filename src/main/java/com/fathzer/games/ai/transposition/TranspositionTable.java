@@ -63,8 +63,8 @@ public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	 * <br>Warning, this method should not be called during table modification.
 	 * @param board The position to collect pv from.
 	 * <br>The move generator should implement the {@link HashProvider} interface.
-	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
-	 *            each other infinitely)
+	 * @param maxDepth How deep the pv goes
+	 * @param <T> The type of the board
 	 * @return The moves
 	 */
 	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, int maxDepth) {
@@ -94,8 +94,8 @@ public interface TranspositionTable<M, B extends MoveGenerator<M>> {
 	 * @param board The position to collect pv from.
 	 * @param move The move to play (if move is not a valid move, result is not specified).
 	 * <br>The move generator should implement the {@link HashProvider} interface.
-	 * @param maxDepth How deep the pv goes (avoids situations where keys point to
-	 *            each other infinitely)
+	 * @param maxDepth How deep the pv goes.
+	 * @param <T> The type of the board
 	 * @return The moves
 	 */
 	default <T extends MoveGenerator<M> & HashProvider> List<M> collectPV(T board, M move, int maxDepth) {

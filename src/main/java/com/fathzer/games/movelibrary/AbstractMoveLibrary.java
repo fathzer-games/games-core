@@ -6,17 +6,18 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 
-import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 
 /** An abstract move library based on searching records in a local or remote database
  * @param <R> The type of the database records. Those records contain the information about a move
  * @param <M> The type of moves
- * @param <B> The type of game board
+ * @param <B> The type of the keys that allow to retrieve the moves from the library (typically, the game board)
  */
-public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> implements MoveLibrary<M, B> {
-	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe 
-	private static final Random RND = new Random();
+public abstract class AbstractMoveLibrary<R, M, B> implements MoveLibrary<M, B> {
+	@SuppressWarnings("java:S2245") //Ignores Sonar security hot spot, here Random is safe
+	// Warning, due to limitations introduced in java 12+, making the field final would no more allow testing the class
+	// as it would be no more possible to mock the random generator.
+	private static Random rnd = new Random();
 
 	/** A function that always select the first element of a list.
 	 * @param <T> The list element type
@@ -31,11 +32,11 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	 * @return A function that randomly selects an element of a list.
 	 */
 	public static <T> Function<List<T>,T> randomMoveSelector() {
-		return l -> l.get(RND.nextInt(l.size()));
+		return l -> l.get(rnd.nextInt(l.size()));
 	}
 	
 	private Function<List<R>, R> moveSelector = randomMoveSelector();
-	private MoveLibrary<M, MoveGenerator<M>> other;
+	private MoveLibrary<M, B> other;
 	
 	/** A function that randomly selects an element of a list with a probability proportional to its relative weight.
 	 * @return A function.
@@ -44,7 +45,7 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	public Function<List<R>, R> weightedMoveSelector() {
 		return values -> {
 			long count = values.stream().mapToLong(AbstractMoveLibrary.this::getWeight).sum();
-			long value = RND.nextLong(count);
+			long value = rnd.nextLong(count);
 			count = 0;
 			int index = values.size()-1;
 			for (int i=0;i<values.size();i++) {
@@ -66,12 +67,12 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 
 	/** Converts a database record that describes an evaluated move to a move instance.
 	 * @param board The position
-	 * @param move The move database record
+	 * @param moveRecord The move database record
 	 * @return An evaluated move instance
 	 */
-	protected abstract EvaluatedMove<M> toEvaluatedMove(B board, R move);
+	protected abstract EvaluatedMove<M> toEvaluatedMove(B board, R moveRecord);
 	
-	/** Sets the move selector (the function that selects a move in the list of move records returned by {@link #getRecords(MoveGenerator)}
+	/** Sets the move selector (the function that selects a move in the list of move records returned by {@link #getRecords(Object)}
 	 * <br>By default, the move is randomly chosen in the list.
 	 * @param moveSelector A move selector
 	 */
@@ -82,7 +83,7 @@ public abstract class AbstractMoveLibrary<R, M, B extends MoveGenerator<M>> impl
 	/** Sets another library to search when no moves are available in this one.
 	 * @param next Another library or null to remove the current 'next' library.
 	 */
-	public void setNext(MoveLibrary<M, MoveGenerator<M>> next) {
+	public void setNext(MoveLibrary<M, B> next) {
 		this.other = next;
 	}
 
